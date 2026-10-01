@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【龍舌潤喉】龍脷葉草藥煮茶配方師與半陰養護遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #120907;
+            color: #fef3c7;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .amber-glow {
+            box-shadow: 0 0 25px rgba(217, 119, 6, 0.35);
+        }
+        .tea-glow-lg {
+            box-shadow: 0 0 45px rgba(245, 158, 11, 0.55);
+        }
+        .purple-clay-glow {
+            box-shadow: 0 0 25px rgba(180, 83, 9, 0.45);
+        }
+        .text-glow-amber {
+            text-shadow: 0 0 14px rgba(251, 191, 36, 0.85);
+        }
+        .text-glow-green {
+            text-shadow: 0 0 16px rgba(52, 211, 153, 0.9);
+        }
+        .ingredient-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .ingredient-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            filter: drop-shadow(0 0 12px #f59e0b);
+        }
+        .steam-bubble {
+            animation: riseSteam 2.5s infinite ease-in-out;
+        }
+        @keyframes riseSteam {
+            0% { transform: translateY(0) scale(0.8); opacity: 0.2; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 0.8; }
+            100% { transform: translateY(-45px) scale(1.5); opacity: 0; }
+        }
+        .teapot-simmer {
+            animation: simmerShake 1.2s infinite ease-in-out;
+        }
+        @keyframes simmerShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-1.5deg) translateY(-1px); }
+            75% { transform: rotate(1.5deg) translateY(1px); }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-amber-950/95 text-amber-100 flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Canvas Background for Warm Tea Steam Particles -->
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-amber-950/80 border border-amber-600/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 amber-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-amber-300/80 block font-medium">潤喉功德 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-amber-300 font-mono text-glow-amber">0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-amber-300/80 block font-medium">咽喉舒暢救癒度</span>
+                <span id="progressText" class="text-xl sm:text-2xl font-semibold text-emerald-300 font-mono text-glow-green">0 / 3</span>
+            </div>
+        </div>
+
+        <!-- Mode Switcher & Codex Button -->
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-amber-900/90 hover:bg-amber-800 text-amber-100 border border-amber-500/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往【半陰養護：龍脷葉種植】 🍃</span>
+            </button>
+            <button id="btnCodex" class="bg-amber-950/90 hover:bg-amber-900 text-amber-200 border border-amber-600/60 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📜 龍脷葉典籍
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: TEA BREWING MASTER (煮茶配方師：紫砂壺熬製甜茶) -->
+        <section id="phaseBrewing" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-amber-200 text-glow-amber">【龍舌潤喉】龍脷葉草藥煮茶配方師</h1>
+                <p class="text-xs sm:text-sm text-amber-300/90 mt-1">「葉形如舌清肺熱，壺添羅漢配桔梗」── 投入龍脷葉配方，控制火候熬製潤喉甘甜茶</p>
+            </div>
+
+            <!-- Main Brewing Station Panel Layout -->
+            <div class="w-full max-w-3xl bg-amber-950/60 border border-amber-600/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl amber-glow flex flex-col md:flex-row items-center gap-5">
+                
+                <!-- Yixing Purple Clay Teapot Simmering View -->
+                <div class="flex-1 w-full flex flex-col items-center justify-center bg-stone-900/80 p-3 rounded-2xl border border-amber-800/60 relative min-h-[300px]">
+                    <div class="w-full flex justify-between items-center px-2 mb-1">
+                        <span class="text-xs text-amber-300 font-bold">🫖 紫砂壺煎煮狀態</span>
+                        <span id="potTempText" class="text-xs text-amber-400 font-mono font-bold">壺溫: 25°C (待加熱)</span>
+                    </div>
+
+                    <!-- Purple Clay Teapot Visual SVG -->
+                    <div class="relative w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center">
+                        <!-- Steam effect layer -->
+                        <div id="steamContainer" class="absolute -top-6 left-1/2 -translate-x-1/2 flex gap-3 pointer-events-none opacity-30">
+                            <span class="text-2xl steam-bubble">💨</span>
+                            <span class="text-3xl steam-bubble" style="animation-delay: 0.6s">♨️</span>
+                            <span class="text-2xl steam-bubble" style="animation-delay: 1.2s">💨</span>
+                        </div>
+
+                        <svg viewBox="0 0 100 100" class="w-full h-full" id="teapotSvg">
+                            <!-- Teapot Stove Fire Flame -->
+                            <path id="stoveFlame" d="M 35 88 Q 50 68 65 88 Q 50 96 35 88 Z" fill="#f59e0b" class="opacity-0 transition-opacity duration-300"/>
+
+                            <!-- Purple Clay Teapot Body (紫砂壺) -->
+                            <!-- Handle -->
+                            <path d="M 22 42 C 8 40 8 70 22 68" stroke="#7c2d12" stroke-width="6" fill="none" stroke-linecap="round"/>
+                            <!-- Spout -->
+                            <path d="M 78 50 C 88 45 92 35 94 32 L 88 30 C 84 38 76 44 76 46 Z" fill="#7c2d12"/>
+                            <!-- Main Pot -->
+                            <ellipse cx="50" cy="58" rx="28" ry="20" fill="#7c2d12"/>
+                            <ellipse cx="50" cy="56" rx="27" ry="18" fill="#9a3412"/>
+                            <!-- Pot Lid & Knob -->
+                            <ellipse cx="50" cy="38" rx="16" ry="5" fill="#7c2d12"/>
+                            <circle cx="50" cy="32" r="3.5" fill="#b45309"/>
+                            
+                            <!-- Tea Essence Liquid Glow inside Teapot Indicator -->
+                            <ellipse id="liquidGlow" cx="50" cy="58" rx="18" ry="10" fill="#f59e0b" opacity="0" class="transition-all duration-500"/>
+                        </svg>
+
+                        <!-- Added Ingredients Badges Display -->
+                        <div id="ingredientsInsideBox" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-stone-950/80 px-3 py-1 rounded-full border border-amber-600/40 text-[10px] text-amber-200">
+                            <span>已入壺:</span>
+                            <span id="badgeDragTongue" class="opacity-30">🍃龍脷葉</span>
+                            <span id="badgeLuoHan" class="opacity-30">🍈羅漢果</span>
+                            <span id="badgePlatycodon" class="opacity-30">🌸桔梗</span>
+                        </div>
+                    </div>
+
+                    <!-- Boiling Controls -->
+                    <div class="w-full mt-2 flex gap-2">
+                        <button id="btnHeatPot" class="flex-1 py-2 bg-amber-700/80 hover:bg-amber-600 text-amber-100 border border-amber-400/50 rounded-xl text-xs font-bold transition-all shadow cursor-pointer flex items-center justify-center gap-1">
+                            🔥 點火沸騰熬煮
+                        </button>
+                        <button id="btnServeTea" class="flex-1 py-2 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 border border-emerald-400/50 rounded-xl text-xs font-bold transition-all shadow cursor-pointer flex items-center justify-center gap-1">
+                            🍵 奉茶舒緩患病者
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Herbal Ingredients Selector & Patients List -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-amber-800/60 min-h-[300px]">
+                    <div>
+                        <h3 class="text-xs font-bold text-amber-300 border-b border-amber-800/60 pb-1.5 mb-2.5">🌿 點擊投入草藥至紫砂壺：</h3>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <!-- Ingredient 1: Dragon Tongue Leaf -->
+                            <div id="cardDragonTongue" class="ingredient-card p-2.5 bg-amber-950/70 border border-amber-500/50 rounded-xl flex flex-col items-center text-center">
+                                <span class="text-2xl mb-1">🍃</span>
+                                <span class="text-xs font-bold text-amber-200">龍脷葉</span>
+                                <span class="text-[9px] text-amber-400/80 mt-0.5">清肺止咳化痰</span>
+                            </div>
+
+                            <!-- Ingredient 2: Luo Han Guo -->
+                            <div id="cardLuoHan" class="ingredient-card p-2.5 bg-amber-950/70 border border-amber-500/50 rounded-xl flex flex-col items-center text-center">
+                                <span class="text-2xl mb-1">🍈</span>
+                                <span class="text-xs font-bold text-amber-200">羅漢果</span>
+                                <span class="text-[9px] text-amber-400/80 mt-0.5">潤肺生津甘甜</span>
+                            </div>
+
+                            <!-- Ingredient 3: Platycodon Root -->
+                            <div id="cardPlatycodon" class="ingredient-card p-2.5 bg-amber-950/70 border border-amber-500/50 rounded-xl flex flex-col items-center text-center">
+                                <span class="text-2xl mb-1">🌸</span>
+                                <span class="text-xs font-bold text-amber-200">桔梗</span>
+                                <span class="text-[9px] text-amber-400/80 mt-0.5">宣肺利咽排膿</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patients Throat Conditions Selection & Soothing Feedback -->
+                    <div class="bg-amber-950/80 p-3 rounded-xl border border-amber-600/50 text-xs leading-relaxed">
+                        <div class="font-bold text-amber-200 mb-1 flex items-center gap-1">
+                            <span>🩺 待救治咽喉患者診室：</span>
+                        </div>
+
+                        <div class="space-y-1.5 text-[11px]">
+                            <button class="patient-btn w-full text-left p-1.5 rounded-lg bg-amber-900/40 hover:bg-amber-900/80 border border-amber-700/50 flex justify-between items-center transition-all cursor-pointer" data-patient="0">
+                                <span>😷 <b>患者一：</b> 百日咳（陣發性痙攣咳嗽）</span>
+                                <span id="patientBadge0" class="text-[9px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded">咳嗽不止</span>
+                            </button>
+                            <button class="patient-btn w-full text-left p-1.5 rounded-lg bg-amber-900/40 hover:bg-amber-900/80 border border-amber-700/50 flex justify-between items-center transition-all cursor-pointer" data-patient="1">
+                                <span>🗣️ <b>患者二：</b> 急性喉炎（聲音嘶啞腫痛）</span>
+                                <span id="patientBadge1" class="text-[9px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded">喉痛嘶啞</span>
+                            </button>
+                            <button class="patient-btn w-full text-left p-1.5 rounded-lg bg-amber-900/40 hover:bg-amber-900/80 border border-amber-700/50 flex justify-between items-center transition-all cursor-pointer" data-patient="2">
+                                <span>😮‍💨 <b>患者三：</b> 肺熱痰多（咽喉乾燥積痰）</span>
+                                <span id="patientBadge2" class="text-[9px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded">痰多燥熱</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="brewResultTip" class="bg-amber-950/90 p-2.5 rounded-xl border border-amber-600/40 text-[11px] text-amber-200 text-center">
+                        💡 請依次放入<b>龍脷葉、羅漢果、桔梗</b>三味草藥，點火熬煮至香氣四溢後奉茶！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PHASE 2: PLANT CULTIVATION & CULTIVATION GUIDE (半陰與溫暖濕潤養護) -->
+        <section id="phaseCultivation" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-amber-300 text-glow-amber">【龍舌潤喉】龍脷葉半陰栽培心法</h1>
+                <p class="text-xs sm:text-sm text-amber-200/90 mt-1">「葉如龍舌喜半陰，夏季遮蔭防寒凍」── 體驗龍脷葉生長環境養護</p>
+            </div>
+
+            <div class="w-full max-w-3xl bg-amber-950/60 border border-amber-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl amber-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Plant Container & SVG Sauropus spatulifolius Visual -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-stone-900/90 p-4 rounded-2xl border border-amber-800/60 relative">
+                    <div id="plantContainer" class="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center overflow-hidden cursor-pointer border border-amber-700/40 rounded-xl bg-slate-950/80">
+                        <!-- Dynamic SVG Sauropus spatulifolius Plant Visual -->
+                    </div>
+
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span class="text-sm font-bold text-amber-300 font-calligraphy">龍脷葉（龍舌草）</span>
+                            <span id="plantStatusBadge" class="ml-2 text-[10px] bg-amber-900/90 text-amber-200 border border-amber-500/50 px-2 py-0.5 rounded-full">環境待調整</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-amber-300/80 block">植株健康度</span>
+                            <div class="w-24 h-2.5 bg-stone-800 rounded-full overflow-hidden border border-amber-600/40">
+                                <div id="plantHealthBar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-300 w-[30%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cultivation Guide & Interactive Care Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-amber-800/60 min-h-[260px]">
+                    <h3 class="text-sm font-bold text-amber-300 text-center border-b border-amber-800/60 pb-2">🍃 龍脷葉栽培指南與喜半陰特性</h3>
+
+                    <div class="space-y-2 text-xs">
+                        <!-- Action 1: Summer Partial Shade -->
+                        <button id="btnSummerShade" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">☂️</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">1. 夏季適當遮蔭（喜半陰）</div>
+                                    <div class="text-[10px] text-amber-400/80">避免強光直射致龍舌狀葉片灼傷枯黃</div>
+                                </div>
+                            </div>
+                            <span id="badgeShade" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">暴曬中</span>
+                        </button>
+
+                        <!-- Action 2: Warmth Keep Free from Cold -->
+                        <button id="btnKeepWarm" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🔥</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">2. 保持溫暖（不耐寒）</div>
+                                    <div class="text-[10px] text-amber-400/80">喜溫暖環境，冬季移入室內防霜凍</div>
+                                </div>
+                            </div>
+                            <span id="badgeWarm" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">環境偏冷</span>
+                        </button>
+
+                        <!-- Action 3: Moist Soil & Good Drainage -->
+                        <button id="btnMoistDrain" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">💧</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">3. 濕潤通暢（濕潤且排水）</div>
+                                    <div class="text-[10px] text-amber-400/80">保持土壤濕潤，且排水暢通防積水爛根</div>
+                                </div>
+                            </div>
+                            <span id="badgeDrain" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">土壤乾燥</span>
+                        </button>
+                    </div>
+
+                    <div id="plantCareResultTip" class="bg-amber-950/80 p-2 rounded-xl border border-amber-600/40 text-[11px] text-amber-200 text-center">
+                        請依次進行半陰遮蔭與保濕，養護葉形如龍舌之優美草藥！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-amber-950 border border-amber-500/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto amber-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-amber-400 hover:text-amber-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-amber-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-amber-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-800/80 border border-amber-400 flex items-center justify-center text-2xl">🍃</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-amber-200">龍脷葉（Sauropus spatulifolius）典籍</h2>
+                    <p class="text-xs text-amber-300/80">別名：龍舌葉、龍利葉、龍味葉、龍舌草</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-amber-100/90 leading-relaxed">
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🍃 形態特徵（葉形似龍舌）</h3>
+                    <p>大戟科守宮木屬常綠小灌木。葉互生，匙形或倒卵狀長橢圓形，<b>葉片平滑厚實，形似龍之舌頭（龍脷）</b>，故得名「龍脷葉」。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 性味功效（清肺止咳、化痰利咽）</h3>
+                    <p>味甘、淡，性平。歸肺、大腸經。功擅<b>清肺止咳、化痰利咽、潤燥通便</b>。嶺南民間常用於熬煮甜茶，對<b>百日咳、急性喉炎、支氣管炎、咽喉腫痛</b>有極佳療效。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植建議（喜半陰、溫暖濕潤、排水通暢）</h3>
+                    <p><b>喜半陰與溫暖環境</b>，不耐寒冷霜凍。夏季生長旺盛期需適當遮蔭，避免強光直射；養護時應<b>保持土壤濕潤但排水通暢</b>，防積水爛根。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">領悟龍脷葉潤喉利咽本草之道</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-amber-950/95 border border-amber-400 text-amber-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME ENGINE LOGIC -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playDropIngredient() {
+                this.init();
+                this.playTone(300, 0.15, 'sine', 0.2);
+                setTimeout(() => this.playTone(450, 0.2, 'triangle', 0.18), 70);
+            }
+            playBoiling() {
+                this.init();
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        this.playTone(200 + Math.random() * 250, 0.1, 'sine', 0.12);
+                    }, i * 90);
+                }
+            }
+            playServeTea() {
+                this.init();
+                this.playTone(523.25, 0.25, 'sine', 0.2); // C5
+                setTimeout(() => this.playTone(659.25, 0.3, 'sine', 0.2), 120); // E5
+                setTimeout(() => this.playTone(783.99, 0.4, 'sine', 0.25), 240); // G5
+            }
+            playSnap() {
+                this.init();
+                this.playTone(440, 0.1, 'triangle', 0.15);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        let state = {
+            score: 0,
+            patientsHealedCount: 0,
+            currentPhase: 'brewing', // 'brewing' | 'cultivation'
+            
+            // Teapot ingredients inside
+            ingredients: {
+                dragonTongue: false,
+                luoHan: false,
+                platycodon: false
+            },
+            isBoiling: false,
+            potTemperature: 25,
+            teaQuality: 0, // 0 to 100
+            selectedPatient: 0,
+            patientsHealed: [false, false, false],
+
+            // Cultivation states
+            summerShade: false,
+            keepWarm: false,
+            moistDrain: false,
+            plantHealth: 30
+        };
+
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+
+        function initBgParticles() {
+            bgParticles = [];
+            for (let i = 0; i < 35; i++) {
+                bgParticles.push({
+                    x: Math.random() * bgCanvas.width,
+                    y: Math.random() * bgCanvas.height,
+                    radius: 1.5 + Math.random() * 3.5,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: -0.3 - Math.random() * 0.5,
+                    alpha: 0.25 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function animateBgCanvas() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = bgCanvas.height;
+                if (p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
+
+                bgCtx.beginPath();
+                bgCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                bgCtx.fillStyle = `rgba(245, 158, 11, ${p.alpha})`;
+                bgCtx.fill();
+            });
+            requestAnimationFrame(animateBgCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            document.getElementById('progressText').innerText = `${state.patientsHealedCount} / 3`;
+        }
+
+        function setupBrewingEngine() {
+            // Add ingredients handlers
+            document.getElementById('cardDragonTongue').addEventListener('click', () => {
+                sound.playDropIngredient();
+                state.ingredients.dragonTongue = true;
+                document.getElementById('badgeDragTongue').classList.remove('opacity-30');
+                document.getElementById('badgeDragTongue').classList.add('font-bold', 'text-emerald-300');
+                showToast("🍃 投入【龍脷葉】：主清肺止咳、化痰利咽！", "🫖");
+                checkIngredientsStatus();
+            });
+
+            document.getElementById('cardLuoHan').addEventListener('click', () => {
+                sound.playDropIngredient();
+                state.ingredients.luoHan = true;
+                document.getElementById('badgeLuoHan').classList.remove('opacity-30');
+                document.getElementById('badgeLuoHan').classList.add('font-bold', 'text-amber-300');
+                showToast("🍈 投入【羅漢果】：生津潤肺、增加甘甜底韻！", "🫖");
+                checkIngredientsStatus();
+            });
+
+            document.getElementById('cardPlatycodon').addEventListener('click', () => {
+                sound.playDropIngredient();
+                state.ingredients.platycodon = true;
+                document.getElementById('badgePlatycodon').classList.remove('opacity-30');
+                document.getElementById('badgePlatycodon').classList.add('font-bold', 'text-purple-300');
+                showToast("🌸 投入【桔梗】：宣肺祛痰、利咽排膿！", "🫖");
+                checkIngredientsStatus();
+            });
+
+            // Fire heating button
+            document.getElementById('btnHeatPot').addEventListener('click', () => {
+                if (!state.ingredients.dragonTongue || !state.ingredients.luoHan || !state.ingredients.platycodon) {
+                    sound.playSnap();
+                    showToast("⚠️ 請先將三味草藥（龍脷葉、羅漢果、桔梗）齊全放入紫砂壺！", "💡");
+                    return;
+                }
+
+                sound.playBoiling();
+                state.isBoiling = true;
+                state.potTemperature = 100;
+                state.teaQuality = 100;
+
+                // Visual effects for stove flame & steam
+                document.getElementById('stoveFlame').classList.remove('opacity-0');
+                document.getElementById('stoveFlame').classList.add('opacity-100');
+                document.getElementById('steamContainer').classList.remove('opacity-30');
+                document.getElementById('steamContainer').classList.add('opacity-100');
+                document.getElementById('liquidGlow').setAttribute('opacity', '0.85');
+                document.getElementById('teapotSvg').classList.add('teapot-simmer');
+
+                document.getElementById('potTempText').innerText = "壺溫: 100°C (沸騰熬煮中)";
+                document.getElementById('brewResultTip').innerHTML = "✨ <b>文火慢燉中：</b>紫砂壺內濃郁草藥甘甜香氣湧出，龍脷潤喉甜茶已成功熬成！";
+
+                showToast("🔥 點火沸騰！龍脷葉潤喉甘甜茶熬製成功！", "🍵");
+            });
+
+            // Patient select logic
+            document.querySelectorAll('.patient-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sound.playSnap();
+                    state.selectedPatient = parseInt(btn.dataset.patient);
+                    showToast(`🩺 已選擇患者 ${state.selectedPatient + 1}，準備奉茶舒緩患處！`, "🍵");
+                });
+            });
+
+            // Serve Tea button
+            document.getElementById('btnServeTea').addEventListener('click', () => {
+                if (state.teaQuality < 80) {
+                    sound.playSnap();
+                    showToast("⚠️ 甜茶尚未沸騰熬透，請先點擊【🔥 點火沸騰熬煮】！", "🫖");
+                    return;
+                }
+
+                const pIdx = state.selectedPatient;
+                if (state.patientsHealed[pIdx]) {
+                    sound.playServeTea();
+                    showToast("✨ 此患者咽喉已獲得龍脷葉甜茶舒緩治癒！", "❤️️");
+                    return;
+                }
+
+                sound.playServeTea();
+                state.patientsHealed[pIdx] = true;
+                state.patientsHealedCount++;
+                state.score += 300;
+                updateHeaderUI();
+
+                const badge = document.getElementById(`patientBadge${pIdx}`);
+                badge.className = "text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded font-bold";
+                badge.innerText = "✨ 咽喉舒暢";
+
+                const patientNames = ["百日咳患者", "急性喉炎患者", "肺熱積痰患者"];
+                showToast(`🍵 奉上龍脷葉潤喉甜茶！${patientNames[pIdx]}咽喉獲得顯著舒緩！`, "❤️");
+
+                // Check all healed
+                if (state.patientsHealedCount >= 3) {
+                    showToast("🎉 太棒了！您已成功運用龍脷葉甜茶治癒所有咽喉患者！", "🏆");
+                }
+            });
+        }
+
+        function checkIngredientsStatus() {
+            if (state.ingredients.dragonTongue && state.ingredients.luoHan && state.ingredients.platycodon) {
+                document.getElementById('brewResultTip').innerHTML = "💡 <b>三味藥材已齊全！</b>請點擊【🔥 點火沸騰熬煮】啟動紫砂壺煎煮！";
+            }
+        }
+
+        function renderPlant() {
+            const container = document.getElementById('plantContainer');
+            let leafScale = state.summerShade ? '1.2' : '0.85';
+            let leafColor = state.summerShade ? '#15803d' : '#854d0e'; // Green vs scorched
+            let moistSoil = state.moistDrain ? '#451a03' : '#1c0a00';
+
+            container.innerHTML = `
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Garden Soil Pot -->
+                    <polygon points="20,90 80,90 86,62 14,62" fill="${moistSoil}"/>
+                    <ellipse cx="50" cy="62" rx="36" ry="8" fill="#291003"/>
+
+                    <!-- Summer Partial Shade Umbrella Visual -->
+                    ${state.summerShade ? `
+                        <path d="M 15 22 Q 50 8 85 22 L 50 22 Z" fill="#b45309" opacity="0.8"/>
+                        <line x1="50" y1="22" x2="50" y2="60" stroke="#78350f" stroke-width="2" stroke-dasharray="2 2"/>
+                    ` : ''}
+
+                    <!-- Central Sauropus spatulifolius (龍脷葉 - Tongue Shaped Leaves) -->
+                    <g transform="translate(50, 62) scale(${leafScale})">
+                        <!-- Stems (小灌木木質化莖) -->
+                        <path d="M 0 0 C -8 -15 -12 -28 -15 -42" stroke="#78350f" stroke-width="3" fill="none"/>
+                        <path d="M 0 0 C 8 -15 12 -28 15 -42" stroke="#78350f" stroke-width="3" fill="none"/>
+                        <path d="M 0 0 C 0 -18 0 -35 0 -50" stroke="#92400e" stroke-width="3.5" fill="none"/>
+
+                        <!-- Tongue Shaped Leaves (匙形像龍舌) -->
+                        <path d="M -15 -25 C -32 -28 -38 -12 -25 -5 C -15 -8 -8 -15 -15 -25 Z" fill="${leafColor}"/>
+                        <path d="M 15 -25 C 32 -28 38 -12 25 -5 C 15 -8 8 -15 15 -25 Z" fill="${leafColor}"/>
+
+                        <path d="M -12 -40 C -30 -45 -34 -25 -20 -18 C -10 -20 -6 -30 -12 -40 Z" fill="#22c55e"/>
+                        <path d="M 12 -40 C 30 -45 34 -25 20 -18 C 10 -20 6 -30 12 -40 Z" fill="#22c55e"/>
+
+                        <!-- Top Spatulate Leaf (匙形龍舌葉) -->
+                        <path d="M 0 -50 C -16 -62 -12 -72 0 -72 C 12 -72 16 -62 0 -50 Z" fill="#4ade80"/>
+                    </g>
+
+                    <!-- Moist & Drainage drops -->
+                    ${state.moistDrain ? `
+                        <circle cx="28" cy="65" r="1.5" fill="#38bdf8" opacity="0.8"/>
+                        <circle cx="72" cy="65" r="1.5" fill="#38bdf8" opacity="0.8"/>
+                    ` : ''}
+                </svg>
+            `;
+
+            document.getElementById('plantHealthBar').style.width = `${state.plantHealth}%`;
+            const badge = document.getElementById('plantStatusBadge');
+            if (state.plantHealth >= 100) {
+                badge.className = "ml-2 text-[10px] bg-amber-400 text-slate-950 font-bold border border-amber-200 px-2 py-0.5 rounded-full animate-bounce";
+                badge.innerText = "✨ 龍舌茂密 · 潤喉優雅";
+            } else if (state.plantHealth >= 60) {
+                badge.className = "ml-2 text-[10px] bg-amber-800 text-amber-200 border border-amber-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "🍃 蓬勃生長中";
+            }
+        }
+
+        function setupCultivationEvents() {
+            document.getElementById('btnSummerShade').addEventListener('click', () => {
+                sound.playSnap();
+                state.summerShade = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeShade').className = "text-[10px] bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeShade').innerText = "☂️ 已遮蔭";
+                showToast("☂️ 夏季適度遮蔭！保護龍舌狀葉片免於暴曬！", "✨");
+                renderPlant();
+            });
+
+            document.getElementById('btnKeepWarm').addEventListener('click', () => {
+                sound.playSnap();
+                state.keepWarm = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeWarm').className = "text-[10px] bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeWarm').innerText = "🔥 溫暖適宜";
+                showToast("🔥 保持環境溫暖！預防霜凍寒害！", "🍃");
+                renderPlant();
+            });
+
+            document.getElementById('btnMoistDrain').addEventListener('click', () => {
+                sound.playSnap();
+                state.moistDrain = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 20);
+                document.getElementById('badgeDrain').className = "text-[10px] bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeDrain').innerText = "💧 濕潤通暢";
+                showToast("💧 保持土壤濕潤且排水通暢！根系舒暢發育！", "🌸");
+                renderPlant();
+            });
+        }
+
+        function setupPhaseToggle() {
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                sound.playSnap();
+                if (state.currentPhase === 'brewing') {
+                    state.currentPhase = 'cultivation';
+                    document.getElementById('phaseBrewing').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('hidden');
+                    document.getElementById('phaseCultivation').classList.add('flex');
+                    document.getElementById('phaseBtnLabel').innerText = "返回【煮茶配方師：熬製潤喉甜茶】 🫖";
+                    renderPlant();
+                } else {
+                    state.currentPhase = 'brewing';
+                    document.getElementById('phaseCultivation').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('flex');
+                    document.getElementById('phaseBrewing').classList.remove('hidden');
+                    document.getElementById('phaseBtnLabel').innerText = "前往【半陰養護：龍脷葉種植】 🍃";
+                }
+            });
+        }
+
+        function setupExtraControls() {
+            // Codex Modal Controls
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playServeTea();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+        }
+
+        window.onload = function() {
+            resizeBgCanvas();
+            initBgParticles();
+            animateBgCanvas();
+
+            setupBrewingEngine();
+            setupCultivationEvents();
+            setupPhaseToggle();
+            setupExtraControls();
+
+            window.addEventListener('resize', resizeBgCanvas);
+        };
+    </script>
+</body>
+</html>

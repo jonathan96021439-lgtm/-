@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第二十一關：蝶豆花【幻彩琉璃】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #060919;
+      color: #e0e7ff;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border-indigo {
+      border: 2px solid #6366f1;
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .pulse-indigo-glow {
+      animation: butterflyPulse 2.5s infinite alternate;
+    }
+
+    @keyframes butterflyPulse {
+      0% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+      100% { box-shadow: 0 0 35px rgba(168, 85, 247, 0.8); }
+    }
+
+    /* Custom Color Transition Glow Filter */
+    .color-glow {
+      filter: drop-shadow(0px 0px 12px currentColor);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-slate-950/95 text-indigo-100">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center border-b border-indigo-900/60 pb-3 mb-2 gap-2">
+    <div>
+      <span class="text-indigo-400 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第二十一關（完結篇）</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-indigo-300">蝶豆花 ── 【幻彩琉璃】</h1>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button id="tab-ph" onclick="switchMode('ph')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-indigo-800 text-indigo-100 hover:bg-indigo-700 transition shadow border border-indigo-500/50 font-bold">
+        🧪 酸鹼變色實驗
+      </button>
+      <button id="tab-trellis" onclick="switchMode('trellis')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-slate-900 text-indigo-300 hover:bg-slate-800 transition border border-indigo-950">
+        🌿 攀援搭架與每日採收
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-indigo-950/80 text-indigo-200 hover:bg-indigo-900 border border-indigo-700/60">
+        📜 本草典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Interactive Display Container -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- MODE 1: pH COLOR CHANGING LABORATORY -->
+    <div id="sec-ph" class="w-full flex flex-col items-center gap-3">
+      <!-- Submode / Status Header -->
+      <div class="w-full flex justify-between items-center bg-slate-900/90 px-4 py-2 rounded-xl border border-indigo-800/50 text-xs sm:text-sm gap-2">
+        <div class="flex gap-2 items-center">
+          <span class="text-indigo-300 font-semibold">🧪 酸鹼值 (pH):</span>
+          <span id="ph-meter" class="text-blue-400 font-bold text-base sm:text-lg">7.0 (中性)</span>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="text-indigo-300 font-semibold hidden sm:inline">花青素狀態:</span>
+          <span id="molecule-state" class="text-xs bg-indigo-950/80 px-2 py-1 rounded border border-indigo-700 text-indigo-200">藍色醌型陰離子 (A⁻)</span>
+        </div>
+        <button onclick="resetPhLab()" class="px-2.5 py-1 bg-indigo-950 hover:bg-indigo-900 text-indigo-200 rounded-lg border border-indigo-700 text-xs">
+          🔄 重新沖泡
+        </button>
+      </div>
+
+      <!-- Interactive Tea Cup Canvas -->
+      <div class="relative w-full aspect-[4/3] max-h-[380px] bg-slate-950 rounded-2xl overflow-hidden ink-border-indigo flex flex-col items-center justify-center">
+        <canvas id="phCanvas" class="w-full h-full cursor-pointer"></canvas>
+        
+        <!-- Instruction Banner -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 px-4 py-1.5 rounded-full border border-indigo-600/60 text-indigo-200 text-xs backdrop-blur-md text-center shadow-lg">
+          💡 點擊或拖曳下方檸檬汁/酸鹼試劑滴入茶杯，觀察蝶豆花水溶液極速變色！
+        </div>
+
+        <!-- Additives Bar Overlay -->
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/90 p-2 rounded-xl border border-indigo-700/60 backdrop-blur-md flex flex-wrap justify-center gap-2 text-xs items-center max-w-[95%]">
+          <button onclick="addAcid('lemon')" class="px-2.5 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-slate-950 rounded-lg font-bold shadow transition flex items-center gap-1">
+            🍋 擠檸檬汁 (-pH 1.0)
+          </button>
+          <button onclick="addAcid('lime')" class="px-2.5 py-1.5 bg-lime-600 hover:bg-lime-500 text-slate-950 rounded-lg font-bold shadow transition flex items-center gap-1">
+            🍈 滴青檸汁 (-pH 0.6)
+          </button>
+          <button onclick="addAdditive('soda')" class="px-2.5 py-1.5 bg-cyan-800 hover:bg-cyan-700 text-cyan-100 rounded-lg font-bold shadow transition flex items-center gap-1">
+            🫧 加氣泡水 (加微泡)
+          </button>
+          <button onclick="addAdditive('honey')" class="px-2.5 py-1.5 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg font-bold shadow transition flex items-center gap-1">
+            🍯 加蜂蜜 (分層沉澱)
+          </button>
+        </div>
+      </div>
+
+      <!-- Scientific Explanation Box -->
+      <div class="w-full bg-slate-900/80 p-3 rounded-xl border border-indigo-900/50 text-xs text-indigo-200 leading-relaxed text-center">
+        <strong class="text-indigo-400">科學原理：</strong>蝶豆花富含高濃度<strong class="text-blue-300">花青素 (Anthocyanin)</strong>。水溶液在中性 (pH 7) 時呈天然寶藍色；當加入酸性汁液 (pH &lt; 5) 時，花青素分子結構發生質子化，轉變為陽離子陽極結構，顏色隨之轉變為夢幻的<strong class="text-purple-300">紫羅蘭色</strong>與<strong class="text-fuchsia-300">艷麗品紅/粉紫色</strong>！
+      </div>
+    </div>
+
+    <!-- MODE 2: TRELLIS VINE CARE & HARVEST -->
+    <div id="sec-trellis" class="hidden w-full flex-col items-center gap-3">
+      <div class="w-full bg-slate-900/90 p-3 rounded-xl border border-indigo-800/50 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm">
+        <div class="flex gap-3">
+          <span>網架狀態: <strong id="trellis-status" class="text-amber-400 font-bold">未架設搭架</strong></span>
+          <span>盛開藍花: <strong id="flower-count" class="text-blue-400 font-bold">0 朵</strong></span>
+          <span>採收總量: <strong id="harvest-score" class="text-indigo-300 font-bold">0 朵</strong></span>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-build-trellis" onclick="buildTrellis()" class="px-3 py-1.5 bg-indigo-900 hover:bg-indigo-800 text-indigo-100 rounded-xl border border-indigo-500 text-xs font-bold shadow transition pulse-indigo-glow">
+            🪜 搭建攀援攀爬網架
+          </button>
+          <button onclick="waterTrellis()" class="px-3 py-1.5 bg-cyan-900 hover:bg-cyan-800 text-cyan-100 rounded-xl border border-cyan-600 text-xs font-bold shadow transition">
+            ☀️ 灌溉與高溫強光
+          </button>
+          <button onclick="resetTrellisGame()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-600 text-xs font-bold shadow transition">
+            🔄 重置藤本園
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[400px] bg-slate-950 rounded-2xl overflow-hidden ink-border-indigo flex flex-col items-center justify-center">
+        <canvas id="trellisCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 px-4 py-1.5 rounded-full border border-indigo-700/60 text-indigo-300 text-xs backdrop-blur-md text-center">
+          🌸 蝶豆花喜高溫強光！先搭建網架引導蔓藤攀援，並點擊採收盛開的深藍蝶花！
+        </div>
+      </div>
+
+      <div class="w-full bg-slate-900/80 p-3 rounded-xl border border-indigo-900/50 text-xs text-indigo-200 leading-relaxed text-center">
+        💡 <strong class="text-indigo-300">栽培指南：</strong> 蝶豆花（Clitoria ternatea）屬豆科蝶形花亞科攀援藤本植物。性喜陽光充足與高溫環境。必須<strong class="text-indigo-200">搭建竹架或網架</strong>供其蔓藤攀爬，並於每日清晨至午後<strong class="text-indigo-200">及時採收新鮮盛開花朵</strong>以作花茶曬乾貯藏。
+      </div>
+    </div>
+
+    <!-- Dynamic Tip Banner Overlay -->
+    <div id="tip-banner" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-indigo-950/95 border border-indigo-400/80 px-4 py-2 rounded-xl text-xs text-indigo-100 backdrop-blur-md text-center max-w-md shadow-2xl transition-all z-40">
+      <span id="tip-text"></span>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-indigo-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-slate-400 hover:text-indigo-400 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-indigo-300 mb-4 border-b border-indigo-800 pb-2">蝶豆花 (Butterfly Pea) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-slate-300">
+        <div>
+          <h3 class="text-indigo-400 font-semibold mb-1">🦋 形態特徵與花青素：</h3>
+          <p class="leading-relaxed">
+            蝶形花科攀援藤本植物，花朵呈獨特深藍色，形似羽翼展翅之藍蝶。富含極高濃度之水溶性<strong class="text-indigo-200">花青素 (Anthocyanins)</strong>，具優異之抗氧化功效。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-indigo-400 font-semibold mb-1">🧪 幻彩變色與生活應用：</h3>
+          <p class="leading-relaxed">
+            蝶豆花水溶液本身為亮藍色。當加入檸檬、青檸或酸梅等酸性物質時，酸鹼度 (pH) 下降，花青素分子結構質子化，水溶液會瞬間轉變為極具視覺震撼的<strong class="text-purple-300">夢幻紫紅色</strong>，廣泛應用於天然星空飲料與糕點著色。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-indigo-400 font-semibold mb-1">🌱 栽培要領與攀援管理：</h3>
+          <p class="leading-relaxed">
+            喜強烈陽光與高溫氣候，耐熱耐旱。生長期需<strong class="text-indigo-200">搭設支持網架</strong>引導蔓藤攀爬向上。建議於盛花期每日採收新開花朵，可鮮用或低溫烘乾保存。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-indigo-700 hover:bg-indigo-600 text-indigo-100 rounded-lg text-sm font-bold shadow transition">
+          領悟草本園終章·返回體驗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------------------------------------------
+       AUDIO SYNTHESIZER (Web Audio API)
+    ------------------------------------------------------------- */
+    class SoundSynthesizer {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playDrip() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+
+      playChime() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const now = this.ctx.currentTime;
+        [659.25, 830.61, 987.77, 1318.51].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.3);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.3);
+        });
+      }
+
+      playPick() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playBuild() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const now = this.ctx.currentTime;
+        for (let i = 0; i < 3; i++) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(150 + i * 80, now + i * 0.07);
+          gain.gain.setValueAtTime(0.08, now + i * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.06);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.07);
+          osc.stop(now + i * 0.07 + 0.06);
+        }
+      }
+    }
+
+    const sound = new SoundSynthesizer();
+
+    /* -------------------------------------------------------------
+       GLOBAL APP STATE
+    ------------------------------------------------------------- */
+    let currentMode = 'ph'; // 'ph' or 'trellis'
+
+    const phCanvas = document.getElementById('phCanvas');
+    const phCtx = phCanvas.getContext('2d');
+    const trellisCanvas = document.getElementById('trellisCanvas');
+    const trellisCtx = trellisCanvas.getContext('2d');
+
+    /* -------------------------------------------------------------
+       MODE 1: pH COLOR LAB LOGIC
+    ------------------------------------------------------------- */
+    let currentPH = 7.0;
+    let targetPH = 7.0;
+    let phBubbles = [];
+    let liquidColor = { r: 30, g: 64, b: 175 }; // Deep Indigo Blue at pH 7
+    let honeyLevel = 0;
+    let acidDrops = [];
+
+    function resetPhLab() {
+      sound.playChime();
+      currentPH = 7.0;
+      targetPH = 7.0;
+      honeyLevel = 0;
+      phBubbles = [];
+      acidDrops = [];
+      updatePhMeterUI();
+      showTip("🍵 重新沖泡！還原極致湛藍蝶豆花茶。");
+    }
+
+    function addAcid(type) {
+      sound.playDrip();
+      const dec = type === 'lemon' ? 1.0 : 0.6;
+      targetPH = Math.max(2.5, targetPH - dec);
+      
+      // Spawn drop animation
+      const w = phCanvas.width || 600;
+      acidDrops.push({
+        x: w / 2 + (Math.random() * 40 - 20),
+        y: 50,
+        vy: 4,
+        color: type === 'lemon' ? '#facc15' : '#84cc16'
+      });
+
+      if (type === 'lemon') showTip("🍋 滴入酸性檸檬汁！pH值下降，花青素發生質子化！");
+      else showTip("🍈 滴入青檸汁！色澤逐漸轉向浪漫紫羅蘭色！");
+    }
+
+    function addAdditive(type) {
+      if (type === 'soda') {
+        sound.playDrip();
+        for (let i = 0; i < 25; i++) {
+          phBubbles.push({
+            x: (phCanvas.width / 2) + (Math.random() * 100 - 50),
+            y: (phCanvas.height * 0.65) + Math.random() * 40,
+            r: Math.random() * 4 + 2,
+            vy: -Math.random() * 2 - 1,
+            alpha: 0.8
+          });
+        }
+        showTip("🫧 加入氣泡水！產生微小碳酸氣泡，口感更佳！");
+      } else if (type === 'honey') {
+        sound.playDrip();
+        honeyLevel = Math.min(100, honeyLevel + 25);
+        showTip("🍯 加入黃金蜂蜜！形成比重較高之天然金黃底層！");
+      }
+    }
+
+    function updatePhMeterUI() {
+      const meter = document.getElementById('ph-meter');
+      const state = document.getElementById('molecule-state');
+      
+      const phVal = currentPH.toFixed(1);
+      if (currentPH > 6.0) {
+        meter.innerText = `${phVal} (中性)`;
+        meter.className = "text-blue-400 font-bold text-base sm:text-lg";
+        state.innerText = "藍色醌型陰離子 (A⁻)";
+      } else if (currentPH > 4.2) {
+        meter.innerText = `${phVal} (微酸性)`;
+        meter.className = "text-purple-400 font-bold text-base sm:text-lg";
+        state.innerText = "中性假鹼結構 / 偏紫羅蘭態";
+      } else {
+        meter.innerText = `${phVal} (強酸性)`;
+        meter.className = "text-fuchsia-400 font-bold text-base sm:text-lg";
+        state.innerText = "紅色黃酮陽離子 (AH⁺)";
+      }
+    }
+
+    // Interpolate Color based on pH
+    function getPhColor(ph) {
+      // pH 7.0: Deep Blue (30, 64, 175)
+      // pH 4.5: Royal Purple (107, 33, 168)
+      // pH 2.5: Magenta Red (192, 38, 211)
+      let r, g, b;
+      if (ph >= 5.0) {
+        const t = (7.0 - ph) / 2.0;
+        r = 30 + (107 - 30) * t;
+        g = 64 + (33 - 64) * t;
+        b = 175 + (168 - 175) * t;
+      } else {
+        const t = (5.0 - ph) / 2.5;
+        r = 107 + (192 - 107) * t;
+        g = 33 + (38 - 33) * t;
+        b = 168 + (211 - 168) * t;
+      }
+      return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
+    }
+
+    function renderPhLabScene() {
+      const w = phCanvas.width;
+      const h = phCanvas.height;
+      if (!w || !h) return;
+
+      // Smooth pH Transition
+      if (Math.abs(currentPH - targetPH) > 0.02) {
+        currentPH += (targetPH - currentPH) * 0.05;
+        updatePhMeterUI();
+        if (Math.abs(currentPH - targetPH) < 0.1) sound.playChime();
+      }
+
+      liquidColor = getPhColor(currentPH);
+
+      phCtx.clearRect(0, 0, w, h);
+
+      // Laboratory Aesthetic Background
+      const bg = phCtx.createRadialGradient(w/2, h/2, 40, w/2, h/2, w);
+      bg.addColorStop(0, '#0c102b');
+      bg.addColorStop(1, '#050714');
+      phCtx.fillStyle = bg;
+      phCtx.fillRect(0, 0, w, h);
+
+      const cupX = w / 2;
+      const cupY = h * 0.58;
+      const cupW = 160;
+      const cupH = 180;
+
+      // Cup Shadow
+      phCtx.beginPath();
+      phCtx.ellipse(cupX, cupY + cupH / 2 + 10, cupW * 0.6, 20, 0, 0, Math.PI * 2);
+      phCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      phCtx.fill();
+
+      // Glass Teacup Liquid Layer
+      const liquidY = cupY - cupH / 4;
+      phCtx.save();
+      phCtx.beginPath();
+      phCtx.moveTo(cupX - cupW / 2 + 10, cupY - cupH / 2);
+      phCtx.lineTo(cupX + cupW / 2 - 10, cupY - cupH / 2);
+      phCtx.lineTo(cupX + cupW / 2 - 25, cupY + cupH / 2);
+      phCtx.bezierCurveTo(cupX + 20, cupY + cupH / 2 + 15, cupX - 20, cupY + cupH / 2 + 15, cupX - cupW / 2 + 25, cupY + cupH / 2);
+      phCtx.closePath();
+      phCtx.clip();
+
+      // Liquid Gradient
+      const liqGrad = phCtx.createLinearGradient(0, cupY - cupH/2, 0, cupY + cupH/2);
+      liqGrad.addColorStop(0, `rgb(${liquidColor.r}, ${liquidColor.g}, ${liquidColor.b})`);
+      liqGrad.addColorStop(1, `rgb(${Math.max(0, liquidColor.r - 30)}, ${Math.max(0, liquidColor.g - 30)}, ${Math.max(0, liquidColor.b - 30)})`);
+      phCtx.fillStyle = liqGrad;
+      phCtx.fillRect(cupX - cupW, cupY - cupH, cupW * 2, cupH * 2);
+
+      // Honey Layer at Bottom
+      if (honeyLevel > 0) {
+        phCtx.fillStyle = 'rgba(217, 119, 6, 0.75)';
+        phCtx.fillRect(cupX - cupW, cupY + cupH / 2 - (honeyLevel * 0.4), cupW * 2, honeyLevel * 0.4);
+      }
+
+      // Soda Bubbles Inside Liquid
+      phBubbles.forEach((b, idx) => {
+        b.y += b.vy;
+        b.alpha -= 0.008;
+        if (b.alpha > 0 && b.y > cupY - cupH / 2) {
+          phCtx.beginPath();
+          phCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          phCtx.fillStyle = `rgba(255, 255, 255, ${b.alpha})`;
+          phCtx.fill();
+        } else {
+          phBubbles.splice(idx, 1);
+        }
+      });
+
+      phCtx.restore();
+
+      // Glass Teacup Outline & Highlights
+      phCtx.beginPath();
+      phCtx.moveTo(cupX - cupW / 2, cupY - cupH / 2);
+      phCtx.lineTo(cupX + cupW / 2, cupY - cupH / 2);
+      phCtx.lineTo(cupX + cupW / 2 - 20, cupY + cupH / 2);
+      phCtx.bezierCurveTo(cupX + 20, cupY + cupH / 2 + 20, cupX - 20, cupY + cupH / 2 + 20, cupX - cupW / 2 + 20, cupY + cupH / 2);
+      phCtx.closePath();
+      phCtx.strokeStyle = 'rgba(165, 180, 252, 0.6)';
+      phCtx.lineWidth = 4;
+      phCtx.stroke();
+
+      // Teacup Handle
+      phCtx.beginPath();
+      phCtx.arc(cupX + cupW / 2 + 10, cupY, 30, -Math.PI * 0.4, Math.PI * 0.4);
+      phCtx.strokeStyle = 'rgba(165, 180, 252, 0.5)';
+      phCtx.lineWidth = 5;
+      phCtx.stroke();
+
+      // Falling Acid Drops Animation
+      acidDrops.forEach((drop, idx) => {
+        drop.y += drop.vy;
+        phCtx.beginPath();
+        phCtx.arc(drop.x, drop.y, 6, 0, Math.PI * 2);
+        phCtx.fillStyle = drop.color;
+        phCtx.fill();
+
+        if (drop.y >= cupY - cupH / 4) {
+          acidDrops.splice(idx, 1);
+          // Ripple effect
+          for (let i = 0; i < 8; i++) {
+            phBubbles.push({
+              x: drop.x + (Math.random() * 20 - 10),
+              y: cupY - cupH / 4 + 10,
+              r: 2 + Math.random() * 3,
+              vy: Math.random() * 2,
+              alpha: 0.9
+            });
+          }
+        }
+      });
+    }
+
+    /* -------------------------------------------------------------
+       MODE 2: TRELLIS VINE CARE & HARVEST LOGIC
+    ------------------------------------------------------------- */
+    let isTrellisBuilt = false;
+    let flowers = [];
+    let harvestScore = 0;
+    let vineGrowth = 0.2; // 0.2 to 1.0
+
+    function initTrellisGame() {
+      isTrellisBuilt = false;
+      harvestScore = 0;
+      vineGrowth = 0.2;
+      flowers = [];
+      document.getElementById('trellis-status').innerText = '未架設搭架';
+      document.getElementById('flower-count').innerText = '0 朵';
+      document.getElementById('harvest-score').innerText = '0 朵';
+      renderTrellisScene();
+    }
+
+    function resetTrellisGame() {
+      sound.playPick();
+      initTrellisGame();
+      showTip("🔄 重新重置藤本園區。");
+    }
+
+    function buildTrellis() {
+      if (isTrellisBuilt) return;
+      isTrellisBuilt = true;
+      sound.playBuild();
+      document.getElementById('trellis-status').innerText = '✨ 網架已完備';
+      showTip("🪜 攀援網架搭建完成！引導蝴蝶豆藤本迅速向上爬攀！");
+      
+      // Grow vines and spawn flowers
+      vineGrowth = 1.0;
+      spawnFlowers();
+      renderTrellisScene();
+    }
+
+    function waterTrellis() {
+      sound.playPick();
+      if (!isTrellisBuilt) {
+        showTip("⚠️ 請先點擊【搭建攀援網架】，供藤本爬攀生長！");
+        return;
+      }
+      spawnFlowers();
+      showTip("☀️ 充足陽光與水份！誘發更多新一代蝶豆花盛開！");
+      renderTrellisScene();
+    }
+
+    function spawnFlowers() {
+      const w = trellisCanvas.width || 600;
+      const h = trellisCanvas.height || 400;
+
+      for (let i = 0; i < 4; i++) {
+        flowers.push({
+          id: Date.now() + Math.random(),
+          x: w * 0.2 + Math.random() * (w * 0.6),
+          y: h * 0.25 + Math.random() * (h * 0.45),
+          r: 16 + Math.random() * 6,
+          harvested: false
+        });
+      }
+      updateFlowerUI();
+    }
+
+    function updateFlowerUI() {
+      const active = flowers.filter(f => !f.harvested).length;
+      document.getElementById('flower-count').innerText = `${active} 朵`;
+      document.getElementById('harvest-score').innerText = `${harvestScore} 朵`;
+    }
+
+    function renderTrellisScene() {
+      const w = trellisCanvas.width;
+      const h = trellisCanvas.height;
+      if (!w || !h) return;
+
+      trellisCtx.clearRect(0, 0, w, h);
+
+      // Outdoor Garden Background
+      const bg = trellisCtx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#0f172a');
+      bg.addColorStop(0.7, '#090d16');
+      bg.addColorStop(1, '#030508');
+      trellisCtx.fillStyle = bg;
+      trellisCtx.fillRect(0, 0, w, h);
+
+      // Sun Glow
+      trellisCtx.beginPath();
+      trellisCtx.arc(w * 0.8, h * 0.18, 50, 0, Math.PI * 2);
+      trellisCtx.fillStyle = 'rgba(251, 191, 36, 0.15)';
+      trellisCtx.fill();
+
+      // Soil Bed
+      trellisCtx.fillStyle = '#1c1917';
+      trellisCtx.fillRect(0, h * 0.82, w, h * 0.18);
+
+      // Trellis Netting Structure (If built)
+      if (isTrellisBuilt) {
+        trellisCtx.strokeStyle = '#475569';
+        trellisCtx.lineWidth = 3;
+
+        // Wooden Main Posts
+        [w * 0.15, w * 0.5, w * 0.85].forEach(x => {
+          trellisCtx.beginPath();
+          trellisCtx.moveTo(x, h * 0.85);
+          trellisCtx.lineTo(x, h * 0.15);
+          trellisCtx.stroke();
+        });
+
+        // Grid Lines
+        trellisCtx.lineWidth = 1;
+        trellisCtx.strokeStyle = '#334155';
+        for (let x = w * 0.15; x <= w * 0.85; x += 30) {
+          trellisCtx.beginPath();
+          trellisCtx.moveTo(x, h * 0.85);
+          trellisCtx.lineTo(x, h * 0.15);
+          trellisCtx.stroke();
+        }
+        for (let y = h * 0.15; y <= h * 0.85; y += 30) {
+          trellisCtx.beginPath();
+          trellisCtx.moveTo(w * 0.15, y);
+          trellisCtx.lineTo(w * 0.85, y);
+          trellisCtx.stroke();
+        }
+      }
+
+      // Climbing Vine Tendrils & Leaves
+      trellisCtx.strokeStyle = '#15803d';
+      trellisCtx.lineWidth = 4;
+      trellisCtx.beginPath();
+      trellisCtx.moveTo(w * 0.2, h * 0.82);
+      trellisCtx.quadraticCurveTo(w * 0.35, h * 0.5, w * 0.5, h * (0.85 - vineGrowth * 0.65));
+      trellisCtx.quadraticCurveTo(w * 0.65, h * 0.4, w * 0.8, h * (0.85 - vineGrowth * 0.6));
+      trellisCtx.stroke();
+
+      // Leaves
+      if (isTrellisBuilt) {
+        for (let x = w * 0.22; x <= w * 0.78; x += 40) {
+          drawLeaf(trellisCtx, x, h * 0.3 + Math.sin(x) * 60, 12);
+        }
+      }
+
+      // Butterfly Pea Flowers
+      flowers.forEach(flower => {
+        if (!flower.harvested) {
+          drawButterflyPeaFlower(trellisCtx, flower.x, flower.y, flower.r);
+        }
+      });
+    }
+
+    function drawLeaf(ctx, x, y, size) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size, size / 2, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#16a34a';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawButterflyPeaFlower(ctx, x, y, r) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Deep Blue Wing Petal Shape
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
+      grad.addColorStop(0, '#60a5fa');
+      grad.addColorStop(0.3, '#1d4ed8');
+      grad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Golden Center Core
+      ctx.beginPath();
+      ctx.ellipse(0, r * 0.2, r * 0.25, r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#fef08a';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Harvest Click Detection
+    trellisCanvas.addEventListener('click', (e) => {
+      if (!isTrellisBuilt) return;
+      const rect = trellisCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      flowers.forEach(flower => {
+        if (!flower.harvested && Math.hypot(flower.x - mx, flower.y - my) < flower.r + 10) {
+          flower.harvested = true;
+          harvestScore++;
+          sound.playPick();
+          updateFlowerUI();
+          showTip("🌸 成功採收鮮艷蝶豆花！花青素養份極致豐富！");
+          renderTrellisScene();
+        }
+      });
+    });
+
+    /* -------------------------------------------------------------
+       NAVIGATION & UI CONTROLS
+    ------------------------------------------------------------- */
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('sec-ph').classList.toggle('hidden', mode !== 'ph');
+      document.getElementById('sec-trellis').classList.toggle('hidden', mode !== 'trellis');
+
+      document.getElementById('tab-ph').className = mode === 'ph' ?
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-indigo-800 text-indigo-100 hover:bg-indigo-700 transition shadow border border-indigo-500/50 font-bold' :
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-slate-900 text-indigo-300 hover:bg-slate-800 transition border border-indigo-950';
+
+      document.getElementById('tab-trellis').className = mode === 'trellis' ?
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-indigo-800 text-indigo-100 hover:bg-indigo-700 transition shadow border border-indigo-500/50 font-bold' :
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-slate-900 text-indigo-300 hover:bg-slate-800 transition border border-indigo-950';
+
+      resizeAllCanvases();
+      if (mode === 'ph') resetPhLab();
+      else if (mode === 'trellis') initTrellisGame();
+    }
+
+    function showTip(text) {
+      const banner = document.getElementById('tip-banner');
+      const tipText = document.getElementById('tip-text');
+      tipText.innerText = text;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3500);
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    function resizeAllCanvases() {
+      [phCanvas, trellisCanvas].forEach(c => {
+        if (c && c.parentElement) {
+          c.width = c.parentElement.clientWidth;
+          c.height = c.parentElement.clientHeight;
+        }
+      });
+      if (currentMode === 'ph') renderPhLabScene();
+      else renderTrellisScene();
+    }
+
+    window.addEventListener('resize', resizeAllCanvases);
+
+    // Animation Render Loop
+    function mainLoop() {
+      if (currentMode === 'ph') renderPhLabScene();
+      requestAnimationFrame(mainLoop);
+    }
+
+    window.onload = () => {
+      resizeAllCanvases();
+      switchMode('ph');
+      requestAnimationFrame(mainLoop);
+    };
+  </script>
+</body>
+</html>

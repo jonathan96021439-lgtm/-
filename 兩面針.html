@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第十七關：兩面針【雙面神牙】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #0c0a09;
+      color: #f5ebe0;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #a38147;
+      box-shadow: 0 0 25px rgba(163, 129, 71, 0.25);
+    }
+
+    .pain-pulse {
+      animation: pulsePain 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulsePain {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #ef4444); }
+    }
+
+    .grind-shake {
+      animation: shakeMortar 0.15s infinite alternate;
+    }
+
+    @keyframes shakeMortar {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      100% { transform: translate(-2px, -1px) rotate(-2deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-stone-950">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center border-b border-amber-900/60 pb-3 mb-2 gap-2">
+    <div>
+      <span class="text-amber-500 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第十七關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-amber-300">兩面針 ── 【雙面神牙】</h1>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button id="tab-prickle" onclick="switchMode('prickle')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50">
+        🔍 雙面銳刺
+      </button>
+      <button id="tab-relief" onclick="switchMode('relief')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700">
+        🦷 牙痛急救
+      </button>
+      <button id="tab-vine" onclick="switchMode('vine')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700">
+        🪜 攀援搭架
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-950/80 text-amber-200 hover:bg-amber-800 border border-amber-700/60">
+        📜 典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Display Canvas & Controls Stage -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- MODE 1: DUAL-SIDED PRICKLE INSPECTION -->
+    <div id="sec-prickle" class="w-full flex flex-col items-center gap-3">
+      <div class="w-full flex justify-between items-center bg-stone-900/90 px-4 py-2 rounded-xl border border-amber-900/50 text-xs sm:text-sm">
+        <span class="text-amber-300 font-semibold">🔍 發現雙面中脈銳刺：<span id="prickle-count" class="text-emerald-400 font-bold text-base">0</span> / 6</span>
+        <button onclick="flipLeaf()" class="px-3 py-1 bg-amber-900/90 hover:bg-amber-800 text-amber-100 rounded-lg border border-amber-500 font-bold text-xs transition">
+          🔄 翻轉葉片 (<span id="leaf-side-text">正面</span>)
+        </button>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[440px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex items-center justify-center">
+        <canvas id="prickleCanvas" class="w-full h-full cursor-pointer"></canvas>
+        
+        <!-- Instruction Banner Overlay -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/80 px-4 py-1.5 rounded-full border border-amber-700/60 text-stone-200 text-xs backdrop-blur-md">
+          💡 點擊葉片中脈正反面上的<strong class="text-amber-300">隱密銳刺</strong> (正面3處 / 反面3處)
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/70 p-3 rounded-xl border border-stone-800 text-xs text-stone-300 leading-relaxed text-center">
+        <strong class="text-amber-400">特徵解析：</strong>兩面針（Zanthoxylum nitidum）屬芸香科藤本植物，最顯著特徵為<strong class="text-amber-200">葉片正反面中脈均長有勾狀銳刺</strong>，故得名「兩面針」。
+      </div>
+    </div>
+
+    <!-- MODE 2: TOOTHACHE INSTANT PAIN RELIEF -->
+    <div id="sec-relief" class="hidden w-full flex-col items-center gap-3">
+      <div class="w-full bg-stone-900/90 p-3 rounded-xl border border-amber-900/50 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div class="text-xs sm:text-sm">
+          <span class="text-amber-400 font-semibold">患者牙痛急症：</span>
+          <span id="pain-status-text" class="text-red-400 font-bold">劇烈腫痛 (100%)</span>
+        </div>
+        <!-- Pain Gauge Bar -->
+        <div class="w-full sm:w-64 bg-stone-950 rounded-full h-3 border border-amber-900/60 overflow-hidden">
+          <div id="pain-bar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full w-full transition-all duration-500"></div>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[420px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex flex-col items-center justify-center p-4">
+        <canvas id="reliefCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+        <!-- Interactive Clinical Action Control Bar -->
+        <div class="absolute bottom-4 flex gap-3">
+          <button id="btn-grind" onclick="doGrindHerb()" class="px-4 py-2 bg-amber-900/90 hover:bg-amber-800 text-amber-100 rounded-xl border border-amber-500 text-xs sm:text-sm font-bold shadow-lg transition flex items-center gap-1.5">
+            🥣 搗爛兩面針 (進度 <span id="grind-progress">0</span>%)
+          </button>
+          <button id="btn-apply" onclick="doApplyToothpaste()" disabled class="px-4 py-2 bg-stone-800 text-stone-500 rounded-xl border border-stone-700 text-xs sm:text-sm font-bold shadow-lg cursor-not-allowed transition flex items-center gap-1.5">
+            🦷 敷用牙痛止痛膏
+          </button>
+        </div>
+      </div>
+
+      <div id="relief-explanation" class="w-full bg-stone-900/80 p-3 rounded-xl border border-amber-900/50 text-xs text-stone-300 leading-relaxed text-center">
+        💡 <strong class="text-amber-300">藥用原理：</strong> 兩面針根葉含有<strong class="text-amber-200">兩面針鹼 (Zanthoxypine)</strong>，具強效活血化瘀、行氣止痛及麻醉鎮痛作用，廣泛用於現代護牙止痛牙膏中。
+      </div>
+    </div>
+
+    <!-- MODE 3: CLIMBING TRELLIS & VISITOR SAFETY CARE -->
+    <div id="sec-vine" class="hidden w-full flex-col items-center gap-3">
+      <div class="relative w-full aspect-[4/3] max-h-[420px] bg-stone-950 rounded-2xl overflow-hidden ink-border">
+        <canvas id="vineCanvas" class="w-full h-full"></canvas>
+
+        <div id="vine-status-banner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-amber-700/60 text-amber-300 text-xs backdrop-blur-md">
+          🌱 狀態：幼苗待攀援搭架
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 w-full">
+        <button onclick="vineCare('trellis')" class="py-2.5 px-2 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          🪜 搭建攀援架
+        </button>
+        <button onclick="vineCare('sun')" class="py-2.5 px-2 bg-amber-950/80 hover:bg-amber-900 text-amber-200 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          ☀️ 溫暖全日照
+        </button>
+        <button onclick="vineCare('sign')" class="py-2.5 px-2 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          ⚠️ 設置防刺警示牌
+        </button>
+      </div>
+
+      <div id="vine-feedback" class="text-xs text-amber-400 font-semibold h-4 text-center"></div>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-amber-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-amber-400 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-amber-300 mb-4 border-b border-amber-800 pb-2">兩面針 (Zanthoxylum nitidum) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌿 雙面鋸齒銳刺特徵：</h3>
+          <p class="leading-relaxed">
+            木質藤本植物，莖枝與葉片均具鉤狀刺。羽狀複葉，最獨特處在於<strong class="text-amber-200">葉片正反兩面的中脈上均生有彎曲的銳利皮刺</strong>，故稱「兩面針」或「雙面神牙」。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🦷 藥用價值與牙痛聖藥：</h3>
+          <p class="leading-relaxed">
+            性溫，味苦、辛。功效包括<strong class="text-amber-200">活血化瘀、行氣止痛、祛風通絡、解毒消腫</strong>。主治牙痛、胃痛、跌打損傷及風濕骨痛。其有效成分兩面針鹼為知名止痛牙膏之核心防護原料。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌱 草本園栽務與安全建議：</h3>
+          <p class="leading-relaxed">
+            喜溫暖濕潤與陽光充足環境。屬攀援藤本，需搭設牢固攀援竹架或沿墻根栽種。因全株具銳刺，草本園展示時<strong class="text-amber-200">必須設立安全警示牌及適度修剪護欄</strong>，避免參觀學生受傷。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm font-bold shadow transition">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Engine & Game Scripting -->
+  <script>
+    class SoundSynthesizer {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playPrickleFound() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.08); // E5
+        osc.frequency.setValueAtTime(783.99, this.ctx.currentTime + 0.16); // G5
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      }
+
+      playFlip() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      }
+
+      playGrind() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110 + Math.random() * 40, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+
+      playSoothe() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      }
+    }
+
+    const sound = new SoundSynthesizer();
+
+    // Mode 1: Prickle Spotting Data
+    let leafSide = 'front'; // 'front' | 'back'
+    let foundPrickles = { front: [false, false, false], back: [false, false, false] };
+
+    const prickleLocations = {
+      front: [
+        { x: 0.38, y: 0.32, radius: 24 },
+        { x: 0.50, y: 0.50, radius: 24 },
+        { x: 0.62, y: 0.68, radius: 24 }
+      ],
+      back: [
+        { x: 0.32, y: 0.28, radius: 24 },
+        { x: 0.48, y: 0.48, radius: 24 },
+        { x: 0.68, y: 0.72, radius: 24 }
+      ]
+    };
+
+    // Mode 2: Relief Data
+    let grindProgress = 0;
+    let painLevel = 100;
+    let isGrinding = false;
+
+    // Mode 3: Vine Trellis Data
+    let vineState = { trellis: false, sun: false, sign: false };
+
+    // Canvas Elements
+    const prickleCanvas = document.getElementById('prickleCanvas');
+    const prickleCtx = prickleCanvas.getContext('2d');
+    const reliefCanvas = document.getElementById('reliefCanvas');
+    const reliefCtx = reliefCanvas.getContext('2d');
+    const vineCanvas = document.getElementById('vineCanvas');
+    const vineCtx = vineCanvas.getContext('2d');
+
+    function resizeAllCanvases() {
+      [prickleCanvas, reliefCanvas, vineCanvas].forEach(c => {
+        if (c && c.parentElement) {
+          c.width = c.parentElement.clientWidth;
+          c.height = c.parentElement.clientHeight;
+        }
+      });
+      renderPrickleScene();
+      renderReliefScene();
+      renderVineScene();
+    }
+    window.addEventListener('resize', resizeAllCanvases);
+
+    /* -------------------------------------------------------------
+       MODE 1: PRICKLE SPOTTING
+    ------------------------------------------------------------- */
+    function flipLeaf() {
+      leafSide = leafSide === 'front' ? 'back' : 'front';
+      document.getElementById('leaf-side-text').innerText = leafSide === 'front' ? '正面' : '反面';
+      sound.playFlip();
+      renderPrickleScene();
+    }
+
+    function renderPrickleScene() {
+      const w = prickleCanvas.width;
+      const h = prickleCanvas.height;
+      if (!w || !h) return;
+
+      prickleCtx.clearRect(0, 0, w, h);
+
+      // Background Ink Texture
+      prickleCtx.fillStyle = '#14100c';
+      prickleCtx.fillRect(0, 0, w, h);
+
+      // Leaf Base Contour
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+
+      prickleCtx.save();
+      prickleCtx.translate(cx, cy);
+      prickleCtx.rotate(leafSide === 'front' ? -0.2 : 0.2);
+
+      // Draw Main Leaf Body
+      prickleCtx.beginPath();
+      prickleCtx.moveTo(-w * 0.3, -h * 0.28);
+      prickleCtx.quadraticCurveTo(0, -h * 0.42, w * 0.32, -h * 0.22);
+      prickleCtx.quadraticCurveTo(w * 0.42, 0, w * 0.28, h * 0.32);
+      prickleCtx.quadraticCurveTo(0, h * 0.42, -w * 0.3, h * 0.22);
+      prickleCtx.quadraticCurveTo(-w * 0.4, 0, -w * 0.3, -h * 0.28);
+
+      prickleCtx.fillStyle = leafSide === 'front' ? '#2e4a21' : '#22381a';
+      prickleCtx.fill();
+      prickleCtx.strokeStyle = '#a38147';
+      prickleCtx.lineWidth = 3;
+      prickleCtx.stroke();
+
+      // Serrated Margins Teeth
+      for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const rx = Math.cos(angle) * (w * 0.32);
+        const ry = Math.sin(angle) * (h * 0.32);
+        prickleCtx.beginPath();
+        prickleCtx.arc(rx, ry, 3, 0, Math.PI * 2);
+        prickleCtx.fillStyle = '#162b11';
+        prickleCtx.fill();
+      }
+
+      // Main Central Midrib (葉片中脈)
+      prickleCtx.beginPath();
+      prickleCtx.moveTo(-w * 0.32, -h * 0.28);
+      prickleCtx.quadraticCurveTo(0, 0, w * 0.3, h * 0.3);
+      prickleCtx.strokeStyle = leafSide === 'front' ? '#85704d' : '#a38147';
+      prickleCtx.lineWidth = 6;
+      prickleCtx.stroke();
+
+      // Side Veins
+      for (let i = -3; i <= 3; i++) {
+        const offset = i * 40;
+        prickleCtx.beginPath();
+        prickleCtx.moveTo(offset, offset * 0.5);
+        prickleCtx.lineTo(offset + 35, offset * 0.5 - 25);
+        prickleCtx.moveTo(offset, offset * 0.5);
+        prickleCtx.lineTo(offset - 25, offset * 0.5 + 30);
+        prickleCtx.strokeStyle = 'rgba(163, 129, 71, 0.3)';
+        prickleCtx.lineWidth = 2;
+        prickleCtx.stroke();
+      }
+
+      prickleCtx.restore();
+
+      // Render Sharp Midrib Prickles (正反面中脈銳刺)
+      const locs = prickleLocations[leafSide];
+      const foundList = foundPrickles[leafSide];
+
+      locs.forEach((loc, idx) => {
+        const px = loc.x * w;
+        const py = loc.y * h;
+        const isFound = foundList[idx];
+
+        // Sharp Hook Spike Shape
+        prickleCtx.save();
+        prickleCtx.translate(px, py);
+        prickleCtx.rotate(0.3 + idx * 0.2);
+
+        prickleCtx.beginPath();
+        prickleCtx.moveTo(-6, 8);
+        prickleCtx.quadraticCurveTo(0, -12, 12, -18); // Hook tip
+        prickleCtx.quadraticCurveTo(4, 0, 8, 12);
+        prickleCtx.closePath();
+
+        prickleCtx.fillStyle = isFound ? '#ef4444' : '#d97706';
+        prickleCtx.fill();
+        prickleCtx.strokeStyle = '#fef08a';
+        prickleCtx.lineWidth = 2;
+        prickleCtx.stroke();
+
+        // Glowing Found Indicator
+        if (isFound) {
+          prickleCtx.beginPath();
+          prickleCtx.arc(0, 0, loc.radius, 0, Math.PI * 2);
+          prickleCtx.strokeStyle = '#22c55e';
+          prickleCtx.lineWidth = 3;
+          prickleCtx.setLineDash([4, 4]);
+          prickleCtx.stroke();
+        }
+
+        prickleCtx.restore();
+      });
+    }
+
+    prickleCanvas.addEventListener('click', (e) => {
+      const rect = prickleCanvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const w = prickleCanvas.width;
+      const h = prickleCanvas.height;
+
+      const locs = prickleLocations[leafSide];
+      const foundList = foundPrickles[leafSide];
+
+      locs.forEach((loc, idx) => {
+        const px = loc.x * w;
+        const py = loc.y * h;
+        const dist = Math.hypot(cx - px, cy - py);
+
+        if (dist <= loc.radius && !foundList[idx]) {
+          foundList[idx] = true;
+          sound.playPrickleFound();
+          updatePrickleProgress();
+          renderPrickleScene();
+        }
+      });
+    });
+
+    function updatePrickleProgress() {
+      const totalFound = foundPrickles.front.filter(Boolean).length + foundPrickles.back.filter(Boolean).length;
+      document.getElementById('prickle-count').innerText = totalFound;
+    }
+
+    /* -------------------------------------------------------------
+       MODE 2: TOOTHACHE RELIEF TASK
+    ------------------------------------------------------------- */
+    function doGrindHerb() {
+      if (grindProgress < 100) {
+        grindProgress += 20;
+        sound.playGrind();
+        document.getElementById('grind-progress').innerText = grindProgress;
+
+        const btnGrind = document.getElementById('btn-grind');
+        btnGrind.classList.add('grind-shake');
+        setTimeout(() => btnGrind.classList.remove('grind-shake'), 150);
+
+        if (grindProgress >= 100) {
+          const btnApply = document.getElementById('btn-apply');
+          btnApply.disabled = false;
+          btnApply.className = "px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 rounded-xl border border-emerald-500 text-xs sm:text-sm font-bold shadow-lg transition flex items-center gap-1.5 cursor-pointer";
+        }
+        renderReliefScene();
+      }
+    }
+
+    function doApplyToothpaste() {
+      if (grindProgress >= 100 && painLevel > 0) {
+        sound.playSoothe();
+        painLevel = 0;
+
+        document.getElementById('pain-bar').style.width = '0%';
+        document.getElementById('pain-status-text').innerText = "完全舒緩痛楚 (0%)";
+        document.getElementById('pain-status-text').className = "text-emerald-400 font-bold";
+
+        document.getElementById('relief-explanation').innerHTML = "🎉 <strong class='text-amber-300'>急救成功！</strong> 兩面針特有生物鹼顯著麻醉牙齦神經，舒緩腫痛！現代知名「兩面針牙膏」即衍生自此古方。";
+
+        renderReliefScene();
+      }
+    }
+
+    function renderReliefScene() {
+      const w = reliefCanvas.width;
+      const h = reliefCanvas.height;
+      if (!w || !h) return;
+
+      reliefCtx.clearRect(0, 0, w, h);
+
+      // Background
+      reliefCtx.fillStyle = '#17120e';
+      reliefCtx.fillRect(0, 0, w, h);
+
+      // Patient Face Profile
+      const fx = w * 0.32;
+      const fy = h * 0.5;
+
+      // Cheek Contour
+      reliefCtx.beginPath();
+      reliefCtx.arc(fx, fy, 65, 0, Math.PI * 2);
+      reliefCtx.fillStyle = painLevel > 0 ? '#451a1a' : '#2d3728';
+      reliefCtx.fill();
+      reliefCtx.strokeStyle = painLevel > 0 ? '#ef4444' : '#22c55e';
+      reliefCtx.lineWidth = 3;
+      reliefCtx.stroke();
+
+      // Pain Swelling Cheek Highlight
+      if (painLevel > 0) {
+        reliefCtx.beginPath();
+        reliefCtx.arc(fx + 25, fy + 15, 30, 0, Math.PI * 2);
+        reliefCtx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+        reliefCtx.fill();
+
+        // Pain Emoji Particle
+        reliefCtx.font = '24px sans-serif';
+        reliefCtx.fillText('⚡ ⚡', fx + 35, fy - 15);
+        reliefCtx.fillText('😣 牙痛中...', fx - 40, fy - 80);
+      } else {
+        reliefCtx.font = '24px sans-serif';
+        reliefCtx.fillText('✨ 😃 痛楚全消！', fx - 50, fy - 80);
+
+        // Green Soothing Aura
+        reliefCtx.beginPath();
+        reliefCtx.arc(fx + 25, fy + 15, 32, 0, Math.PI * 2);
+        reliefCtx.fillStyle = 'rgba(34, 197, 94, 0.35)';
+        reliefCtx.fill();
+      }
+
+      // Mortar & Pestle (搗藥缽)
+      const mx = w * 0.72;
+      const my = h * 0.58;
+
+      // Mortar Bowl
+      reliefCtx.beginPath();
+      reliefCtx.arc(mx, my, 45, 0, Math.PI);
+      reliefCtx.fillStyle = '#292524';
+      reliefCtx.fill();
+      reliefCtx.strokeStyle = '#78716c';
+      reliefCtx.lineWidth = 4;
+      reliefCtx.stroke();
+
+      // Ground Paste Content
+      if (grindProgress > 0) {
+        reliefCtx.beginPath();
+        reliefCtx.arc(mx, my + 10, (grindProgress / 100) * 35, 0, Math.PI);
+        reliefCtx.fillStyle = '#4d7c0f';
+        reliefCtx.fill();
+      }
+
+      // Pestle Stick
+      reliefCtx.save();
+      reliefCtx.translate(mx + 10, my - 20);
+      reliefCtx.rotate(-0.4);
+      reliefCtx.fillStyle = '#a8a29e';
+      reliefCtx.fillRect(-8, -35, 16, 60);
+      reliefCtx.restore();
+    }
+
+    /* -------------------------------------------------------------
+       MODE 3: CLIMBING TRELLIS & VISITOR SAFETY
+    ------------------------------------------------------------- */
+    function vineCare(action) {
+      const fb = document.getElementById('vine-feedback');
+      const banner = document.getElementById('vine-status-banner');
+
+      if (action === 'trellis') {
+        vineState.trellis = true;
+        fb.innerText = "🪜 搭建竹質攀援架，為兩面針藤本蔓延提供支撐！";
+      } else if (action === 'sun') {
+        vineState.sun = true;
+        fb.innerText = "☀️ 提供充足溫暖日光，加速兩面針旺盛抽枝生長！";
+      } else if (action === 'sign') {
+        vineState.sign = true;
+        fb.innerText = "⚠️ 設置防刺警告牌與草本防護欄，保障草本園參觀者安全！";
+      }
+
+      if (vineState.trellis && vineState.sun && vineState.sign) {
+        banner.innerText = "🎉 狀態：雙面神牙繁茂攀援 · 參觀防護完善";
+        banner.className = "absolute top-3 left-1/2 -translate-x-1/2 bg-emerald-900/90 px-4 py-1.5 rounded-full border border-emerald-500 text-emerald-200 text-xs backdrop-blur-md font-bold";
+      }
+
+      renderVineScene();
+    }
+
+    function renderVineScene() {
+      const w = vineCanvas.width;
+      const h = vineCanvas.height;
+      if (!w || !h) return;
+
+      vineCtx.clearRect(0, 0, w, h);
+
+      // Garden Soil Background
+      vineCtx.fillStyle = '#130e0a';
+      vineCtx.fillRect(0, 0, w, h);
+
+      // Trellis Frame (若已搭建)
+      if (vineState.trellis) {
+        vineCtx.strokeStyle = '#856434';
+        vineCtx.lineWidth = 4;
+
+        // Vertical Bamboo Poles
+        for (let x = w * 0.25; x <= w * 0.75; x += w * 0.12) {
+          vineCtx.beginPath();
+          vineCtx.moveTo(x, h * 0.2);
+          vineCtx.lineTo(x, h * 0.85);
+          vineCtx.stroke();
+        }
+        // Horizontal Bars
+        for (let y = h * 0.25; y <= h * 0.8; y += h * 0.15) {
+          vineCtx.beginPath();
+          vineCtx.moveTo(w * 0.22, y);
+          vineCtx.lineTo(w * 0.78, y);
+          vineCtx.stroke();
+        }
+      }
+
+      // Vine Stem Growth
+      vineCtx.beginPath();
+      vineCtx.moveTo(w * 0.5, h * 0.85);
+      if (vineState.trellis) {
+        vineCtx.quadraticCurveTo(w * 0.4, h * 0.5, w * 0.6, h * 0.25);
+      } else {
+        vineCtx.quadraticCurveTo(w * 0.48, h * 0.75, w * 0.52, h * 0.7);
+      }
+      vineCtx.strokeStyle = vineState.sun ? '#65a30d' : '#3f6212';
+      vineCtx.lineWidth = vineState.sun ? 8 : 5;
+      vineCtx.stroke();
+
+      // Prickled Leaf Clusters along Vine
+      if (vineState.trellis) {
+        for (let i = 0; i < (vineState.sun ? 8 : 4); i++) {
+          const ly = h * 0.75 - i * 35;
+          const lx = w * 0.5 + (i % 2 === 0 ? 25 : -25);
+
+          vineCtx.beginPath();
+          vineCtx.arc(lx, ly, 12, 0, Math.PI * 2);
+          vineCtx.fillStyle = '#4d7c0f';
+          vineCtx.fill();
+
+          // Tiny Prickle Spike Highlight
+          vineCtx.beginPath();
+          vineCtx.moveTo(lx, ly);
+          vineCtx.lineTo(lx + 6, ly - 8);
+          vineCtx.strokeStyle = '#ef4444';
+          vineCtx.lineWidth = 2;
+          vineCtx.stroke();
+        }
+      }
+
+      // Safety Sign (若已設置)
+      if (vineState.sign) {
+        const sx = w * 0.82;
+        const sy = h * 0.65;
+
+        // Wooden Post
+        vineCtx.fillStyle = '#57534e';
+        vineCtx.fillRect(sx - 3, sy, 6, 50);
+
+        // Yellow Warning Board
+        vineCtx.fillStyle = '#eab308';
+        vineCtx.fillRect(sx - 30, sy - 35, 60, 35);
+        vineCtx.strokeStyle = '#000';
+        vineCtx.lineWidth = 2;
+        vineCtx.strokeRect(sx - 30, sy - 35, 60, 35);
+
+        vineCtx.fillStyle = '#000';
+        vineCtx.font = 'bold 10px sans-serif';
+        vineCtx.fillText('⚠️ 有刺', sx - 20, sy - 20);
+        vineCtx.fillText('請勿觸摸', sx - 22, sy - 8);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       NAVIGATION & MODAL TOGGLE
+    ------------------------------------------------------------- */
+    function switchMode(mode) {
+      document.getElementById('sec-prickle').classList.toggle('hidden', mode !== 'prickle');
+      document.getElementById('sec-relief').classList.toggle('hidden', mode !== 'relief');
+      document.getElementById('sec-vine').classList.toggle('hidden', mode !== 'vine');
+
+      const tabs = ['prickle', 'relief', 'vine'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === mode) {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50 font-bold";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700";
+        }
+      });
+
+      if (mode === 'prickle') renderPrickleScene();
+      else if (mode === 'relief') renderReliefScene();
+      else if (mode === 'vine') renderVineScene();
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup Initializer
+    window.onload = () => {
+      resizeAllCanvases();
+      switchMode('prickle');
+    };
+  </script>
+</body>
+</html>

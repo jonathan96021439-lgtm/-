@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>明愛聖若瑟中學 AI 智慧中草藥園監控與管理系統</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for trends graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts Inter & Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            botanical: {
+              gold: '#d97706',
+              bg: '#f8faf9',
+              card: '#ffffff',
+              dark: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #f1f5f9;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .badge-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between custom-scrollbar">
+
+  <!-- Top Navigation / Header -->
+  <header class="bg-gradient-to-r from-emerald-950 via-emerald-800 to-teal-900 text-white shadow-xl sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        
+        <!-- School Identity -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner shrink-0">
+            <i class="fa-solid fa-seedling text-emerald-300 text-2xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-xl font-black tracking-tight text-white">明愛聖若瑟中學</h1>
+              <span class="bg-emerald-500/30 text-emerald-200 text-xs px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-medium">
+                Caritas St. Joseph Secondary School
+              </span>
+            </div>
+            <p class="text-xs text-emerald-100/90 flex items-center gap-2 mt-0.5 flex-wrap">
+              <span class="font-bold text-amber-300"><i class="fa-solid fa-microchip text-emerald-400 mr-1"></i>AI 智慧中草藥園監控與管理系統</span>
+              <span>•</span>
+              <span class="text-emerald-200"><i class="fa-solid fa-location-dot text-amber-400 mr-1"></i>香港青衣邨楓樹窩道10號 (室外中草藥園區)</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Right System Info & Live Time -->
+        <div class="flex items-center justify-between lg:justify-end gap-4 border-t lg:border-t-0 border-emerald-700/50 pt-2 lg:pt-0">
+          <div class="text-left lg:text-right">
+            <div id="liveClock" class="text-sm font-bold tracking-wider font-mono text-emerald-200">2026-09-30 14:30:00</div>
+            <div class="text-xs text-emerald-300/90 flex items-center gap-1.5 justify-start lg:justify-end mt-0.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 badge-pulse"></span>
+              <span>探測器陣列: 連線正常 (21/21 盆栽連線)</span>
+            </div>
+          </div>
+          <button onclick="toggleAiAssistantModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-1.5 shrink-0 hover:scale-105">
+            <i class="fa-solid fa-robot text-sm"></i>
+            <span>問問 AI 草園小助手</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-grow w-full">
+
+    <!-- Climate Scenario Controller Bar -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white rounded-2xl p-4 shadow-xl border border-emerald-500/30">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0">
+            <i class="fa-solid fa-cloud-sun-rain text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-amber-300 flex items-center gap-2">
+              氣候情境模擬 - 即時天氣環境切換器
+              <span class="text-[11px] bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded border border-amber-500/40 font-normal">測試 AI 即時應變</span>
+            </h2>
+            <p class="text-xs text-slate-300 mt-0.5">點擊預設情境，模擬青衣極端天氣，驗證 21 種中草藥盆栽探測器與 AI 自動灌溉響應：</p>
+          </div>
+        </div>
+
+        <!-- Simulation Preset Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="applyPreset('tsingyi')" id="btn-preset-tsingyi" class="preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-emerald-600 border-emerald-400 text-white transition hover:bg-emerald-500 shadow-md">
+            <i class="fa-solid fa-cloud-sun text-amber-300 mr-1"></i> 青衣實時微氣候
+          </button>
+          <button onclick="applyPreset('hot')" id="btn-preset-hot" class="preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-slate-800 border-slate-700 text-slate-300 transition hover:bg-slate-700">
+            <i class="fa-solid fa-sun text-amber-400 mr-1"></i> 酷熱晴天 (34.5°C/38%)
+          </button>
+          <button onclick="applyPreset('rain')" id="btn-preset-rain" class="preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-slate-800 border-slate-700 text-slate-300 transition hover:bg-slate-700">
+            <i class="fa-solid fa-cloud-showers-heavy text-blue-400 mr-1"></i> 颱風暴雨 (22.8°C/94%)
+          </button>
+          <button onclick="applyPreset('dry')" id="btn-preset-dry" class="preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-slate-800 border-slate-700 text-slate-300 transition hover:bg-slate-700">
+            <i class="fa-solid fa-wind text-orange-400 mr-1"></i> 乾燥秋風 (21.0°C/32%)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outdoor Microclimate Weather Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      
+      <!-- Metric 1: Temperature -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-amber-500">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>室外環境氣溫</span>
+          <i class="fa-solid fa-temperature-three-quarters text-amber-500 text-base"></i>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metric-temp" class="text-2xl font-black text-slate-800">27.8</span>
+          <span class="text-xs font-semibold text-slate-600">°C</span>
+        </div>
+        <p id="sub-temp" class="text-[11px] text-emerald-600 font-medium mt-1">適宜植物正常生長</p>
+      </div>
+
+      <!-- Metric 2: Air Humidity -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-blue-500">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>相對大氣濕度</span>
+          <i class="fa-solid fa-droplet text-blue-500 text-base"></i>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metric-humidity" class="text-2xl font-black text-slate-800">72</span>
+          <span class="text-xs font-semibold text-slate-600">%</span>
+        </div>
+        <p id="sub-humidity" class="text-[11px] text-blue-600 font-medium mt-1">濕度良好，保持通風</p>
+      </div>
+
+      <!-- Metric 3: Solar Lux -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-yellow-500">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>戶外光照強度</span>
+          <i class="fa-solid fa-sun text-yellow-500 text-base"></i>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metric-lux" class="text-2xl font-black text-slate-800">45,500</span>
+          <span class="text-xs font-semibold text-slate-600">Lux</span>
+        </div>
+        <p id="sub-lux" class="text-[11px] text-amber-600 font-medium mt-1">UV 指數: <span id="metric-uv">5 (中等)</span></p>
+      </div>
+
+      <!-- Metric 4: Wind Speed -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-teal-500">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>青衣園區風速</span>
+          <i class="fa-solid fa-wind text-teal-500 text-base"></i>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metric-wind" class="text-2xl font-black text-slate-800">11.8</span>
+          <span class="text-xs font-semibold text-slate-600">km/h</span>
+        </div>
+        <p id="sub-wind" class="text-[11px] text-teal-600 font-medium mt-1">和風 (東南風 3級)</p>
+      </div>
+
+      <!-- Metric 5: Soil Moisture Avg -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-emerald-500">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>21盆平均土壤濕度</span>
+          <i class="fa-solid fa-spa text-emerald-600 text-base"></i>
+        </div>
+        <div class="flex items-baseline gap-1">
+          <span id="metric-soil" class="text-2xl font-black text-slate-800">60.5</span>
+          <span class="text-xs font-semibold text-slate-600">%</span>
+        </div>
+        <p id="sub-soil" class="text-[11px] text-emerald-600 font-medium mt-1">水分充足，根系健康</p>
+      </div>
+
+      <!-- Metric 6: Weather Condition -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-sm hover:shadow-md transition border-l-4 border-indigo-500 bg-indigo-50/20">
+        <div class="flex items-center justify-between text-slate-500 text-xs mb-1">
+          <span>天氣狀態概況</span>
+          <i id="weather-icon" class="fa-solid fa-cloud-sun text-indigo-600 text-base"></i>
+        </div>
+        <div class="text-base font-bold text-slate-800 truncate mt-1" id="metric-condition">
+          青衣局部晴朗
+        </div>
+        <p class="text-[11px] text-indigo-600 font-medium mt-1">天文台數據實時同步</p>
+      </div>
+
+    </div>
+
+    <!-- AI Decision Engine & Suggestions Card -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- AI Irrigation Control Center (2 Cols) -->
+      <div class="lg:col-span-2 glass-card rounded-2xl p-5 shadow-md border border-emerald-100 flex flex-col justify-between">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-md shrink-0">
+                <i class="fa-solid fa-brain text-lg"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                  AI 智慧灌溉與氣候決策中心
+                  <span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                    21 盆數據即時運算
+                  </span>
+                </h3>
+                <p class="text-xs text-slate-500">實時監測土壤含水量、蒸發速率與香港天文台預報</p>
+              </div>
+            </div>
+
+            <!-- Mode Switch -->
+            <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+              <span class="text-xs font-bold text-slate-600 pl-2">AI 模式:</span>
+              <button id="aiModeAuto" onclick="setAiMode(true)" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition">全自動</button>
+              <button id="aiModeManual" onclick="setAiMode(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">手動</button>
+            </div>
+          </div>
+
+          <!-- Dynamic AI Irrigation Callout Box -->
+          <div id="aiAdviceBox" class="bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <div class="flex items-start gap-3">
+              <div class="text-emerald-700 text-2xl mt-0.5 shrink-0">
+                <i class="fa-solid fa-faucet-drip"></i>
+              </div>
+              <div class="space-y-1.5 flex-1">
+                <div class="flex items-center justify-between flex-wrap gap-1">
+                  <h4 class="font-bold text-emerald-950 text-sm" id="aiAdviceTitle">AI 灑水決策：【暫無需自動灑水】</h4>
+                  <span id="aiAdviceBadge" class="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">土壤濕度適中</span>
+                </div>
+                <p id="aiAdviceDetail" class="text-xs text-slate-700 leading-relaxed">
+                  當前青衣室外相對濕度為 <strong class="text-emerald-800">72%</strong>，21 種中草藥盆栽平均土壤濕度為 <strong class="text-emerald-800">60.5%</strong>。蒸發率低，多數植物（如蘆薈、龍舌蘭、艾草）水分充沛。建議維持當前狀態，防止過度澆水引致爛根。
+                </p>
+                <div class="pt-1 flex flex-wrap gap-4 text-xs text-slate-600 font-mono border-t border-emerald-200/60 mt-2">
+                  <span>建議灌溉總量: <strong id="aiWaterVol" class="text-slate-800">0.0 L/m²</strong></span>
+                  <span>最佳灑水時機: <strong id="aiWaterTime" class="text-slate-800">今日傍晚 18:30</strong></span>
+                  <span>蒸散失水風險: <strong id="aiEvapRisk" class="text-emerald-700">低 (Low)</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Automated System Action Buttons -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+              <span>一鍵執行草園自動化響應控制：</span>
+              <span class="text-[11px] font-normal text-slate-500">（全園 21 盆連動）</span>
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button onclick="triggerAction('watering')" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-shower text-emerald-600"></i>
+                <span>啟動微噴灌</span>
+              </button>
+              <button onclick="triggerAction('shade')" class="p-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl border border-blue-200 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-umbrella text-blue-600"></i>
+                <span>展開防曬遮陽網</span>
+              </button>
+              <button onclick="triggerAction('nutrient')" class="p-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl border border-amber-200 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-flask-vial text-amber-600"></i>
+                <span>補充有機營養液</span>
+              </button>
+              <button onclick="resetAllPots()" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl border border-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-rotate-right text-slate-600"></i>
+                <span>重置 AI 預設狀態</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Log Bar -->
+        <div class="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono">
+          <div class="truncate flex items-center gap-2">
+            <i class="fa-solid fa-terminal text-slate-400"></i>
+            <span id="systemLog">系統日誌: [14:30:00] AI 探測器數據同步完成，本校 21 種中草藥盆栽狀態穩定。</span>
+          </div>
+          <span class="shrink-0 text-emerald-600 font-bold cursor-pointer hover:underline ml-2" onclick="clearLog()">清空</span>
+        </div>
+      </div>
+
+      <!-- AI Planting Advice & HK Adaptation Card (1 Col) -->
+      <div class="glass-card rounded-2xl p-5 shadow-md border border-amber-100 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow-md font-bold shrink-0">
+              <i class="fa-solid fa-seedling text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">本校草園養護要點</h3>
+              <p class="text-xs text-slate-500">針對青衣氣候與 21 種植物習性</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200">
+              <h4 class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-lightbulb text-amber-600"></i> 當季重點養護建議：
+              </h4>
+              <p id="seasonalTip" class="text-xs text-slate-700 mt-1 leading-relaxed">
+                秋初香港天氣干燥且日光充沛。建議重點保持魚腥草、虎耳草與憂遁草土壤潤澤；蘆薈與龍舌蘭則需控水防爛根；紫蘇與蝶豆花應注意充足陽光以促進開花與揮發油累積。
+              </p>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold text-slate-800 mb-2 flex items-center justify-between">
+                <span>重點監控植物：</span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">21 種已連線</span>
+              </h4>
+              <div class="grid grid-cols-2 gap-1.5 text-xs">
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="font-bold text-slate-800 truncate">魚腥草</span>
+                  <span class="text-[10px] text-slate-400 shrink-0">喜濕</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="font-bold text-slate-800 truncate">蘆薈</span>
+                  <span class="text-[10px] text-slate-400 shrink-0">耐旱</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="font-bold text-slate-800 truncate">憂遁草</span>
+                  <span class="text-[10px] text-slate-400 shrink-0">抗炎</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="font-bold text-slate-800 truncate">薑黃</span>
+                  <span class="text-[10px] text-slate-400 shrink-0">理氣</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="openAllPlantsOverviewModal()" class="w-full mt-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-list-check"></i>
+          <span>查看本校 21 種中草藥全科總覽</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- School Herbal Plant Grid Title & Filter Controls -->
+    <div class="space-y-3 pt-2">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-leaf text-emerald-600"></i>
+            明愛聖若瑟中學中草藥園 — 21 種植物探測器矩陣
+          </h2>
+          <p class="text-xs text-slate-500">戶外園區每盆植物均配備實時土壤濕度、溫度、光照強度與 pH 值感知探頭</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full md:w-72">
+          <input id="searchInput" type="text" oninput="handleSearch()" placeholder="搜尋植物名稱 / 功效 / 拼音..." class="w-full bg-white text-xs pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm">
+          <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-3"></i>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 text-xs font-bold">
+        <button onclick="filterCategory('all')" id="tab-all" class="cat-tab px-3.5 py-2 rounded-xl bg-emerald-700 text-white shadow-sm shrink-0 transition">
+          全部分類 (21)
+        </button>
+        <button onclick="filterCategory('leaf')" id="tab-leaf" class="cat-tab px-3.5 py-2 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shrink-0 transition">
+          🌿 藥用葉類 (8)
+        </button>
+        <button onclick="filterCategory('root_fruit')" id="tab-root_fruit" class="cat-tab px-3.5 py-2 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shrink-0 transition">
+          🍊 根莖花果類 (7)
+        </button>
+        <button onclick="filterCategory('detox')" id="tab-detox" class="cat-tab px-3.5 py-2 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shrink-0 transition">
+          💧 清熱解毒類 (4)
+        </button>
+        <button onclick="filterCategory('succulent')" id="tab-succulent" class="cat-tab px-3.5 py-2 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shrink-0 transition">
+          🌵 多肉抗旱類 (2)
+        </button>
+      </div>
+    </div>
+
+    <!-- Plants Grid Container -->
+    <div id="potsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <!-- Dynamic render of 21 plants via JavaScript -->
+    </div>
+
+    <!-- Data Analytics & 24H Trend Chart -->
+    <div class="glass-card rounded-2xl p-5 shadow-md border border-slate-200">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-600"></i>
+            24小時環境與土壤水份監控趨勢圖
+          </h3>
+          <p class="text-xs text-slate-500">青衣室外園區 24 小時大氣溫濕度與 21 盆土壤平均濕度歷史記錄</p>
+        </div>
+
+        <!-- Chart Toggle Buttons -->
+        <div class="flex items-center gap-2">
+          <button onclick="updateChartType('temp_hum')" id="chartBtn1" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition">
+            氣溫 vs 濕度
+          </button>
+          <button onclick="updateChartType('soil')" id="chartBtn2" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            全園平均土壤含水量
+          </button>
+        </div>
+      </div>
+
+      <!-- Chart Canvas Wrapper -->
+      <div class="w-full h-72 relative">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950 text-slate-400 text-xs py-6 mt-8 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-base shadow">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <div>
+          <p class="font-bold text-slate-200 text-sm">明愛聖若瑟中學 Caritas St. Joseph Secondary School</p>
+          <p class="text-slate-500 mt-0.5">AI 智慧中草藥園監控與管理系統 • 香港青衣邨楓樹窩道10號室外草園區</p>
+        </div>
+      </div>
+      <div class="text-slate-500 text-center md:text-right">
+        <p>全校 21 種中草藥盆栽 IoT 探測器連線專案</p>
+        <p class="mt-0.5">© 2026 Caritas St. Joseph Secondary School. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL 1: AI Assistant Chat Modal Drawer -->
+  <div id="aiChatModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between">
+      
+      <!-- Drawer Header -->
+      <div class="bg-gradient-to-r from-emerald-950 to-teal-900 text-white p-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg shadow">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm">中草藥 AI 智慧小助手</h3>
+            <p class="text-[11px] text-emerald-200">明愛聖若瑟中學 21 種草園專屬問答</p>
+          </div>
+        </div>
+        <button onclick="toggleAiAssistantModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Chat History -->
+      <div id="chatHistory" class="p-4 flex-1 overflow-y-auto space-y-3 custom-scrollbar bg-slate-50">
+        <div class="flex gap-2.5 items-start">
+          <div class="w-7 h-7 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs shrink-0 mt-0.5">
+            <i class="fa-solid fa-leaf"></i>
+          </div>
+          <div class="bg-white border border-slate-200 text-slate-800 text-xs p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] space-y-1">
+            <p class="font-bold text-emerald-800">歡迎來到明愛聖若瑟中學 AI 中草藥園！</p>
+            <p class="leading-relaxed">我是草園 AI 小助手。本校草園共種植了 <strong class="text-emerald-700">21 種傳統中草藥</strong>（包括魚腥草、銀杏葉、憂遁草、佛手果、兩面針等）。你可以問我關於任何一種植物的功效、種植濕度或青衣氣候建議！</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Question Buttons -->
+      <div class="p-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto custom-scrollbar text-[11px]">
+        <button onclick="sendQuickPrompt('請介紹本校的魚腥草與憂遁草藥用功效')" class="shrink-0 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200 transition">
+          🌱 魚腥草與憂遁草
+        </button>
+        <button onclick="sendQuickPrompt('蘆薈與龍舌蘭在青衣室外需要注意什麼？')" class="shrink-0 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-full border border-amber-200 transition">
+          🌵 多肉植物防爛根
+        </button>
+        <button onclick="sendQuickPrompt('薑黃與兩面針的生長環境需求是什麼？')" class="shrink-0 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-full border border-blue-200 transition">
+          🍊 根莖類植物養護
+        </button>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+        <input id="chatInput" type="text" placeholder="輸入關於 21 種中草藥的問題..." onkeydown="if(event.key==='Enter') sendChatMessage()" class="flex-1 bg-slate-100 text-slate-800 text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <button onclick="sendChatMessage()" class="w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center text-sm shadow transition shrink-0">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL 2: Plant Details & Sensor Calibration Modal -->
+  <div id="plantModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-emerald-950 to-teal-900 text-white p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span id="modalPlantIcon" class="text-3xl">🌿</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modalPlantName" class="font-bold text-base">植物名稱</h3>
+              <span id="modalPlantId" class="text-xs bg-emerald-500/30 text-emerald-200 px-2 py-0.5 rounded font-mono">POT-01</span>
+            </div>
+            <p id="modalPlantLatin" class="text-xs text-emerald-200 font-mono italic">Latin Name</p>
+          </div>
+        </div>
+        <button onclick="closePlantModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-4 text-xs text-slate-700 custom-scrollbar">
+        
+        <!-- TCM Properties & Efficacy -->
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1.5 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-mortar-pestle text-emerald-600"></i> 中醫藥用價值與性味歸經 (TCM Efficacy)
+          </h4>
+          <div id="modalPlantTags" class="flex flex-wrap gap-1.5 mb-2">
+            <!-- Dynamic tags -->
+          </div>
+          <p id="modalPlantTcmDetail" class="text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+            藥用詳細敘述...
+          </p>
+        </div>
+
+        <!-- Ideal Growth Parameters -->
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-gauge-high text-blue-600"></i> AI 最佳生長環境指標 (Optimal Growing Window)
+          </h4>
+          <div class="grid grid-cols-2 gap-2 text-slate-700">
+            <div class="p-2.5 bg-blue-50/70 rounded-xl border border-blue-100">
+              <span class="text-slate-400 block text-[10px]">理想土壤濕度</span>
+              <span id="modalIdealMoisture" class="font-bold text-blue-900 text-sm">50% - 70%</span>
+            </div>
+            <div class="p-2.5 bg-amber-50/70 rounded-xl border border-amber-100">
+              <span class="text-slate-400 block text-[10px]">理想環境溫度</span>
+              <span id="modalIdealTemp" class="font-bold text-amber-900 text-sm">18°C - 28°C</span>
+            </div>
+            <div class="p-2.5 bg-yellow-50/70 rounded-xl border border-yellow-100">
+              <span class="text-slate-400 block text-[10px]">理想光照需求</span>
+              <span id="modalIdealLux" class="font-bold text-yellow-900 text-sm">30k - 50k Lux</span>
+            </div>
+            <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100">
+              <span class="text-slate-400 block text-[10px]">理想土壤 pH 值</span>
+              <span id="modalIdealPh" class="font-bold text-emerald-900 text-sm">6.0 - 6.8</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Sensor Calibration Section -->
+        <div class="bg-slate-900 text-white p-4 rounded-xl space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h4 class="font-bold text-amber-400 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-sliders"></i> 探測器數值動態校準與模擬 (Live Sensor Calibration)
+            </h4>
+            <span class="text-[10px] text-slate-400">拉動滑桿測試 AI 實時重算</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <!-- Slider 1: Soil Moisture -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300">土壤濕度:</span>
+                <span id="sliderMoistureVal" class="text-blue-400 font-mono font-bold">50%</span>
+              </div>
+              <input id="sliderMoisture" type="range" min="10" max="95" value="50" oninput="updateCalibSliderVal()" class="w-full accent-blue-500">
+            </div>
+
+            <!-- Slider 2: Soil Temp -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300">土壤溫度:</span>
+                <span id="sliderTempVal" class="text-amber-400 font-mono font-bold">25°C</span>
+              </div>
+              <input id="sliderTemp" type="range" min="10" max="42" value="25" oninput="updateCalibSliderVal()" class="w-full accent-amber-500">
+            </div>
+
+            <!-- Slider 3: Sunlight Lux -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300">光照強度:</span>
+                <span id="sliderLuxVal" class="text-yellow-400 font-mono font-bold">35,000 Lux</span>
+              </div>
+              <input id="sliderLux" type="range" min="1000" max="85000" step="1000" value="35000" oninput="updateCalibSliderVal()" class="w-full accent-yellow-400">
+            </div>
+
+            <!-- Slider 4: Soil pH -->
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300">土壤 pH:</span>
+                <span id="sliderPhVal" class="text-emerald-400 font-mono font-bold">6.5</span>
+              </div>
+              <input id="sliderPh" type="range" min="4.5" max="8.5" step="0.1" value="6.5" oninput="updateCalibSliderVal()" class="w-full accent-emerald-400">
+            </div>
+          </div>
+        </div>
+
+        <!-- Practical Care Note -->
+        <div class="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
+          <h4 class="font-bold text-emerald-950 mb-1 flex items-center gap-1 text-xs">
+            <i class="fa-solid fa-seedling text-emerald-600"></i> 青衣校園種植指南 (School Botanical Guide)：
+          </h4>
+          <p id="modalPlantCareGuide" class="text-slate-700 leading-relaxed">
+            種植維護要點...
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button onclick="waterCurrentModalPlant()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-shower"></i> 獨立微噴補水 30秒
+        </button>
+        <div class="flex gap-2">
+          <button onclick="applyCalibrationFromModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition">
+            套用探測器新數據
+          </button>
+          <button onclick="closePlantModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-300 transition">
+            關閉
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. DATASET: EXCLUSIVELY THE SCHOOL'S ACTUAL 21 CHINESE HERBAL PLANTS
+       ========================================================================== */
+    const SCHOOL_PLANTS_DATA = [
+      {
+        id: 'POT-01',
+        name: '銀杏葉',
+        latin: 'Ginkgo biloba',
+        icon: '🍂',
+        category: 'leaf',
+        moisture: 52,
+        temp: 26.5,
+        lux: 48000,
+        ph: 6.5,
+        health: 96,
+        status: 'good',
+        tcmTags: ['活血化瘀', '通絡止痛', '斂肺平喘'],
+        tcmDetail: '銀杏葉性溫，味甘、苦、澀，歸心、肺經。具活血化瘀、通絡止痛、斂肺平喘、化濁降脂之功。常用於心悸怔忡、胸痹心痛及高脂血症。',
+        idealMoisture: '45% - 65%',
+        idealTemp: '15°C - 28°C',
+        idealLux: '全日照 (>40,000 Lux)',
+        idealPh: '6.0 - 7.0',
+        careGuide: '銀杏喜光照充足且排水良好的壤土，青衣戶外草園通風良好最適宜生長，忌土壤積水。'
+      },
+      {
+        id: 'POT-02',
+        name: '魚腥草',
+        latin: 'Houttuynia cordata',
+        icon: '🌱',
+        category: 'detox',
+        moisture: 78,
+        temp: 25.1,
+        lux: 28000,
+        ph: 6.2,
+        health: 98,
+        status: 'good',
+        tcmTags: ['清熱解毒', '消腫療瘡', '利尿通淋'],
+        tcmDetail: '魚腥草性微寒，味辛，歸肺經。清熱解毒、消癰排膿、利尿通淋，為嶺南清熱祛濕與天然抗菌之良藥。',
+        idealMoisture: '70% - 85%',
+        idealTemp: '18°C - 26°C',
+        idealLux: '半日照/陰濕 (20,000 Lux)',
+        idealPh: '5.8 - 6.8',
+        careGuide: '魚腥草極喜濕潤土壤與半陰環境，乾燥天氣時需頻繁微噴保濕。'
+      },
+      {
+        id: 'POT-03',
+        name: '天冬',
+        latin: 'Asparagus cochinchinensis',
+        icon: '🌿',
+        category: 'root_fruit',
+        moisture: 58,
+        temp: 26.0,
+        lux: 35000,
+        ph: 6.4,
+        health: 94,
+        status: 'good',
+        tcmTags: ['養陰潤燥', '清肺生津', '滋陰降火'],
+        tcmDetail: '天冬（天門冬）性寒，味甘、苦，歸肺、腎經。專於養陰潤燥、清肺生津，適用於陰虛發熱、肺燥乾咳。',
+        idealMoisture: '50% - 70%',
+        idealTemp: '18°C - 28°C',
+        idealLux: '散射強光 (30k-40k Lux)',
+        idealPh: '6.0 - 6.8',
+        careGuide: '肉質塊根耐旱怕澇，宜選用富含有機質的疏鬆沙質壤土。'
+      },
+      {
+        id: 'POT-04',
+        name: '翅莢決明',
+        latin: 'Senna alata',
+        icon: '🌼',
+        category: 'detox',
+        moisture: 60,
+        temp: 27.2,
+        lux: 52000,
+        ph: 6.8,
+        health: 95,
+        status: 'good',
+        tcmTags: ['清熱解毒', '祛風止癢', '通便殺蟲'],
+        tcmDetail: '翅莢決明性寒，味苦，歸肝、大腸經。外用祛風止癢皮膚病，內服清熱通便，花朵黃色顯眼。',
+        idealMoisture: '50% - 65%',
+        idealTemp: '20°C - 32°C',
+        idealLux: '強日光 (>45,000 Lux)',
+        idealPh: '6.2 - 7.2',
+        careGuide: '熱帶強健植物，青衣陽光充沛處生長迅速，需定時適度修剪枝條。'
+      },
+      {
+        id: 'POT-05',
+        name: '辣木籽 (辣木)',
+        latin: 'Moringa oleifera',
+        icon: '🫘',
+        category: 'root_fruit',
+        moisture: 42,
+        temp: 28.0,
+        lux: 55000,
+        ph: 7.0,
+        health: 91,
+        status: 'good',
+        tcmTags: ['增強免疫', '降糖降壓', '抗氧化'],
+        tcmDetail: '辣木被譽為「神奇之樹」，辣木籽富含植物蛋白與多酚，能排毒通便、調節血糖血壓及抗疲勞。',
+        idealMoisture: '35% - 50%',
+        idealTemp: '22°C - 35°C',
+        idealLux: '全日照強光',
+        idealPh: '6.5 - 7.5',
+        careGuide: '極度耐旱，忌積水致根腐。青衣秋季控水可促進根系深紮。'
+      },
+      {
+        id: 'POT-06',
+        name: '虎耳草',
+        latin: 'Saxifraga stolonifera',
+        icon: '☘️',
+        category: 'detox',
+        moisture: 72,
+        temp: 24.2,
+        lux: 22000,
+        ph: 6.0,
+        health: 93,
+        status: 'good',
+        tcmTags: ['祛風清熱', '涼血解毒', '消腫止痛'],
+        tcmDetail: '虎耳草性涼，味微苦、辛，歸肺、脾經。能祛風清熱、涼血解毒，常用於耳化膿、濕疹及小兒驚風。',
+        idealMoisture: '65% - 80%',
+        idealTemp: '15°C - 25°C',
+        idealLux: '耐陰/散射光 (15k-25k Lux)',
+        idealPh: '5.8 - 6.5',
+        careGuide: '喜陰濕環境，需放置於遮陽網下方生長，避免正午烈日暴曬。'
+      },
+      {
+        id: 'POT-07',
+        name: '佛手果',
+        latin: 'Citrus medica var. sarcodactylis',
+        icon: '🍋',
+        category: 'root_fruit',
+        moisture: 55,
+        temp: 26.8,
+        lux: 46000,
+        ph: 6.2,
+        health: 96,
+        status: 'good',
+        tcmTags: ['疏肝理氣', '和胃止痛', '燥濕化痰'],
+        tcmDetail: '佛手性溫，味辛、苦、酸，歸肝、脾、胃、肺經。理氣而不傷陰，專治肝胃氣滯、胸脅脹痛。',
+        idealMoisture: '50% - 70%',
+        idealTemp: '20°C - 30°C',
+        idealLux: '充足陽光 (40,000+ Lux)',
+        idealPh: '6.0 - 6.5',
+        careGuide: '芸香科柑橘類植物，結果期需保證充沛日光與定期補給磷鉀肥。'
+      },
+      {
+        id: 'POT-08',
+        name: '南非葉',
+        latin: 'Vernonia amygdalina',
+        icon: '🍃',
+        category: 'leaf',
+        moisture: 50,
+        temp: 27.5,
+        lux: 50000,
+        ph: 6.6,
+        health: 97,
+        status: 'good',
+        tcmTags: ['清熱解毒', '涼血消腫', '降血壓血糖'],
+        tcmDetail: '南非葉（苦葉樹）性寒，味苦。民間常用於清熱解毒、保肝、輔助調節血糖與血壓。',
+        idealMoisture: '45% - 65%',
+        idealTemp: '20°C - 33°C',
+        idealLux: '強日光',
+        idealPh: '6.2 - 7.0',
+        careGuide: '適應力極強，生長迅速，採收嫩葉後能快速萌發新芽。'
+      },
+      {
+        id: 'POT-09',
+        name: '艾草',
+        latin: 'Artemisia argyi',
+        icon: '🌾',
+        category: 'leaf',
+        moisture: 48,
+        temp: 26.2,
+        lux: 42000,
+        ph: 6.5,
+        health: 95,
+        status: 'good',
+        tcmTags: ['溫經止血', '散寒止痛', '祛濕止癢'],
+        tcmDetail: '艾草性溫，味苦、辛，歸肝、脾、腎經。為溫經止血、散寒止痛及艾灸必備藥材，防蚊驅蟲。',
+        idealMoisture: '40% - 60%',
+        idealTemp: '18°C - 28°C',
+        idealLux: '全日照',
+        idealPh: '6.0 - 7.0',
+        careGuide: '艾草喜乾燥，根系忌水澇。青衣秋季微風環境有利於揮發油積聚。'
+      },
+      {
+        id: 'POT-10',
+        name: '蘆薈',
+        latin: 'Aloe vera',
+        icon: '🌵',
+        category: 'succulent',
+        moisture: 32,
+        temp: 28.2,
+        lux: 58000,
+        ph: 7.0,
+        health: 98,
+        status: 'good',
+        tcmTags: ['瀉下通便', '清肝殺蟲', '燙傷修復'],
+        tcmDetail: '蘆薈性寒，味苦，歸肝、胃、大腸經。能瀉熱通便、清肝瀉火，鮮葉凝膠外敷治燙傷與創傷。',
+        idealMoisture: '25% - 40%',
+        idealTemp: '20°C - 35°C',
+        idealLux: '耐強陽光',
+        idealPh: '6.5 - 7.5',
+        careGuide: '多肉植物典型代表，極度耐旱。土壤水分低於30%無妨，最忌頻繁澆水致爛根。'
+      },
+      {
+        id: 'POT-11',
+        name: '憂遁草',
+        latin: 'Clinacanthus nutans',
+        icon: '🌱',
+        category: 'detox',
+        moisture: 65,
+        temp: 26.4,
+        lux: 36000,
+        ph: 6.3,
+        health: 94,
+        status: 'good',
+        tcmTags: ['清熱利濕', '消腫散瘀', '抗炎解毒'],
+        tcmDetail: '憂遁草（鱷嘴花）性平，味甘、淡，歸肝、腎經。嶺南名藥，調解尿酸、清熱利濕、抗發炎。',
+        idealMoisture: '60% - 75%',
+        idealTemp: '20°C - 30°C',
+        idealLux: '中等日照',
+        idealPh: '6.0 - 6.8',
+        careGuide: '喜濕潤壤土，高溫季節需要保持充足供水與定期補充有機肥。'
+      },
+      {
+        id: 'POT-12',
+        name: '紅田烏',
+        latin: 'Alternanthera sessilis red',
+        icon: '🌺',
+        category: 'leaf',
+        moisture: 62,
+        temp: 25.8,
+        lux: 40000,
+        ph: 6.4,
+        health: 92,
+        status: 'good',
+        tcmTags: ['通心血管', '清熱解毒', '涼血止血'],
+        tcmDetail: '紅田烏（紅田鳥）性涼，味甘，歸心、小腸經。具通暢心血管、清除血瘀、涼血解毒之民間口碑。',
+        idealMoisture: '55% - 75%',
+        idealTemp: '18°C - 30°C',
+        idealLux: '喜陽光（葉色更紅亮）',
+        idealPh: '6.0 - 7.0',
+        careGuide: '陽光越充足，紫紅色葉片越發鮮豔美麗，喜溫暖濕潤氣候。'
+      },
+      {
+        id: 'POT-13',
+        name: '龍脷葉',
+        latin: 'Sauropus rostratus',
+        icon: '🍃',
+        category: 'leaf',
+        moisture: 58,
+        temp: 25.5,
+        lux: 32000,
+        ph: 6.2,
+        health: 96,
+        status: 'good',
+        tcmTags: ['潤肺止咳', '通便化痰', '清熱解毒'],
+        tcmDetail: '龍脷葉性平，味甘、淡，歸肺、大腸經。民間煲湯常品，潤肺止咳、化痰平喘，極適用於咽喉腫痛。',
+        idealMoisture: '50% - 70%',
+        idealTemp: '18°C - 28°C',
+        idealLux: '半日照/散射光',
+        idealPh: '5.8 - 6.6',
+        careGuide: '常綠灌木，喜濕潤與排水良好的半陰環境，避免午後暴曬。'
+      },
+      {
+        id: 'POT-14',
+        name: '金針葉 (金針菜)',
+        latin: 'Hemerocallis fulva',
+        icon: '🌼',
+        category: 'leaf',
+        moisture: 54,
+        temp: 25.0,
+        lux: 44000,
+        ph: 6.6,
+        health: 93,
+        status: 'good',
+        tcmTags: ['清熱利濕', '寬胸安神', '涼血解毒'],
+        tcmDetail: '金針花/葉（萱草）性涼，味甘，歸肝、脾經。能養血平肝、寬胸安神、清熱利濕，故又名「忘憂草」。',
+        idealMoisture: '50% - 65%',
+        idealTemp: '15°C - 26°C',
+        idealLux: '強日光',
+        idealPh: '6.0 - 7.0',
+        careGuide: '適應性強，耐寒亦耐旱，青衣戶外草園土層深厚處開花繁茂。'
+      },
+      {
+        id: 'POT-15',
+        name: '無花果',
+        latin: 'Ficus carica',
+        icon: '🍈',
+        category: 'root_fruit',
+        moisture: 52,
+        temp: 26.8,
+        lux: 49000,
+        ph: 6.8,
+        health: 97,
+        status: 'good',
+        tcmTags: ['健脾開胃', '清腸消腫', '潤肺止咳'],
+        tcmDetail: '無花果性平，味甘，歸脾、胃、大腸經。健脾開胃、潤肺止咳、清腸解毒，富含膳食纖維與消化酶。',
+        idealMoisture: '45% - 65%',
+        idealTemp: '20°C - 32°C',
+        idealLux: '全日照',
+        idealPh: '6.5 - 7.5',
+        careGuide: '落葉小喬木，果期需要充沛陽光與穩定水分，忌土壤長時間澇浸。'
+      },
+      {
+        id: 'POT-16',
+        name: '龍舌蘭',
+        latin: 'Agave americana',
+        icon: '🪴',
+        category: 'succulent',
+        moisture: 28,
+        temp: 28.5,
+        lux: 62000,
+        ph: 7.2,
+        health: 99,
+        status: 'good',
+        tcmTags: ['解毒拔毒', '止咳化痰', '涼血止血'],
+        tcmDetail: '龍舌蘭性平，味酸、甘，歸肺、大腸經。具潤肺化痰、解毒消腫之效，葉片堅挺極具觀賞價值。',
+        idealMoisture: '20% - 35%',
+        idealTemp: '22°C - 38°C',
+        idealLux: '極強烈陽光 (>50k Lux)',
+        idealPh: '6.8 - 7.8',
+        careGuide: '超強抗旱植物，青衣戶外全露天種植無壓力，幾乎無需人為多餘灌溉。'
+      },
+      {
+        id: 'POT-17',
+        name: '兩面針',
+        latin: 'Zanthoxylum nitidum',
+        icon: '🪵',
+        category: 'root_fruit',
+        moisture: 46,
+        temp: 26.3,
+        lux: 38000,
+        ph: 6.2,
+        health: 91,
+        status: 'good',
+        tcmTags: ['祛風通絡', '活血化瘀', '行氣止痛'],
+        tcmDetail: '兩面針性平，味苦、辛，歸肝、胃經。行氣止痛、活血化瘀、祛風通絡，常用於牙痛、胃痛及跌打損傷。',
+        idealMoisture: '40% - 60%',
+        idealTemp: '18°C - 28°C',
+        idealLux: '陽光充足至半陰',
+        idealPh: '5.8 - 6.6',
+        careGuide: '木質藤本植物，莖葉有刺，宜設置攀援鐵架，保持根部排水暢通。'
+      },
+      {
+        id: 'POT-18',
+        name: '薑黃',
+        latin: 'Curcuma longa',
+        icon: '🍠',
+        category: 'root_fruit',
+        moisture: 60,
+        temp: 26.9,
+        lux: 41000,
+        ph: 6.3,
+        health: 95,
+        status: 'good',
+        tcmTags: ['破血行氣', '通經止痛', '抗炎抗氧化'],
+        tcmDetail: '薑黃性溫，味苦、辛，歸脾、肝經。強效破血行氣、通經止痛，含薑黃素（Curcumin），抗炎抗氧化。',
+        idealMoisture: '55% - 70%',
+        idealTemp: '20°C - 32°C',
+        idealLux: '喜溫暖陽光',
+        idealPh: '6.0 - 6.8',
+        careGuide: '薑黃根莖在地下發育，喜肥沃濕潤土壤，秋冬季地上部分枯萎為正常休眠。'
+      },
+      {
+        id: 'POT-19',
+        name: '三葉草',
+        latin: 'Trifolium repens',
+        icon: '☘️',
+        category: 'leaf',
+        moisture: 56,
+        temp: 24.8,
+        lux: 39000,
+        ph: 6.5,
+        health: 93,
+        status: 'good',
+        tcmTags: ['清熱平肝', '祛風止咳', '固氮改善土壤'],
+        tcmDetail: '三葉草（白車軸草）性涼，味微苦。清熱平肝、祛風止咳，其根系具固氮作用，能顯著改善草園土壤肥力。',
+        idealMoisture: '50% - 65%',
+        idealTemp: '15°C - 25°C',
+        idealLux: '溫和日光',
+        idealPh: '6.0 - 7.0',
+        careGuide: '地面鋪覆性植物，保持土壤濕潤即可快速擴展，保護草園地表水分。'
+      },
+      {
+        id: 'POT-20',
+        name: '紫蘇',
+        latin: 'Perilla frutescens',
+        icon: '🍇',
+        category: 'leaf',
+        moisture: 58,
+        temp: 25.6,
+        lux: 43000,
+        ph: 6.5,
+        health: 96,
+        status: 'good',
+        tcmTags: ['解表散寒', '行氣和胃', '理氣安胎解魚毒'],
+        tcmDetail: '紫蘇性溫，味辛，歸肺、脾經。散寒解表、理氣寬中、解魚蟹毒。氣味芳香，為中藥與藥膳珍品。',
+        idealMoisture: '50% - 70%',
+        idealTemp: '18°C - 28°C',
+        idealLux: '充足陽光（香氣更濃）',
+        idealPh: '6.0 - 7.0',
+        careGuide: '一年生草本，光照越充足，紫蘇葉色越濃郁、揮發油含量越高。'
+      },
+      {
+        id: 'POT-21',
+        name: '蝶豆花',
+        latin: 'Clitoria ternatea',
+        icon: '🦋',
+        category: 'root_fruit',
+        moisture: 62,
+        temp: 27.0,
+        lux: 47000,
+        ph: 6.4,
+        health: 97,
+        status: 'good',
+        tcmTags: ['富含花青素', '抗氧化保護眼睛', '舒緩情緒'],
+        tcmDetail: '蝶豆花性平，味甘。花朵呈靚麗深藍色，富含高濃度花青素，抗氧化、護眼明目、舒緩壓力。',
+        idealMoisture: '55% - 70%',
+        idealTemp: '20°C - 32°C',
+        idealLux: '強日光',
+        idealPh: '6.0 - 6.8',
+        careGuide: '熱帶蔓藤植物，花期長，需要立柱牽引，陽光充足可持續繁花盛開。'
+      }
+    ];
+
+    /* SYSTEM GLOBAL STATE */
+    let potsData = JSON.parse(JSON.stringify(SCHOOL_PLANTS_DATA));
+    let isAiAutoMode = true;
+    let currentCategoryFilter = 'all';
+    let searchQuery = '';
+    let currentPreset = 'tsingyi';
+    let activeModalPlantId = null;
+    let trendChartInstance = null;
+
+    /* ==========================================================================
+       2. WEATHER PRESETS & AI ADAPTIVE RECALCULATION
+       ========================================================================== */
+    const WEATHER_PRESETS = {
+      tsingyi: {
+        temp: 27.8,
+        humidity: 72,
+        lux: 45500,
+        uv: '5 (中等)',
+        wind: 11.8,
+        soilAvg: 60.5,
+        condition: '青衣局部晴朗',
+        icon: 'fa-cloud-sun',
+        adviceTitle: 'AI 灑水決策：【暫無需自動灑水】',
+        adviceBadge: '土壤濕度適中',
+        adviceDetail: '當前青衣室外相對濕度為 <strong class="text-emerald-800">72%</strong>，21 種中草藥盆栽平均土壤濕度為 <strong class="text-emerald-800">60.5%</strong>。蒸發率低，多數植物（如蘆薈、龍舌蘭、艾草）水分充沛。建議維持當前狀態，防止過度澆水引致爛根。',
+        waterVol: '0.0 L/m²',
+        waterTime: '今日傍晚 18:30',
+        evapRisk: '低 (Low)'
+      },
+      hot: {
+        temp: 34.5,
+        humidity: 38,
+        lux: 82000,
+        uv: '10 (甚高)',
+        wind: 7.5,
+        soilAvg: 36.2,
+        condition: '酷熱暴曬乾燥',
+        icon: 'fa-sun',
+        adviceTitle: 'AI 灑水決策：【高溫乾旱！急需脈衝微噴】',
+        adviceBadge: '高溫警報',
+        adviceDetail: '檢測到青衣氣溫升至 <strong class="text-amber-800">34.5°C</strong> 且光照強烈（82,000 Lux）。魚腥草、虎耳草及憂遁草水分蒸散劇烈，土壤平均濕度跌至 <strong class="text-amber-800">36.2%</strong>。AI 已自動展開遮陽網，並建議執行 12 分鐘全園脈衝微噴。',
+        waterVol: '2.8 L/m²',
+        waterTime: '立即執行 (NOW)',
+        evapRisk: '極高 (Critical)'
+      },
+      rain: {
+        temp: 22.8,
+        humidity: 94,
+        lux: 7500,
+        uv: '1 (極低)',
+        wind: 36.0,
+        soilAvg: 86.4,
+        condition: '颱風狂風大雨',
+        icon: 'fa-cloud-showers-heavy',
+        adviceTitle: 'AI 灑水決策：【排水開啟，強制關閉水閥】',
+        adviceBadge: '強降雨預警',
+        adviceDetail: '相對濕度達 <strong class="text-blue-800">94%</strong>，土壤含水量已接近飽和 (86.4%)。AI 已強制鎖定水閥，啟動防雨排澇排水溝與通風系統，重點保護辣木籽、蘆薈與龍舌蘭防根腐。',
+        waterVol: '0.0 L/m²',
+        waterTime: '未來 36小時無需灑水',
+        evapRisk: '極低 (Zero)'
+      },
+      dry: {
+        temp: 21.0,
+        humidity: 32,
+        lux: 38000,
+        uv: '4 (中等)',
+        wind: 19.5,
+        soilAvg: 44.0,
+        condition: '乾燥秋風爽朗',
+        icon: 'fa-wind',
+        adviceTitle: 'AI 灑水決策：【建議葉面定時霧化】',
+        adviceBadge: '秋燥乾燥',
+        adviceDetail: '秋風偏大導致空氣相對濕度下降至 <strong class="text-orange-800">32%</strong>。紫蘇、薄荷、龍脷葉葉面蒸發加速。AI 建議每隔 3 小時進行 2 分鐘輕微葉面霧化保濕。',
+        waterVol: '1.0 L/m²',
+        waterTime: '每 3 小時霧化 2 分鐘',
+        evapRisk: '中等偏高 (Medium-High)'
+      }
+    };
+
+    function applyPreset(key) {
+      currentPreset = key;
+      const data = WEATHER_PRESETS[key];
+
+      // Update UI Header Metrics
+      document.getElementById('metric-temp').innerText = data.temp;
+      document.getElementById('metric-humidity').innerText = data.humidity;
+      document.getElementById('metric-lux').innerText = data.lux.toLocaleString();
+      document.getElementById('metric-uv').innerText = data.uv;
+      document.getElementById('metric-wind').innerText = data.wind;
+      document.getElementById('metric-soil').innerText = data.soilAvg;
+      document.getElementById('metric-condition').innerText = data.condition;
+      
+      document.getElementById('weather-icon').className = `fa-solid ${data.icon} text-indigo-600 text-base`;
+
+      // Update AI Advice Box
+      document.getElementById('aiAdviceTitle').innerText = data.adviceTitle;
+      document.getElementById('aiAdviceBadge').innerText = data.adviceBadge;
+      document.getElementById('aiAdviceDetail').innerHTML = data.adviceDetail;
+      document.getElementById('aiWaterVol').innerText = data.waterVol;
+      document.getElementById('aiWaterTime').innerText = data.waterTime;
+      document.getElementById('aiEvapRisk').innerText = data.evapRisk;
+
+      // Update Button Styles
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.className = "preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-slate-800 border-slate-700 text-slate-300 transition hover:bg-slate-700";
+      });
+      const activeBtn = document.getElementById(`btn-preset-${key}`);
+      if(activeBtn) {
+        activeBtn.className = "preset-btn px-3 py-2 rounded-xl text-xs font-bold border bg-emerald-600 border-emerald-400 text-white transition hover:bg-emerald-500 shadow-md";
+      }
+
+      // Dynamically recalibrate 21 pot moistures according to weather preset
+      potsData.forEach(pot => {
+        if(key === 'hot') {
+          if(pot.category === 'succulent') pot.moisture = Math.max(18, pot.moisture - 8);
+          else pot.moisture = Math.max(22, pot.moisture - 18);
+        } else if(key === 'rain') {
+          pot.moisture = Math.min(95, pot.moisture + 28);
+        } else if(key === 'dry') {
+          pot.moisture = Math.max(30, pot.moisture - 12);
+        } else {
+          // reset to default
+          const orig = SCHOOL_PLANTS_DATA.find(p => p.id === pot.id);
+          if(orig) pot.moisture = orig.moisture;
+        }
+        evaluatePlantHealth(pot);
+      });
+
+      renderPotsGrid();
+      updateChartWithPreset(key);
+      addLog(`[氣候模擬] 已載入模擬情境：${data.condition} (室外 ${data.temp}°C / 濕度 ${data.humidity}%)`);
+    }
+
+    function evaluatePlantHealth(pot) {
+      if(pot.moisture < 35 && pot.category !== 'succulent') {
+        pot.status = 'warning';
+        pot.health = Math.max(75, 100 - (35 - pot.moisture) * 2);
+      } else if(pot.moisture > 85) {
+        pot.status = 'warning';
+        pot.health = Math.max(78, 100 - (pot.moisture - 85) * 1.8);
+      } else {
+        pot.status = 'good';
+        pot.health = Math.min(99, 92 + Math.floor(Math.random() * 7));
+      }
+    }
+
+    /* ==========================================================================
+       3. RENDER 21 PLANT GRID MATRIX & SEARCH / FILTER
+       ========================================================================== */
+    function renderPotsGrid() {
+      const container = document.getElementById('potsGrid');
+      container.innerHTML = '';
+
+      const filtered = potsData.filter(pot => {
+        const matchesCategory = (currentCategoryFilter === 'all') || (pot.category === currentCategoryFilter);
+        const matchesSearch = searchQuery === '' || 
+          pot.name.includes(searchQuery) || 
+          pot.latin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pot.tcmTags.some(t => t.includes(searchQuery));
+        return matchesCategory && matchesSearch;
+      });
+
+      if(filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
+            <i class="fa-solid fa-seedling text-3xl mb-2 text-slate-300"></i>
+            <p class="text-xs font-bold">沒有找到符合條件的中草藥盆栽</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(pot => {
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-4 shadow-sm hover:shadow-md transition border border-slate-200 flex flex-col justify-between group";
+
+        let statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">🟢 最佳狀態</span>`;
+        if(pot.moisture < 35 && pot.category !== 'succulent') {
+          statusBadge = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">🟡 需補水</span>`;
+        } else if(pot.moisture > 85) {
+          statusBadge = `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-300">🔵 濕度偏高</span>`;
+        }
+
+        let catName = '藥用葉類';
+        if(pot.category === 'root_fruit') catName = '根莖花果';
+        if(pot.category === 'detox') catName = '清熱解毒';
+        if(pot.category === 'succulent') catName = '多肉抗旱';
+
+        card.innerHTML = `
+          <div>
+            <!-- Card Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl shrink-0">${pot.icon}</span>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1">
+                    ${pot.name}
+                    <span class="text-[10px] text-slate-400 font-mono">(${pot.id})</span>
+                  </h3>
+                  <p class="text-[10px] text-slate-500 font-mono italic truncate max-w-[130px]">${pot.latin}</p>
+                </div>
+              </div>
+              ${statusBadge}
+            </div>
+
+            <!-- Category & Health Row -->
+            <div class="flex items-center justify-between text-xs mb-2.5">
+              <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200">
+                ${catName}
+              </span>
+              <div class="flex items-center gap-1">
+                <span class="text-slate-400 text-[10px]">健康度:</span>
+                <span class="font-bold text-emerald-700 text-xs">${pot.health}%</span>
+              </div>
+            </div>
+
+            <!-- Live Sensor Metrics -->
+            <div class="grid grid-cols-2 gap-1.5 text-xs mb-3">
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-slate-400 block text-[9px]"><i class="fa-solid fa-droplet text-blue-500"></i> 土壤濕度</span>
+                <span class="font-bold text-slate-800 text-xs">${pot.moisture}%</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-slate-400 block text-[9px]"><i class="fa-solid fa-temperature-low text-amber-500"></i> 土壤溫度</span>
+                <span class="font-bold text-slate-800 text-xs">${pot.temp}°C</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-slate-400 block text-[9px]"><i class="fa-solid fa-sun text-yellow-500"></i> 光照強度</span>
+                <span class="font-bold text-slate-800 text-[11px]">${(pot.lux/1000).toFixed(1)}k Lux</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-slate-400 block text-[9px]"><i class="fa-solid fa-vial text-emerald-600"></i> 土壤 pH</span>
+                <span class="font-bold text-slate-800 text-xs">${pot.ph}</span>
+              </div>
+            </div>
+
+            <!-- TCM Quick Tags -->
+            <div class="flex flex-wrap gap-1 mb-3">
+              ${pot.tcmTags.map(t => `<span class="bg-emerald-50 text-emerald-800 text-[9px] font-medium px-1.5 py-0.5 rounded border border-emerald-200">${t}</span>`).join('')}
+            </div>
+          </div>
+
+          <!-- Card Action Buttons -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs font-bold">
+            <button onclick="waterSinglePot('${pot.id}')" class="py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition text-center flex items-center justify-center gap-1">
+              <i class="fa-solid fa-shower text-xs"></i> 獨立噴水
+            </button>
+            <button onclick="openPlantModal('${pot.id}')" class="py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg shadow-sm transition text-center flex items-center justify-center gap-1">
+              <i class="fa-solid fa-sliders text-xs"></i> 詳情與校準
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentCategoryFilter = cat;
+      document.querySelectorAll('.cat-tab').forEach(tab => {
+        tab.className = "cat-tab px-3.5 py-2 rounded-xl bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shrink-0 transition";
+      });
+      const activeTab = document.getElementById(`tab-${cat}`);
+      if(activeTab) {
+        activeTab.className = "cat-tab px-3.5 py-2 rounded-xl bg-emerald-700 text-white shadow-sm shrink-0 transition font-bold";
+      }
+      renderPotsGrid();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.trim();
+      renderPotsGrid();
+    }
+
+    function waterSinglePot(id) {
+      const pot = potsData.find(p => p.id === id);
+      if(pot) {
+        pot.moisture = Math.min(95, pot.moisture + 15);
+        evaluatePlantHealth(pot);
+        renderPotsGrid();
+        addLog(`[單盆灑水] 已為 ${pot.name} (${pot.id}) 執行精準微噴，土壤濕度提升至 ${pot.moisture}%`);
+      }
+    }
+
+    function resetAllPots() {
+      potsData = JSON.parse(JSON.stringify(SCHOOL_PLANTS_DATA));
+      renderPotsGrid();
+      addLog("[系統重置] 已重置所有 21 盆中草藥探測器為系統標準預設值");
+    }
+
+    /* ==========================================================================
+       4. SYSTEM CONTROL & LOGGING
+       ========================================================================== */
+    function setAiMode(auto) {
+      isAiAutoMode = auto;
+      const btnAuto = document.getElementById('aiModeAuto');
+      const btnManual = document.getElementById('aiModeManual');
+      if(auto) {
+        btnAuto.className = "px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition";
+        btnManual.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        addLog("[AI 控制] 已開啟全自動 AI 智慧灌溉決策模式");
+      } else {
+        btnManual.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition";
+        btnAuto.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        addLog("[AI 控制] 已切換為手動控制模式");
+      }
+    }
+
+    function triggerAction(action) {
+      if(action === 'watering') {
+        potsData.forEach(p => {
+          p.moisture = Math.min(90, p.moisture + 12);
+          evaluatePlantHealth(p);
+        });
+        renderPotsGrid();
+        addLog("[全園指令] 全園 21 盆微噴灌水系統已啟動 (執行時間 10 分鐘)");
+      } else if(action === 'shade') {
+        addLog("[全園指令] 戶外草園防曬遮陽網已自動展開 (防護紫外線率: 85%)");
+      } else if(action === 'nutrient') {
+        addLog("[全園指令] 有機微量元素營養液自動滴灌系統已啟動");
+      }
+    }
+
+    function addLog(msg) {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      document.getElementById('systemLog').innerText = `系統日誌: [${timeStr}] ${msg}`;
+    }
+
+    function clearLog() {
+      document.getElementById('systemLog').innerText = "系統日誌: 等待最新數據事件...";
+    }
+
+    /* ==========================================================================
+       5. PLANT MODAL & LIVE SENSOR CALIBRATION
+       ========================================================================== */
+    function openPlantModal(id) {
+      activeModalPlantId = id;
+      const pot = potsData.find(p => p.id === id);
+      if(!pot) return;
+
+      document.getElementById('modalPlantIcon').innerText = pot.icon;
+      document.getElementById('modalPlantName').innerText = pot.name;
+      document.getElementById('modalPlantId').innerText = pot.id;
+      document.getElementById('modalPlantLatin').innerText = pot.latin;
+      document.getElementById('modalPlantTcmDetail').innerText = pot.tcmDetail;
+      document.getElementById('modalIdealMoisture').innerText = pot.idealMoisture;
+      document.getElementById('modalIdealTemp').innerText = pot.idealTemp;
+      document.getElementById('modalIdealLux').innerText = pot.idealLux;
+      document.getElementById('modalIdealPh').innerText = pot.idealPh;
+      document.getElementById('modalPlantCareGuide').innerText = pot.careGuide;
+
+      // Tags
+      document.getElementById('modalPlantTags').innerHTML = pot.tcmTags.map(t => 
+        `<span class="bg-emerald-100 text-emerald-900 font-bold text-[11px] px-2.5 py-0.5 rounded-md border border-emerald-300">${t}</span>`
+      ).join('');
+
+      // Calibration Sliders Initial Values
+      document.getElementById('sliderMoisture').value = pot.moisture;
+      document.getElementById('sliderTemp').value = pot.temp;
+      document.getElementById('sliderLux').value = pot.lux;
+      document.getElementById('sliderPh').value = pot.ph;
+
+      updateCalibSliderVal();
+      document.getElementById('plantModal').classList.remove('hidden');
+    }
+
+    function openAllPlantsOverviewModal() {
+      openPlantModal('POT-01');
+    }
+
+    function closePlantModal() {
+      document.getElementById('plantModal').classList.add('hidden');
+    }
+
+    function updateCalibSliderVal() {
+      document.getElementById('sliderMoistureVal').innerText = document.getElementById('sliderMoisture').value + '%';
+      document.getElementById('sliderTempVal').innerText = document.getElementById('sliderTemp').value + '°C';
+      document.getElementById('sliderLuxVal').innerText = Number(document.getElementById('sliderLux').value).toLocaleString() + ' Lux';
+      document.getElementById('sliderPhVal').innerText = document.getElementById('sliderPh').value;
+    }
+
+    function applyCalibrationFromModal() {
+      if(!activeModalPlantId) return;
+      const pot = potsData.find(p => p.id === activeModalPlantId);
+      if(pot) {
+        pot.moisture = parseInt(document.getElementById('sliderMoisture').value);
+        pot.temp = parseFloat(document.getElementById('sliderTemp').value);
+        pot.lux = parseInt(document.getElementById('sliderLux').value);
+        pot.ph = parseFloat(document.getElementById('sliderPh').value);
+
+        evaluatePlantHealth(pot);
+        renderPotsGrid();
+        addLog(`[探測器校準] 已更新 ${pot.name} (${pot.id}) 傳感器數據: 濕度=${pot.moisture}%, 溫度=${pot.temp}°C, pH=${pot.ph}`);
+      }
+      closePlantModal();
+    }
+
+    function waterCurrentModalPlant() {
+      if(activeModalPlantId) {
+        waterSinglePot(activeModalPlantId);
+        openPlantModal(activeModalPlantId); // refresh
+      }
+    }
+
+    /* ==========================================================================
+       6. AI ASSISTANT CHATBOT INTERACTION
+       ========================================================================== */
+    function toggleAiAssistantModal() {
+      document.getElementById('aiChatModal').classList.toggle('hidden');
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById('chatInput').value = promptText;
+      sendChatMessage();
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if(!msg) return;
+
+      const history = document.getElementById('chatHistory');
+
+      // User Bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = "flex gap-2.5 items-start justify-end";
+      userBubble.innerHTML = `
+        <div class="bg-emerald-700 text-white text-xs p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%]">
+          ${msg}
+        </div>
+      `;
+      history.appendChild(userBubble);
+      input.value = '';
+      history.scrollTop = history.scrollHeight;
+
+      // Simulated Bot Reply
+      setTimeout(() => {
+        let reply = generateAiReply(msg);
+        const botBubble = document.createElement('div');
+        botBubble.className = "flex gap-2.5 items-start";
+        botBubble.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs shrink-0 mt-0.5">
+            <i class="fa-solid fa-leaf"></i>
+          </div>
+          <div class="bg-white border border-slate-200 text-slate-800 text-xs p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] leading-relaxed">
+            ${reply}
+          </div>
+        `;
+        history.appendChild(botBubble);
+        history.scrollTop = history.scrollHeight;
+      }, 500);
+    }
+
+    function generateAiReply(q) {
+      if(q.includes('魚腥草') || q.includes('憂遁草')) {
+        return "<strong>魚腥草</strong>（POT-02）與<strong>憂遁草</strong>（POT-11）均為本校草園的清熱解毒要藥。<br>• 魚腥草喜高濕潤土壤（70%-85%），天然抗菌排膿；<br>• 憂遁草清熱利濕抗炎，喜溫和陽光。當前探測器顯示兩者皆生長良好！";
+      } else if(q.includes('蘆薈') || q.includes('龍舌蘭') || q.includes('多肉') || q.includes('爛根')) {
+        return "<strong>蘆薈</strong>（POT-10）與<strong>龍舌蘭</strong>（POT-16）屬於極度耐旱的多肉植物。<br>• 理想土壤濕度僅需 20%-40%；<br>• 青衣室外多雨時，AI 系統會自動開閉防雨棚防止水澇爛根。";
+      } else if(q.includes('薑黃') || q.includes('兩面針') || q.includes('根莖')) {
+        return "<strong>薑黃</strong>（破血行氣）與<strong>兩面針</strong>（祛風止痛）為本校根莖類代表。<br>• 薑黃喜濕潤肥沃土質，薑黃素含量高；<br>• 兩面針為木質藤本，需搭設牽引架生長。";
+      } else {
+        return `感謝諮詢！本校中草藥園 21 種植物（包括銀杏葉、佛手果、紫蘇、蝶豆花、紅田烏等）均已連接 AI 探測器。當前青衣天氣適宜，系統持續實時維護中。`;
+      }
+    }
+
+    /* ==========================================================================
+       7. CHART.JS 24-HOUR TREND GRAPH
+       ========================================================================== */
+    const hours = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+
+    function initChart() {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: hours,
+          datasets: [
+            {
+              label: '室外氣溫 (°C)',
+              data: [22.5, 21.8, 21.2, 25.4, 29.1, 27.8, 25.5, 23.8],
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              tension: 0.4,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              label: '相對濕度 (%)',
+              data: [82, 85, 88, 70, 62, 72, 78, 83],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              tension: 0.4,
+              fill: true,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: '氣溫 (°C)' },
+              min: 15,
+              max: 40
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: '濕度 (%)' },
+              min: 20,
+              max: 100,
+              grid: { drawOnChartArea: false }
+            }
+          },
+          plugins: {
+            legend: { labels: { font: { family: 'Noto Sans TC', size: 12 } } }
+          }
+        }
+      });
+    }
+
+    function updateChartType(type) {
+      if(!trendChartInstance) return;
+      const btn1 = document.getElementById('chartBtn1');
+      const btn2 = document.getElementById('chartBtn2');
+
+      if(type === 'temp_hum') {
+        btn1.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition";
+        btn2.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+
+        trendChartInstance.data.datasets = [
+          {
+            label: '室外氣溫 (°C)',
+            data: [22.5, 21.8, 21.2, 25.4, 29.1, 27.8, 25.5, 23.8],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            tension: 0.4,
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            label: '相對濕度 (%)',
+            data: [82, 85, 88, 70, 62, 72, 78, 83],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+            tension: 0.4,
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ];
+      } else {
+        btn2.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition";
+        btn1.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+
+        trendChartInstance.data.datasets = [
+          {
+            label: '21 盆平均土壤濕度 (%)',
+            data: [64, 63, 62, 59, 57, 60.5, 62, 63],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.3,
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ];
+      }
+      trendChartInstance.update();
+    }
+
+    function updateChartWithPreset(key) {
+      if(!trendChartInstance) return;
+      if(key === 'hot') {
+        trendChartInstance.data.datasets[0].data = [27, 26, 25, 30, 35, 34.5, 31, 28];
+        trendChartInstance.data.datasets[1].data = [55, 52, 50, 42, 35, 38, 45, 50];
+      } else if(key === 'rain') {
+        trendChartInstance.data.datasets[0].data = [22, 22, 21, 22, 22.8, 22.5, 22, 22];
+        trendChartInstance.data.datasets[1].data = [92, 95, 96, 95, 94, 94, 95, 96];
+      } else {
+        trendChartInstance.data.datasets[0].data = [22.5, 21.8, 21.2, 25.4, 29.1, 27.8, 25.5, 23.8];
+        trendChartInstance.data.datasets[1].data = [82, 85, 88, 70, 62, 72, 78, 83];
+      }
+      trendChartInstance.update();
+    }
+
+    /* ==========================================================================
+       8. INITIALIZATION ON WINDOW LOAD
+       ========================================================================== */
+    window.onload = function() {
+      // Clock Timer
+      setInterval(() => {
+        const now = new Date();
+        const str = now.getFullYear() + '-' + 
+          String(now.getMonth()+1).padStart(2, '0') + '-' + 
+          String(now.getDate()).padStart(2, '0') + ' ' + 
+          String(now.getHours()).padStart(2, '0') + ':' + 
+          String(now.getMinutes()).padStart(2, '0') + ':' + 
+          String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('liveClock').innerText = str;
+      }, 1000);
+
+      // Render initial 21 plants grid
+      renderPotsGrid();
+
+      // Initialize chart
+      initChart();
+
+      addLog("明愛聖若瑟中學 AI 智慧中草藥園監控系統初始化完成 (21/21 植物連線中)");
+    };
+  </script>
+</body>
+</html>

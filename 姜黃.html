@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第十八關：薑黃【金黃染坊】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #0c0a09;
+      color: #f5ebe0;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #d97706;
+      box-shadow: 0 0 25px rgba(217, 119, 6, 0.25);
+    }
+
+    .grind-shake {
+      animation: shakeMortar 0.15s infinite alternate;
+    }
+
+    @keyframes shakeMortar {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      100% { transform: translate(-2px, -2px) rotate(-2deg); }
+    }
+
+    .bubble-rise {
+      animation: rise 2s infinite ease-in;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+      100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-stone-950">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center border-b border-amber-900/60 pb-3 mb-2 gap-2">
+    <div>
+      <span class="text-amber-500 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第十八關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-amber-400">薑黃 ── 【金黃染坊】</h1>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button id="tab-grind" onclick="switchMode('grind')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50 font-bold">
+        🎨 研磨與草木染
+      </button>
+      <button id="tab-cook" onclick="switchMode('cook')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700">
+        🍲 咖哩藥膳烹飪
+      </button>
+      <button id="tab-farm" onclick="switchMode('farm')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700">
+        🌱 高溫多濕養護
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-950/80 text-amber-200 hover:bg-amber-800 border border-amber-700/60">
+        📜 典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Stage -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- MODE 1: GRINDING & PLANT DYEING STUDIO -->
+    <div id="sec-grind" class="w-full flex flex-col items-center gap-3">
+      <div class="w-full flex flex-wrap justify-between items-center bg-stone-900/90 px-4 py-2 rounded-xl border border-amber-900/50 text-xs sm:text-sm gap-2">
+        <span class="text-amber-300 font-semibold">🥣 薑黃素萃取進度：<span id="dye-progress-text" class="text-amber-400 font-bold text-base">0%</span></span>
+        <div class="flex gap-2">
+          <button onclick="setMedium('paper')" id="btn-paper" class="px-2.5 py-1 bg-amber-900/90 text-amber-100 rounded-lg text-xs border border-amber-500 font-semibold">
+            📜 宣紙
+          </button>
+          <button onclick="setMedium('silk')" id="btn-silk" class="px-2.5 py-1 bg-stone-800 text-stone-400 rounded-lg text-xs border border-stone-700">
+            🧵 絲綢
+          </button>
+          <button onclick="clearCanvas()" class="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-lg text-xs border border-stone-600">
+            🧹 重置染布
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[440px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex items-center justify-center">
+        <canvas id="grindCanvas" class="w-full h-full cursor-crosshair"></canvas>
+        
+        <!-- Instruction Banner Overlay -->
+        <div id="grind-instruction" class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/85 px-4 py-1.5 rounded-full border border-amber-700/60 text-stone-200 text-xs backdrop-blur-md text-center">
+          💡 請在缽中按壓或拖曳研磨杵萃取金黃薑黃素，萃取完成後可在畫布上手繪染紋！
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/70 p-3 rounded-xl border border-stone-800 text-xs text-stone-300 leading-relaxed text-center">
+        <strong class="text-amber-400">特徵解析：</strong>薑黃（Curcuma longa）根莖斷面呈鮮豔橙黃色，含富貴金黃色素——<strong class="text-amber-200">薑黃素 (Curcumin)</strong>，自古為國風傳統草木染與黃色染料之頂級源泉。
+      </div>
+    </div>
+
+    <!-- MODE 2: CURRY CULINARY KITCHEN -->
+    <div id="sec-cook" class="hidden w-full flex-col items-center gap-3">
+      <div class="w-full bg-stone-900/90 p-3 rounded-xl border border-amber-900/50 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div class="text-xs sm:text-sm">
+          <span class="text-amber-400 font-semibold">金黃薑黃咖哩煲煲煮度：</span>
+          <span id="cook-status-text" class="text-amber-300 font-bold">待加入香料與薑黃粉 (0%)</span>
+        </div>
+        <div class="w-full sm:w-64 bg-stone-950 rounded-full h-3 border border-amber-900/60 overflow-hidden">
+          <div id="cook-bar" class="bg-gradient-to-r from-amber-700 via-yellow-500 to-amber-300 h-full w-0% transition-all duration-500"></div>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[420px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex flex-col items-center justify-center p-4">
+        <canvas id="cookCanvas" class="w-full h-full"></canvas>
+
+        <!-- Spice Addition Buttons -->
+        <div class="absolute bottom-4 flex flex-wrap gap-2 justify-center">
+          <button id="btn-add-turmeric" onclick="addSpice('turmeric')" class="px-3 py-1.5 bg-amber-800 hover:bg-amber-700 text-amber-100 rounded-xl border border-amber-500 text-xs font-bold shadow-lg transition">
+            ✨ 加入薑黃黃金粉
+          </button>
+          <button id="btn-add-pepper" onclick="addSpice('pepper')" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-200 rounded-xl border border-stone-600 text-xs font-bold shadow-lg transition">
+            🌶️ 加入胡椒 (增進吸收)
+          </button>
+          <button id="btn-add-herbs" onclick="addSpice('herbs')" class="px-3 py-1.5 bg-amber-950 hover:bg-amber-900 text-amber-300 rounded-xl border border-amber-800 text-xs font-bold shadow-lg transition">
+            🌿 加入理氣芳香草本
+          </button>
+          <button id="btn-simmer" onclick="simmerCurry()" disabled class="px-3 py-1.5 bg-stone-800 text-stone-500 rounded-xl border border-stone-700 text-xs font-bold shadow-lg cursor-not-allowed transition">
+            🔥 文火慢燉
+          </button>
+        </div>
+      </div>
+
+      <div id="cook-explanation" class="w-full bg-stone-900/80 p-3 rounded-xl border border-amber-900/50 text-xs text-stone-300 leading-relaxed text-center">
+        💡 <strong class="text-amber-300">食療藥理：</strong> 薑黃味辛、苦，性溫。能<strong class="text-amber-200">破血行氣、通經止痛</strong>。搭配黑胡椒胡椒鹼可大幅提升薑黃素人體吸收率，強效抗氧化與消炎。
+      </div>
+    </div>
+
+    <!-- MODE 3: RHIZOME FARMING & HARVESTING -->
+    <div id="sec-farm" class="hidden w-full flex-col items-center gap-3">
+      <div class="relative w-full aspect-[4/3] max-h-[420px] bg-stone-950 rounded-2xl overflow-hidden ink-border">
+        <canvas id="farmCanvas" class="w-full h-full"></canvas>
+
+        <div id="farm-status-banner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-amber-700/60 text-amber-300 text-xs backdrop-blur-md">
+          🌱 狀態：春季裸土待播種種塊
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 w-full">
+        <button onclick="farmAction('plant')" class="py-2.5 px-2 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          🪴 栽種於沙質壤土
+        </button>
+        <button onclick="farmAction('climate')" class="py-2.5 px-2 bg-amber-950/80 hover:bg-amber-900 text-amber-200 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          ☀️ 高溫多濕灌溉
+        </button>
+        <button onclick="farmAction('harvest')" class="py-2.5 px-2 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl text-xs border border-amber-700/50 transition font-semibold">
+          ⛏️ 秋冬枯葉採挖
+        </button>
+      </div>
+
+      <div id="farm-feedback" class="text-xs text-amber-400 font-semibold h-4 text-center"></div>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-amber-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-amber-400 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-amber-400 mb-4 border-b border-amber-800 pb-2">薑黃 (Curcuma longa) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌿 形態特徵與金黃色素：</h3>
+          <p class="leading-relaxed">
+            薑黃屬薑科多年生草本，根莖發達，斷面深橙黃色。其核心活性物質為<strong class="text-amber-200">薑黃素 (Curcumin)</strong>，自古即為華夏傳統草木染極具代表性的天然黃色染料源。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">💊 藥用價值與保健效應：</h3>
+          <p class="leading-relaxed">
+            性溫，味辛、苦。歸肝、脾經。功能包括<strong class="text-amber-200">破血行氣、通經止痛、抗氧化與抗炎</strong>。主治胸脅刺痛、痛經、跌打腫痛。現代醫學證實薑黃素有助於保護心血管及關節保健。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌱 栽培要領與採收時期：</h3>
+          <p class="leading-relaxed">
+            喜熱帶亞熱帶<strong class="text-amber-200">高溫多濕環境</strong>，需排水良好、疏鬆肥沃的沙質壤土。春季播種根莖，經夏日高溫迅速生長，待秋末冬初地上莖葉枯黃時採挖根莖，洗淨煮沸曬乾入藥。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm font-bold shadow transition">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Engine & Interactive Logic -->
+  <script>
+    class SoundSynthesizer {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playGrind() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120 + Math.random() * 50, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playDip() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+
+      playSizzle() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const bufferSize = this.ctx.sampleRate * 0.2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        noise.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+
+      playComplete() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(554.37, this.ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      }
+    }
+
+    const sound = new SoundSynthesizer();
+
+    // Mode 1: Grinding & Dyeing Logic
+    let dyeProgress = 0; // 0 to 100
+    let mediumType = 'paper'; // 'paper' | 'silk'
+    let isGrindingDrag = false;
+    let pestlePos = { x: 0, y: 0 };
+    let strokePaths = [];
+
+    // Mode 2: Curry Culinary Logic
+    let spicesAdded = { turmeric: false, pepper: false, herbs: false };
+    let simmered = false;
+
+    // Mode 3: Farming Logic
+    let farmState = { planted: false, watered: false, harvested: false };
+
+    // Canvas References
+    const grindCanvas = document.getElementById('grindCanvas');
+    const grindCtx = grindCanvas.getContext('2d');
+    const cookCanvas = document.getElementById('cookCanvas');
+    const cookCtx = cookCanvas.getContext('2d');
+    const farmCanvas = document.getElementById('farmCanvas');
+    const farmCtx = farmCanvas.getContext('2d');
+
+    // Canvas Auto Resizing
+    function resizeAllCanvases() {
+      [grindCanvas, cookCanvas, farmCanvas].forEach(c => {
+        if (c && c.parentElement) {
+          c.width = c.parentElement.clientWidth;
+          c.height = c.parentElement.clientHeight;
+        }
+      });
+      renderGrindScene();
+      renderCookScene();
+      renderFarmScene();
+    }
+    window.addEventListener('resize', resizeAllCanvases);
+
+    /* -------------------------------------------------------------
+       MODE 1: GRINDING & PLANT DYEING STUDIO
+    ------------------------------------------------------------- */
+    function setMedium(type) {
+      mediumType = type;
+      document.getElementById('btn-paper').className = type === 'paper' ? 
+        'px-2.5 py-1 bg-amber-900/90 text-amber-100 rounded-lg text-xs border border-amber-500 font-semibold' : 
+        'px-2.5 py-1 bg-stone-800 text-stone-400 rounded-lg text-xs border border-stone-700';
+      document.getElementById('btn-silk').className = type === 'silk' ? 
+        'px-2.5 py-1 bg-amber-900/90 text-amber-100 rounded-lg text-xs border border-amber-500 font-semibold' : 
+        'px-2.5 py-1 bg-stone-800 text-stone-400 rounded-lg text-xs border border-stone-700';
+      sound.playDip();
+      renderGrindScene();
+    }
+
+    function clearCanvas() {
+      strokePaths = [];
+      renderGrindScene();
+    }
+
+    function renderGrindScene() {
+      const w = grindCanvas.width;
+      const h = grindCanvas.height;
+      if (!w || !h) return;
+
+      grindCtx.clearRect(0, 0, w, h);
+
+      // Background Medium Texture
+      if (mediumType === 'paper') {
+        grindCtx.fillStyle = '#1c1917'; // Ink Xuan paper
+        grindCtx.fillRect(0, 0, w, h);
+        // Paper grain
+        grindCtx.strokeStyle = 'rgba(217, 119, 6, 0.05)';
+        for (let i = 0; i < h; i += 8) {
+          grindCtx.beginPath();
+          grindCtx.moveTo(0, i);
+          grindCtx.lineTo(w, i);
+          grindCtx.stroke();
+        }
+      } else {
+        grindCtx.fillStyle = '#12100e'; // Dark Silk
+        grindCtx.fillRect(0, 0, w, h);
+        // Silk grid lines
+        grindCtx.strokeStyle = 'rgba(251, 191, 36, 0.08)';
+        for (let x = 0; x < w; x += 12) {
+          grindCtx.beginPath();
+          grindCtx.moveTo(x, 0);
+          grindCtx.lineTo(x, h);
+          grindCtx.stroke();
+        }
+      }
+
+      // Render Dye Painted Strokes
+      strokePaths.forEach(path => {
+        if (path.length < 2) return;
+        grindCtx.beginPath();
+        grindCtx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          grindCtx.lineTo(path[i].x, path[i].y);
+        }
+        grindCtx.strokeStyle = 'rgba(245, 158, 11, 0.75)'; // Golden curcumin dye
+        grindCtx.lineWidth = 14;
+        grindCtx.lineCap = 'round';
+        grindCtx.lineJoin = 'round';
+        grindCtx.shadowColor = '#f59e0b';
+        grindCtx.shadowBlur = 8;
+        grindCtx.stroke();
+        grindCtx.shadowBlur = 0;
+      });
+
+      // Mortar Station Area on Left/Center
+      const mx = w * 0.3;
+      const my = h * 0.6;
+      const mr = 55;
+
+      // Mortar Outer Shadow/Bowl
+      grindCtx.beginPath();
+      grindCtx.arc(mx, my, mr, 0, Math.PI * 2);
+      grindCtx.fillStyle = '#292524';
+      grindCtx.fill();
+      grindCtx.strokeStyle = '#b45309';
+      grindCtx.lineWidth = 4;
+      grindCtx.stroke();
+
+      // Extracted Golden Curcumin Paste inside Mortar
+      if (dyeProgress > 0) {
+        grindCtx.beginPath();
+        grindCtx.arc(mx, my, (dyeProgress / 100) * (mr - 8), 0, Math.PI * 2);
+        grindCtx.fillStyle = '#d97706';
+        grindCtx.fill();
+      }
+
+      // Turmeric Rhizome Chunk
+      if (dyeProgress < 100) {
+        grindCtx.beginPath();
+        grindCtx.ellipse(mx - 10, my - 5, 18, 10, 0.4, 0, Math.PI * 2);
+        grindCtx.fillStyle = '#b45309';
+        grindCtx.fill();
+        grindCtx.strokeStyle = '#f59e0b';
+        grindCtx.lineWidth = 2;
+        grindCtx.stroke();
+      }
+
+      // Pestle Handle
+      const px = pestlePos.x || (mx + 20);
+      const py = pestlePos.y || (my - 30);
+
+      grindCtx.save();
+      grindCtx.translate(px, py);
+      grindCtx.rotate(-0.3);
+      grindCtx.fillStyle = '#78350f';
+      grindCtx.fillRect(-8, -40, 16, 50);
+      grindCtx.strokeStyle = '#f59e0b';
+      grindCtx.lineWidth = 2;
+      grindCtx.strokeRect(-8, -40, 16, 50);
+      grindCtx.restore();
+
+      // Brush Cursor Hint if Dye ready
+      if (dyeProgress >= 100) {
+        grindCtx.fillStyle = '#f59e0b';
+        grindCtx.font = '12px sans-serif';
+        grindCtx.fillText('🖌️ 點擊/拖曳右側畫面進行草木染藝', w * 0.48, h * 0.12);
+      }
+    }
+
+    // Interactive Grinding & Painting Events
+    let currentStroke = [];
+
+    grindCanvas.addEventListener('mousedown', startGrindOrPaint);
+    grindCanvas.addEventListener('mousemove', moveGrindOrPaint);
+    grindCanvas.addEventListener('mouseup', endGrindOrPaint);
+
+    grindCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      startGrindOrPaint(touch);
+    });
+    grindCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      moveGrindOrPaint(touch);
+    });
+    grindCanvas.addEventListener('touchend', endGrindOrPaint);
+
+    function startGrindOrPaint(e) {
+      const rect = grindCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const w = grindCanvas.width;
+      const h = grindCanvas.height;
+
+      const mx = w * 0.3;
+      const my = h * 0.6;
+      const distToMortar = Math.hypot(x - mx, y - my);
+
+      if (distToMortar < 65 && dyeProgress < 100) {
+        isGrindingDrag = true;
+        pestlePos = { x, y };
+        doGrindAction();
+      } else if (dyeProgress >= 100) {
+        isGrindingDrag = false;
+        currentStroke = [{ x, y }];
+        strokePaths.push(currentStroke);
+        sound.playDip();
+      }
+    }
+
+    function moveGrindOrPaint(e) {
+      const rect = grindCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const w = grindCanvas.width;
+      const h = grindCanvas.height;
+
+      if (isGrindingDrag) {
+        pestlePos = { x, y };
+        doGrindAction();
+      } else if (currentStroke.length > 0) {
+        currentStroke.push({ x, y });
+        renderGrindScene();
+      }
+    }
+
+    function endGrindOrPaint() {
+      isGrindingDrag = false;
+      currentStroke = [];
+    }
+
+    function doGrindAction() {
+      if (dyeProgress < 100) {
+        dyeProgress = Math.min(100, dyeProgress + 4);
+        sound.playGrind();
+        document.getElementById('dye-progress-text').innerText = `${Math.floor(dyeProgress)}%`;
+
+        if (dyeProgress >= 100) {
+          sound.playComplete();
+          document.getElementById('grind-instruction').innerHTML = "✨ <strong class='text-amber-300'>萃取完成！</strong> 雙手可於右側宣紙/絲綢畫布上揮毫草木染！";
+        }
+        renderGrindScene();
+      }
+    }
+
+    /* -------------------------------------------------------------
+       MODE 2: CURRY CULINARY KITCHEN
+    ------------------------------------------------------------- */
+    function addSpice(type) {
+      spicesAdded[type] = true;
+      sound.playSizzle();
+
+      if (type === 'turmeric') document.getElementById('btn-add-turmeric').disabled = true;
+      if (type === 'pepper') document.getElementById('btn-add-pepper').disabled = true;
+      if (type === 'herbs') document.getElementById('btn-add-herbs').disabled = true;
+
+      checkCookStatus();
+      renderCookScene();
+    }
+
+    function checkCookStatus() {
+      const count = Object.values(spicesAdded).filter(Boolean).length;
+      const pct = Math.floor((count / 3) * 60);
+      document.getElementById('cook-bar').style.width = `${pct}%`;
+
+      if (count === 3) {
+        const btnSimmer = document.getElementById('btn-simmer');
+        btnSimmer.disabled = false;
+        btnSimmer.className = "px-3 py-1.5 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-xl border border-amber-500 text-xs font-bold shadow-lg transition cursor-pointer";
+        document.getElementById('cook-status-text').innerText = "香料齊備，可開文火燉煮 (60%)";
+      }
+    }
+
+    function simmerCurry() {
+      if (!simmered) {
+        simmered = true;
+        sound.playComplete();
+        document.getElementById('cook-bar').style.width = '100%';
+        document.getElementById('cook-status-text').innerText = "金黃薑黃咖哩燉煮完成！(100%)";
+        document.getElementById('cook-status-text').className = "text-amber-400 font-bold";
+        document.getElementById('cook-explanation').innerHTML = "🎉 <strong class='text-amber-300'>大功告成！</strong> 薑黃配合胡椒鹼與草本芳香理氣藥，展現極高破血行氣與溫經止痛療效！";
+        renderCookScene();
+      }
+    }
+
+    function renderCookScene() {
+      const w = cookCanvas.width;
+      const h = cookCanvas.height;
+      if (!w || !h) return;
+
+      cookCtx.clearRect(0, 0, w, h);
+
+      // Kitchen Hearth Background
+      cookCtx.fillStyle = '#1c140e';
+      cookCtx.fillRect(0, 0, w, h);
+
+      // Wok Clay Pot Outer
+      const cx = w * 0.5;
+      const cy = h * 0.55;
+
+      cookCtx.beginPath();
+      cookCtx.arc(cx, cy, 90, 0, Math.PI * 2);
+      cookCtx.fillStyle = '#292524';
+      cookCtx.fill();
+      cookCtx.strokeStyle = '#78350f';
+      cookCtx.lineWidth = 6;
+      cookCtx.stroke();
+
+      // Wok Inner Curry Broth
+      cookCtx.beginPath();
+      cookCtx.arc(cx, cy, 78, 0, Math.PI * 2);
+      cookCtx.fillStyle = simmered ? '#d97706' : '#78350f';
+      cookCtx.fill();
+
+      // Simmering Steam / Bubbles Effect
+      if (simmered) {
+        for (let i = 0; i < 6; i++) {
+          const bx = cx + (Math.sin(Date.now() * 0.003 + i) * 40);
+          const by = cy + (Math.cos(Date.now() * 0.003 + i) * 30);
+          cookCtx.beginPath();
+          cookCtx.arc(bx, by, 8, 0, Math.PI * 2);
+          cookCtx.fillStyle = '#fef08a';
+          cookCtx.fill();
+        }
+      }
+
+      // Spices floating
+      if (spicesAdded.turmeric) {
+        cookCtx.fillStyle = '#f59e0b';
+        cookCtx.font = '16px sans-serif';
+        cookCtx.fillText('✨薑黃素', cx - 35, cy - 20);
+      }
+      if (spicesAdded.pepper) {
+        cookCtx.fillStyle = '#eab308';
+        cookCtx.font = '16px sans-serif';
+        cookCtx.fillText('🌶️黑胡椒', cx + 5, cy + 25);
+      }
+      if (spicesAdded.herbs) {
+        cookCtx.fillStyle = '#84cc16';
+        cookCtx.font = '16px sans-serif';
+        cookCtx.fillText('🌿草本', cx - 45, cy + 30);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       MODE 3: RHIZOME FARMING & HARVESTING
+    ------------------------------------------------------------- */
+    function farmAction(action) {
+      const fb = document.getElementById('farm-feedback');
+      const banner = document.getElementById('farm-status-banner');
+
+      if (action === 'plant') {
+        farmState.planted = true;
+        fb.innerText = "🪴 選擇疏鬆透氣沙質壤土播種薑黃種塊！";
+        sound.playGrind();
+      } else if (action === 'climate') {
+        if (!farmState.planted) {
+          fb.innerText = "⚠️ 請先播種薑黃種塊！";
+          return;
+        }
+        farmState.watered = true;
+        fb.innerText = "☀️ 提供高溫多濕環境與充足灌溉，葉片茁壯茂盛！";
+        sound.playDip();
+      } else if (action === 'harvest') {
+        if (!farmState.watered) {
+          fb.innerText = "⚠️ 薑黃尚未經夏季高溫生長，無法採挖！";
+          return;
+        }
+        farmState.harvested = true;
+        fb.innerText = "⛏️️ 秋冬葉片枯黃之際，掘出質地堅實之鮮黃金黃根莖！";
+        sound.playComplete();
+      }
+
+      if (farmState.planted && farmState.watered && farmState.harvested) {
+        banner.innerText = "🎉 狀態：秋冬金黃根莖採收成功 · 薑黃素豐收";
+        banner.className = "absolute top-3 left-1/2 -translate-x-1/2 bg-amber-900/90 px-4 py-1.5 rounded-full border border-amber-500 text-amber-200 text-xs backdrop-blur-md font-bold";
+      }
+
+      renderFarmScene();
+    }
+
+    function renderFarmScene() {
+      const w = farmCanvas.width;
+      const h = farmCanvas.height;
+      if (!w || !h) return;
+
+      farmCtx.clearRect(0, 0, w, h);
+
+      // Soil Background
+      farmCtx.fillStyle = '#1c140e';
+      farmCtx.fillRect(0, 0, w, h);
+
+      // Soil Bed Contour
+      farmCtx.beginPath();
+      farmCtx.moveTo(0, h * 0.6);
+      farmCtx.quadraticCurveTo(w * 0.5, h * 0.55, w, h * 0.6);
+      farmCtx.lineTo(w, h);
+      farmCtx.lineTo(0, h);
+      farmCtx.fillStyle = '#451a03'; // Sandy loam
+      farmCtx.fill();
+
+      // Plant Growth State
+      if (farmState.planted && !farmState.watered) {
+        // Seed Rhizome in Soil
+        farmCtx.beginPath();
+        farmCtx.ellipse(w * 0.5, h * 0.65, 25, 14, 0, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#b45309';
+        farmCtx.fill();
+        farmCtx.strokeStyle = '#f59e0b';
+        farmCtx.lineWidth = 2;
+        farmCtx.stroke();
+      } else if (farmState.watered && !farmState.harvested) {
+        // Lush Tropical Stem & Leaves
+        farmCtx.beginPath();
+        farmCtx.moveTo(w * 0.5, h * 0.6);
+        farmCtx.lineTo(w * 0.5, h * 0.25);
+        farmCtx.strokeStyle = '#65a30d';
+        farmCtx.lineWidth = 8;
+        farmCtx.stroke();
+
+        // Wide Leaves
+        farmCtx.beginPath();
+        farmCtx.ellipse(w * 0.42, h * 0.32, 35, 12, -0.5, 0, Math.PI * 2);
+        farmCtx.ellipse(w * 0.58, h * 0.35, 35, 12, 0.5, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#84cc16';
+        farmCtx.fill();
+      } else if (farmState.harvested) {
+        // Harvested Golden Rhizomes
+        for (let i = -2; i <= 2; i++) {
+          const rx = w * 0.5 + i * 22;
+          const ry = h * 0.68 + Math.abs(i) * 5;
+          farmCtx.beginPath();
+          farmCtx.ellipse(rx, ry, 18, 12, i * 0.2, 0, Math.PI * 2);
+          farmCtx.fillStyle = '#d97706';
+          farmCtx.fill();
+          farmCtx.strokeStyle = '#fef08a';
+          farmCtx.lineWidth = 2;
+          farmCtx.stroke();
+        }
+      }
+    }
+
+    /* -------------------------------------------------------------
+       NAVIGATION & MODAL TOGGLE
+    ------------------------------------------------------------- */
+    function switchMode(mode) {
+      document.getElementById('sec-grind').classList.toggle('hidden', mode !== 'grind');
+      document.getElementById('sec-cook').classList.toggle('hidden', mode !== 'cook');
+      document.getElementById('sec-farm').classList.toggle('hidden', mode !== 'farm');
+
+      const tabs = ['grind', 'cook', 'farm'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === mode) {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50 font-bold";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700";
+        }
+      });
+
+      if (mode === 'grind') renderGrindScene();
+      else if (mode === 'cook') renderCookScene();
+      else if (mode === 'farm') renderFarmScene();
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup Initializer
+    window.onload = () => {
+      resizeAllCanvases();
+      switchMode('grind');
+    };
+  </script>
+</body>
+</html>

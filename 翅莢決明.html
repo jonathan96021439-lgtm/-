@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【黃花對聯】翅莢決明主題飛花燈謎與清肝潤腸遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #1a0f02;
+            color: #fef3c7;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(45, 20, 5, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #eab308;
+            border-radius: 3px;
+        }
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(234, 179, 8, 0.45);
+        }
+        .candle-glow {
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 14px rgba(250, 204, 21, 0.9);
+        }
+        .text-glow-amber {
+            text-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+        }
+        @keyframes pulseCandle {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.7)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.95)); }
+        }
+        .pulse-candle {
+            animation: pulseCandle 2.2s ease-in-out infinite;
+        }
+        @keyframes floatSparks {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-30px) rotate(15deg); opacity: 0; }
+        }
+        .spark-anim {
+            animation: floatSparks 3s ease-out infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-stone-950 text-amber-50 flex flex-col justify-between overflow-hidden">
+
+    <header class="relative z-20 w-full max-w-4xl mx-auto p-3 sm:p-4 flex justify-between items-center pointer-events-auto">
+        <div class="bg-amber-950/80 border border-yellow-500/50 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 gold-glow">
+            <div>
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">燈謎得分 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-yellow-300 font-mono text-glow-gold">0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60"></div>
+            <div>
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">飛花連對 Combo</span>
+                <span id="comboText" class="text-xl sm:text-2xl font-semibold text-amber-200 font-mono">x0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60 hidden sm:block"></div>
+            <div class="hidden sm:block">
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">黃花對聯 Round</span>
+                <span id="levelText" class="text-lg font-semibold text-yellow-200 font-mono">1 / 5</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="btnCodex" class="bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-yellow-500/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                翅莢決明典籍
+            </button>
+            <button id="btnSound" class="bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-yellow-500/50 p-2.5 rounded-xl transition-all shadow-md">
+                <svg id="soundOnIcon" class="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                <svg id="soundOffIcon" class="w-5 h-5 text-amber-500/50 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-between p-2 sm:p-4 max-w-4xl w-full mx-auto">
+        
+        <!-- Target Task Banner -->
+        <div id="questBanner" class="w-full mb-2 transition-all duration-300">
+            <div class="bg-gradient-to-r from-stone-950/90 via-amber-950/90 to-stone-950/90 border-2 border-yellow-500/60 rounded-2xl p-3 sm:p-4 shadow-xl text-center relative overflow-hidden backdrop-blur-md">
+                <div id="stepIndicator" class="text-xs text-yellow-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block animate-ping"></span>
+                    <span id="stepTitleText">飛花令燈謎 ‧ 觀金黃燭台花序對聯</span>
+                </div>
+                <h2 id="questInstruction" class="text-base sm:text-lg font-bold text-yellow-100 font-calligraphy leading-snug">
+                    「直立黃花如燭台，照亮明目清肝火」── 請配對正確下聯與目疾腸道燈謎！
+                </h2>
+                <p id="subHintText" class="text-xs text-amber-300/80 mt-1">提示：翅莢決明花序直立如金黃燭火，具有清肝明目、潤腸通便、殺蟲止痒之功。</p>
+            </div>
+        </div>
+
+        <!-- Interactive Gold Candle Flower Stage -->
+        <div id="fieldContainer" class="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] bg-amber-950/40 rounded-2xl overflow-hidden border-4 border-amber-700/80 shadow-2xl candle-glow flex flex-col justify-between p-3">
+            
+            <!-- Dynamic Canvas showing Candle Flower & Light Particles -->
+            <canvas id="candleCanvas" class="absolute inset-0 z-0 cursor-pointer"></canvas>
+
+            <div id="riddleBoard" class="relative z-20 w-full h-full flex flex-col justify-between p-2">
+                <!-- Upper Couplet Display Header -->
+                <div id="coupletCard" class="bg-gradient-to-r from-amber-950/95 via-stone-900/90 to-amber-950/95 border-2 border-yellow-400/80 rounded-2xl p-3 text-center shadow-xl pulse-candle">
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <span class="text-2xl sm:text-3xl">🕯️✨</span>
+                        <span id="coupletUpperText" class="text-lg sm:text-xl font-bold text-yellow-300 font-calligraphy text-glow-gold">
+                            上聯：黃花直立如金燭
+                        </span>
+                    </div>
+                    <p id="riddlePrompt" class="text-sm font-semibold text-amber-100 mb-1">
+                        燈謎試煉加載中...
+                    </p>
+                    <span class="text-xs text-amber-200/80 italic">點擊下方正確對聯或燈謎謎底以點亮金黃燭台</span>
+                </div>
+
+                <!-- Couplet & Riddle Options Grid -->
+                <div id="coupletOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
+                    <!-- Options injected by JS -->
+                </div>
+            </div>
+
+            <!-- Floating Toast Alert Overlay -->
+            <div id="gameToast" class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none bg-black/85 border border-yellow-400 text-yellow-200 text-xs sm:text-sm px-5 py-2.5 rounded-full backdrop-blur-md shadow-2xl opacity-0 transition-opacity duration-300 flex items-center gap-2">
+                <span id="toastIcon">✨</span>
+                <span id="toastText">點亮金黃燭火...</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-20 w-full text-center py-2 text-xs text-yellow-400/60 font-light">
+        【黃花對聯】翅莢決明（Senna alata） ── 直立黃色燭火 ‧ 清肝明目 ‧ 潤腸通便 ‧ 殺蟲止痒
+    </footer>
+
+    <!-- Game Start Modal -->
+    <div id="startModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="bg-gradient-to-b from-amber-950 via-stone-900 to-stone-950 border-2 border-yellow-500/60 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600"></div>
+            
+            <div class="mb-5">
+                <span class="inline-block px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 text-xs tracking-widest mb-2 border border-yellow-500/30">本草黃花 ‧ 飛花燈謎</span>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-yellow-300 font-calligraphy text-glow-gold mb-2">【黃花對聯】</h1>
+                <p class="text-sm sm:text-base text-amber-200/80">翅莢決明飛花對聯與清肝潤腸燈謎遊戲</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-left text-xs sm:text-sm">
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-yellow-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>🕯️</span> 第一步：觀燭台黃花
+                    </div>
+                    <p class="text-amber-100/80 leading-relaxed">
+                        觀察翅莢決明直立如<strong class="text-yellow-300">金黃燭台</strong>的花序，響應飛花對聯！
+                    </p>
+                </div>
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-yellow-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>📜</span> 第二步：對燈謎清肝腸
+                    </div>
+                    <p class="text-amber-100/80 leading-relaxed">
+                        解答對應之<strong class="text-yellow-300">「清肝明目、潤腸通便、殺蟲止痒」</strong>燈謎與喜全日照高溫之種植訣竅！
+                    </p>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600 hover:from-yellow-400 hover:to-amber-300 text-stone-950 font-bold text-lg rounded-2xl shadow-xl hover:shadow-yellow-500/30 transition-all cursor-pointer">
+                飛花對聯 ‧ 點亮黃燭
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-stone-950 via-amber-950 to-stone-950 border-2 border-yellow-500/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl">
+            <div id="gameOverTitle" class="text-3xl sm:text-4xl font-bold text-yellow-300 font-calligraphy mb-2 text-glow-gold">金燭吐輝 ‧ 燈謎大成</div>
+            <p id="gameOverSubtitle" class="text-sm text-amber-200/80 mb-6">您已熟知翅莢決明之燭台花序、清肝明目潤腸功效與全日照栽培法！</p>
+
+            <div class="bg-stone-900/80 border border-amber-800/60 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-xs text-amber-400/80 block">燈謎總分</span>
+                    <span id="finalScore" class="text-3xl font-extrabold text-yellow-300 font-mono">0</span>
+                </div>
+                <div>
+                    <span class="text-xs text-amber-400/80 block">最高連對</span>
+                    <span id="finalCombo" class="text-3xl font-extrabold text-amber-200 font-mono">x0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnRestart" class="flex-1 py-3 bg-yellow-600 hover:bg-yellow-500 text-stone-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer">
+                    再對一次
+                </button>
+                <button id="btnOpenCodexEnd" class="flex-1 py-3 bg-stone-900 hover:bg-amber-950 border border-yellow-600/60 text-yellow-300 font-bold rounded-xl transition-all cursor-pointer">
+                    閱讀翅莢決明典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Codex Modal -->
+    <div id="codexModal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-amber-950 to-stone-950 border-2 border-yellow-500/60 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-amber-800/50 flex justify-between items-center bg-amber-900/40">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🕯️🌼</span>
+                    <h3 class="text-2xl font-bold text-yellow-300 font-calligraphy">翅莢決明（Cassia alata）本草典籍</h3>
+                </div>
+                <button id="btnCloseCodex" class="text-yellow-400 hover:text-yellow-200 p-1 text-2xl transition-all cursor-pointer">&times;</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-5 text-sm sm:text-base text-amber-100/90 leading-relaxed">
+                <!-- Visual Traits -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-yellow-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【形態特徵 ‧ 金黃燭台】</span>
+                    </div>
+                    <p>
+                        翅莢決明為豆科決明屬灌木。最顯著特徵為其頂生直立之總狀花序，密生鮮黃色花朵，高聳直立，<strong class="text-yellow-300">宛如一支支燦爛燃燒的金黃色燭台</strong>。果實為具翼之莢果（翅莢）。
+                    </p>
+                </div>
+
+                <!-- Medicinal Uses -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-yellow-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【特性用處 ‧ 清肝潤腸】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-yellow-300">清肝明目：</strong> 能瀉肝火、清頭目，適用於肝火上炎引致之目赤腫痛、目昏多淚。</li>
+                        <li><strong class="text-yellow-300">潤腸通便：</strong> 含有蒽醌類成分，具良好潤腸瀉下作用，緩解腸燥便秘。</li>
+                        <li><strong class="text-yellow-300">殺蟲止痒：</strong> 葉片汁液與提取物傳統用於皮膚頑癬、濕疹，有殺蟲止痒之功。</li>
+                    </ul>
+                </div>
+
+                <!-- Planting & Cultivation Guide -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-yellow-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【種植建議 ‧ 日照高溫與修剪】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-yellow-300">光照與氣溫：</strong> 喜極其充足之<strong class="text-yellow-300">全日照與高溫環境</strong>，抗熱耐旱，不耐嚴寒。</li>
+                        <li><strong class="text-yellow-300">土壤要求：</strong> 對土壤適應力強，不擇土壤，排水良好之砂質壤土最佳，生長十分迅速。</li>
+                        <li><strong class="text-yellow-300">修剪分枝：</strong> 花期過後需<strong class="text-yellow-300">及時剪除殘花與過長枝條</strong>，可促進下季萌發更多側枝與燭台花序。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-950 border-t border-amber-800/50 text-center">
+                <button id="btnConfirmCodex" class="px-8 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer">
+                    領悟典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playFlicker() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(580, now + 0.12);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } catch(e){}
+            }
+
+            playMatch(isCorrect) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    if (isCorrect) {
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(523.25, now); // C5
+                        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3); // C6
+                        gain.gain.setValueAtTime(0.25, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                        osc.start(now);
+                        osc.stop(now + 0.35);
+                    } else {
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(220, now);
+                        osc.frequency.linearRampToValueAtTime(110, now + 0.22);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                        osc.start(now);
+                        osc.stop(now + 0.25);
+                    }
+                } catch(e){}
+            }
+
+            playWin() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const notes = [440, 554.37, 659.25, 880, 1108.73];
+                    notes.forEach((freq, i) => {
+                        const now = this.ctx.currentTime + i * 0.1;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.3);
+                    });
+                } catch(e){}
+            }
+        }
+
+        const COUPLET_QUESTS = [
+            {
+                upper: "上聯：直立黃花如金燭",
+                riddle: "燈謎一：矗立金黃燭台花序，主治肝火上炎、雙目昏花（打一核心功效）",
+                hint: "功效提示：清肝瀉火，明目退翳，照亮雙眼。",
+                options: [
+                    { title: "【下聯】清肝明目照雙睛", desc: "【謎底：清肝明目】清肝火、治目赤腫痛昏花", isCorrect: true },
+                    { title: "【下聯】大熱溫陽散寒濕", desc: "【非此藥】溫補脾腎藥性", isCorrect: false },
+                    { title: "【下聯】麻辣香濃佐佳肴", desc: "【非藥用】普通調味之品", isCorrect: false },
+                    { title: "【下聯】收斂固澀止汗流", desc: "【非此藥】收全汗止瀉功效", isCorrect: false }
+                ],
+                explanation: "翅莢決明花序如金燭，具清肝明目之功，治目赤腫痛。"
+            },
+            {
+                upper: "上聯：燭火輝煌通幽徑",
+                riddle: "燈謎二：金花照亮腸道，潤滑燥結，腹脹便秘一掃空（打一腸道功效）",
+                hint: "功效提示：蒽醌類成分潤滑腸道，通便瀉下。",
+                options: [
+                    { title: "【下聯】苦寒大瀉傷正氣", desc: "【錯誤】峻下峻瀉過於猛烈", isCorrect: false },
+                    { title: "【下聯】潤腸通便解腹結", desc: "【謎底：潤腸通便】潤腸下氣，緩解腸燥便秘", isCorrect: true },
+                    { title: "【下聯】利水消腫排結石", desc: "【錯誤】主要作用於尿路通利", isCorrect: false },
+                    { title: "【下聯】補氣健脾化痰濕", desc: "【錯誤】補益脾胃劑型", isCorrect: false }
+                ],
+                explanation: "翅莢決明兼具潤腸通便之效，能暢通腸道燥結。"
+            },
+            {
+                upper: "上聯：黃花璀璨驅頑癬",
+                riddle: "燈謎三：鮮葉汁液外塗，皮膚瘙痒、頑癬濕疹化春風（打一皮膚外用功效）",
+                hint: "功效提示：傳統民間用於皮膚真菌頑癬殺蟲止痒。",
+                options: [
+                    { title: "【下聯】殺蟲止痒祛皮膚", desc: "【謎底：殺蟲止痒】外用治頑癬、濕疹皮膚痒", isCorrect: true },
+                    { title: "【下聯】劇毒腐蝕傷肌膚", desc: "【錯誤】無毒害溫和藥性", isCorrect: false },
+                    { title: "【下聯】生肌止血封傷口", desc: "【錯誤】收斂創傷止血藥", isCorrect: false },
+                    { title: "【下聯】溫經通絡散寒痛", desc: "【錯誤】溫陽活血通絡藥", isCorrect: false }
+                ],
+                explanation: "翅莢決明葉片提取物具殺蟲止痒之功，常用於皮膚頑癬。"
+            },
+            {
+                upper: "上聯：全日高溫生急速",
+                riddle: "燈謎四：喜烈日炙烤與高溫酷暑，不擇土壤生長迅速（打一種植環境需求）",
+                hint: "種植提示：需充足陽光與溫暖熱量。",
+                options: [
+                    { title: "陰暗潮濕怕強光", desc: "【錯誤】陰暗環境生長不良", isCorrect: false },
+                    { title: "【下聯】全日照耀極喜溫", desc: "【謎底：全日照與高溫】喜極其充足日光與高溫氣候", isCorrect: true },
+                    { title: "極度耐寒凍冰雪", desc: "【錯誤】不耐嚴寒霜凍", isCorrect: false },
+                    { title: "浸泡水底成浮萍", desc: "【錯誤】排水不良易爛根", isCorrect: false }
+                ],
+                explanation: "翅莢決明喜全日照與高溫環境，生長極為迅速。"
+            },
+            {
+                upper: "上聯：謝落殘花及時剪",
+                riddle: "燈謎五：花期過後適時修剪殘枝，來年側枝蓬勃燭台更盛（打一種植修剪秘訣）",
+                hint: "種植提示：花後修剪促進多發分枝。",
+                options: [
+                    { title: "【下聯】促進分枝燭台盛", desc: "【謎底：花後修剪促進分枝】及時剪除殘花促側枝萌發", isCorrect: true },
+                    { title: "砍斷主根任枯萎", desc: "【錯誤】破壞株體生命", isCorrect: false },
+                    { title: "連年不剪任荒蕪", desc: "【錯誤】枝條過密開花減少", isCorrect: false },
+                    { title: "密閉遮光不透風", desc: "【錯誤】影響光合作用", isCorrect: false }
+                ],
+                explanation: "翅莢決明花後及時修剪殘花過長枝，可大幅促進分枝與下季繁花。"
+            }
+        ];
+
+        let currentRound = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+
+        const sounds = new SoundEngine();
+
+        const candleCanvas = document.getElementById('candleCanvas');
+        const candleCtx = candleCanvas.getContext('2d');
+        let candleFlames = [];
+
+        function resizeCandleCanvas() {
+            const rect = candleCanvas.parentElement.getBoundingClientRect();
+            candleCanvas.width = rect.width;
+            candleCanvas.height = rect.height;
+            initCandleParticles();
+        }
+
+        function initCandleParticles() {
+            candleFlames = [];
+            const count = 25;
+            for (let i = 0; i < count; i++) {
+                candleFlames.push({
+                    x: Math.random() * candleCanvas.width,
+                    y: Math.random() * candleCanvas.height,
+                    radius: 2 + Math.random() * 4,
+                    color: Math.random() > 0.3 ? '#facc15' : '#f97316',
+                    vy: 0.5 + Math.random() * 1.2,
+                    alpha: Math.random()
+                });
+            }
+        }
+
+        function drawCandleScene() {
+            if (!candleCtx) return;
+            const w = candleCanvas.width;
+            const h = candleCanvas.height;
+
+            candleCtx.clearRect(0, 0, w, h);
+
+            // Draw Central Stylized Golden Candle Spike
+            const centerX = w / 2;
+            const bottomY = h;
+
+            // Background glow
+            const bgGlow = candleCtx.createRadialGradient(centerX, h * 0.5, 20, centerX, h * 0.5, w * 0.6);
+            bgGlow.addColorStop(0, 'rgba(251, 191, 36, 0.25)');
+            bgGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            candleCtx.fillStyle = bgGlow;
+            candleCtx.fillRect(0, 0, w, h);
+
+            // Candle Flower Tower Stem & Yellow Spikes
+            candleCtx.beginPath();
+            candleCtx.moveTo(centerX - 8, bottomY);
+            candleCtx.lineTo(centerX - 4, h * 0.25);
+            candleCtx.lineTo(centerX + 4, h * 0.25);
+            candleCtx.lineTo(centerX + 8, bottomY);
+            candleCtx.fillStyle = '#15803d';
+            candleCtx.fill();
+
+            // Draw Golden Candle Spikes (Flower Cluster)
+            const clusterTop = h * 0.15;
+            const clusterBottom = h * 0.65;
+            const clusterHeight = clusterBottom - clusterTop;
+
+            for (let y = clusterTop; y < clusterBottom; y += 12) {
+                const progress = (y - clusterTop) / clusterHeight;
+                const widthAtY = Math.sin(progress * Math.PI) * 45 + 10;
+
+                // Golden Petal Flame
+                candleCtx.beginPath();
+                candleCtx.ellipse(centerX, y, widthAtY, 8, 0, 0, Math.PI * 2);
+                candleCtx.fillStyle = `rgba(250, 204, 21, ${0.7 + Math.sin(Date.now() * 0.005 + y) * 0.2})`;
+                candleCtx.fill();
+
+                candleCtx.beginPath();
+                candleCtx.ellipse(centerX, y - 2, widthAtY * 0.6, 5, 0, 0, Math.PI * 2);
+                candleCtx.fillStyle = 'rgba(254, 240, 138, 0.9)';
+                candleCtx.fill();
+            }
+
+            // Top Flame Candle Tip
+            const flameY = clusterTop - 15;
+            const flameGlow = candleCtx.createRadialGradient(centerX, flameY, 2, centerX, flameY, 25);
+            flameGlow.addColorStop(0, '#ffffff');
+            flameGlow.addColorStop(0.4, '#facc15');
+            flameGlow.addColorStop(1, 'rgba(249, 115, 22, 0)');
+            candleCtx.fillStyle = flameGlow;
+            candleCtx.beginPath();
+            candleCtx.arc(centerX, flameY, 25, 0, Math.PI * 2);
+            candleCtx.fill();
+
+            // Animated floating spark particles
+            candleFlames.forEach(p => {
+                p.y -= p.vy;
+                if (p.y < 0) p.y = h;
+                p.alpha += (Math.random() - 0.5) * 0.05;
+                if (p.alpha < 0.2) p.alpha = 0.2;
+                if (p.alpha > 0.9) p.alpha = 0.9;
+
+                candleCtx.beginPath();
+                candleCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                candleCtx.fillStyle = p.color;
+                candleCtx.globalAlpha = p.alpha;
+                candleCtx.fill();
+                candleCtx.globalAlpha = 1.0;
+            });
+
+            requestAnimationFrame(drawCandleScene);
+        }
+
+        candleCanvas.addEventListener('click', () => {
+            sounds.init();
+            sounds.playFlicker();
+            showToast('✨ 金黃燭台璀璨生輝！');
+        });
+
+        function startNewGame() {
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            currentRound = 0;
+            updateHeaderUI();
+            loadRound(currentRound);
+
+            document.getElementById('startModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('codexModal').classList.add('hidden');
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = score;
+            document.getElementById('comboText').innerText = 'x' + combo;
+            document.getElementById('levelText').innerText = `${currentRound + 1} / ${COUPLET_QUESTS.length}`;
+        }
+
+        function loadRound(roundIdx) {
+            if (roundIdx >= COUPLET_QUESTS.length) {
+                endGame();
+                return;
+            }
+
+            updateHeaderUI();
+
+            const quest = COUPLET_QUESTS[roundIdx];
+
+            document.getElementById('coupletUpperText').innerText = quest.upper;
+            document.getElementById('riddlePrompt').innerText = quest.riddle;
+            document.getElementById('subHintText').innerText = quest.hint;
+
+            renderCoupletOptions(quest);
+        }
+
+        function renderCoupletOptions(quest) {
+            const grid = document.getElementById('coupletOptionsGrid');
+            grid.innerHTML = '';
+
+            // Shuffle options slightly
+            const shuffledOpts = [...quest.options].sort(() => Math.random() - 0.5);
+
+            shuffledOpts.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = "group bg-gradient-to-b from-stone-900/90 to-amber-950/80 hover:from-amber-900/90 hover:to-amber-950/95 border-2 border-amber-700/60 hover:border-yellow-400 rounded-2xl p-3 text-left transition-all shadow-lg hover:scale-[1.02] active:scale-95 flex flex-col justify-between cursor-pointer";
+
+                btn.innerHTML = `
+                    <div class="font-bold text-yellow-300 text-sm sm:text-base mb-1 font-calligraphy group-hover:text-yellow-200 text-glow-gold">${opt.title}</div>
+                    <p class="text-xs text-amber-200/80 leading-snug">${opt.desc}</p>
+                `;
+
+                btn.addEventListener('click', () => handleChoice(opt, quest, btn));
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleChoice(selectedOpt, quest, btnElement) {
+            sounds.init();
+
+            if (selectedOpt.isCorrect) {
+                sounds.playMatch(true);
+                score += 100 + combo * 20;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                updateHeaderUI();
+
+                btnElement.classList.add('border-yellow-400', 'gold-glow');
+                showToast(`✅ 對聯精妙！${quest.explanation}`);
+
+                setTimeout(() => {
+                    currentRound++;
+                    loadRound(currentRound);
+                }, 1800);
+            } else {
+                sounds.playMatch(false);
+                combo = 0;
+                updateHeaderUI();
+
+                btnElement.classList.add('border-red-500/80');
+                showToast(`❌ 選擇未合！${quest.explanation}`);
+
+                setTimeout(() => {
+                    btnElement.classList.remove('border-red-500/80');
+                }, 800);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('gameToast');
+            const toastText = document.getElementById('toastText');
+            toastText.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 1700);
+        }
+
+        function endGame() {
+            sounds.playWin();
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalCombo').innerText = 'x' + maxCombo;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        window.addEventListener('load', () => {
+            resizeCandleCanvas();
+            drawCandleScene();
+            window.addEventListener('resize', resizeCandleCanvas);
+
+            document.getElementById('btnStartGame').addEventListener('click', () => {
+                sounds.init();
+                startNewGame();
+            });
+
+            document.getElementById('btnRestart').addEventListener('click', () => {
+                startNewGame();
+            });
+
+            const openCodex = () => {
+                document.getElementById('codexModal').classList.remove('hidden');
+            };
+            const closeCodex = () => {
+                document.getElementById('codexModal').classList.add('hidden');
+            };
+
+            document.getElementById('btnCodex').addEventListener('click', openCodex);
+            document.getElementById('btnOpenCodexEnd').addEventListener('click', openCodex);
+            document.getElementById('btnCloseCodex').addEventListener('click', closeCodex);
+            document.getElementById('btnConfirmCodex').addEventListener('click', closeCodex);
+
+            const btnSound = document.getElementById('btnSound');
+            const soundOnIcon = document.getElementById('soundOnIcon');
+            const soundOffIcon = document.getElementById('soundOffIcon');
+
+            btnSound.addEventListener('click', () => {
+                sounds.enabled = !sounds.enabled;
+                if (sounds.enabled) {
+                    soundOnIcon.classList.remove('hidden');
+                    soundOffIcon.classList.add('hidden');
+                } else {
+                    soundOnIcon.classList.add('hidden');
+                    soundOffIcon.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

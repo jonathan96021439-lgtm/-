@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第十六關：龍舌蘭【千斤挺拔】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #0d0a07;
+      color: #f5ebe0;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #85704d;
+      box-shadow: 0 0 25px rgba(133, 112, 77, 0.35);
+    }
+
+    .agave-glow {
+      box-shadow: 0 0 15px rgba(132, 204, 22, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-stone-950">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex justify-between items-center border-b border-amber-900/60 pb-3 mb-2">
+    <div>
+      <span class="text-amber-500 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第十六關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-amber-300">龍舌蘭 ── 【千斤挺拔】<span class="text-xs bg-red-900 text-red-200 px-2 py-0.5 rounded-full ml-2 border border-red-600">加強版</span></h1>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-tab-td" onclick="switchMode('td')" class="px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50">
+        ⚔️ 葉刺塔防
+      </button>
+      <button id="btn-tab-farm" onclick="switchMode('farm')" class="px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700">
+        ☀️️ 強光耐旱
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-sm bg-amber-950/80 text-amber-200 hover:bg-amber-800 border border-amber-700/60">
+        📜 典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Stage -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+    
+    <!-- PHASE 1: AGAVE TOWER DEFENSE -->
+    <div id="section-td" class="w-full flex flex-col items-center gap-2">
+      <!-- Status HUD Bar -->
+      <div class="w-full flex justify-between items-center bg-stone-900/90 px-4 py-2 rounded-xl border border-amber-900/50 text-xs sm:text-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">草本園生命：</span>
+          <span id="hp-display" class="text-emerald-400 font-bold text-base">10 / 10</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">龍舌陽光能量：</span>
+          <span id="sun-display" class="text-amber-300 font-bold text-base">☀️ 90</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">入侵波次：</span>
+          <span id="wave-display" class="text-amber-200 font-semibold">1 / 5</span>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="relative w-full aspect-[4/3] max-h-[460px] bg-stone-950 rounded-2xl overflow-hidden ink-border">
+        <canvas id="tdCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+        <!-- Dynamic Tower Selector & Upgrade Bar -->
+        <div id="build-bar" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 bg-stone-900/95 border border-amber-700/60 p-2 rounded-xl backdrop-blur-md shadow-2xl">
+          <button onclick="selectTowerType('blade')" id="btn-tower-blade" class="flex flex-col items-center p-2 rounded-lg bg-amber-900/90 border border-amber-500 text-amber-100 hover:bg-amber-800 transition">
+            <span class="text-xs sm:text-sm font-bold">🌵 葉刃刺塔</span>
+            <span class="text-[10px] sm:text-xs text-amber-300">☀️ 45 (速射刺)</span>
+          </button>
+          <button onclick="selectTowerType('stalk')" id="btn-tower-stalk" class="flex flex-col items-center p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition">
+            <span class="text-xs sm:text-sm font-bold">🌾 天尺巨花莖塔</span>
+            <span class="text-[10px] sm:text-xs text-amber-300">☀️ 90 (範圍震退)</span>
+          </button>
+          <button onclick="selectTowerType('net')" id="btn-tower-net" class="flex flex-col items-center p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition">
+            <span class="text-xs sm:text-sm font-bold">🧵 龍舌纖維網</span>
+            <span class="text-[10px] sm:text-xs text-amber-300">☀️ 60 (減速遲滯)</span>
+          </button>
+        </div>
+
+        <!-- Selected Tower Action Panel Modal Popup -->
+        <div id="action-panel" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/95 border-2 border-amber-500 p-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-4 text-xs">
+          <div>
+            <div id="panel-title" class="font-bold text-amber-300 text-sm">塔名稱</div>
+            <div id="panel-level" class="text-stone-300">等級：Lv.1</div>
+          </div>
+          <button id="btn-upgrade" onclick="upgradeSelectedTower()" class="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 rounded border border-emerald-500 font-semibold transition">
+            升級 ☀️ 50
+          </button>
+          <button onclick="deselectTower()" class="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded border border-stone-600">
+            關閉
+          </button>
+        </div>
+
+        <!-- Game Over / Victory Overlay -->
+        <div id="game-overlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4">
+          <h2 id="overlay-title" class="text-3xl font-calligraphy text-amber-300 mb-2">防線勝利！</h2>
+          <p id="overlay-desc" class="text-stone-300 text-sm max-w-md mb-4 leading-relaxed">龍舌蘭堅硬帶刺的葉片與巨大的花莖成功護衛草本園免受害蟲侵擾。</p>
+          <button onclick="resetTDGame()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm font-bold shadow-lg transition">
+            重新挑戰 (高難度)
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-between w-full text-xs text-stone-400 px-1">
+        <span>🐜 害蟲類型：快速象鼻蟲、堅甲介殼蟲、巨型蛀幹夜蛾幼蟲(Boss)</span>
+        <span>💡 點擊已佈署塔可消耗陽光進行提升級！</span>
+      </div>
+    </div>
+
+    <!-- PHASE 2: ARID CULTIVATION CARE -->
+    <div id="section-farm" class="hidden w-full flex-col items-center gap-4">
+      <div class="bg-stone-900/90 border border-amber-800 p-4 rounded-xl w-full max-w-xl text-center shadow-xl">
+        <h2 class="text-xl font-calligraphy text-amber-300 mb-2">強光極度耐旱與砂質排水養護</h2>
+        <p class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-4">
+          龍舌蘭肉質葉能貯存大量水分，<strong class="text-amber-400">極度耐旱且喜全日照強光</strong>。基質必須具備極佳排水性，避免根部積水腐爛。
+        </p>
+
+        <!-- Dynamic Agave Canvas -->
+        <div class="relative w-full h-60 bg-stone-950 rounded-xl overflow-hidden border border-amber-900/50 mb-4">
+          <canvas id="farmCanvas" class="w-full h-full"></canvas>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="farmCare('sun')" class="py-2.5 px-3 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            ☀️ 全日照極光
+          </button>
+          <button onclick="farmCare('drain')" class="py-2.5 px-3 bg-stone-800 hover:bg-stone-700 text-amber-200 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            🪨 鋪設透氣砂石
+          </button>
+          <button onclick="farmCare('dry')" class="py-2.5 px-3 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            🌵 控水防積水爛根
+          </button>
+        </div>
+        <div id="farm-feedback" class="mt-3 text-xs text-amber-400 h-5 font-semibold"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-amber-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-amber-400 text-xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-amber-300 mb-4 border-b border-amber-800 pb-2">龍舌蘭 (Agave americana) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌿 特性與藥用價值：</h3>
+          <p class="leading-relaxed">
+            大型肉質植物，葉片堅挺如劍，邊緣與頂端具銳刺。性味酸甘咸平。能<strong class="text-amber-200">潤肺止咳、涼血解毒、清熱利濕</strong>。強韌的葉脈纖維亦被廣泛提取用於高強度紡織與繩索。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌱 栽務與養護建議：</h3>
+          <p class="leading-relaxed">
+            極度耐旱、喜強烈陽光與通風良好環境；對土壤要求極度排水良好，宜混入大量砂石，切忌積水。生長極慢，多年乃至幾十年才開花一次，巨大的花莖高達數公尺，開花結實後母株死亡。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm font-bold shadow">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playShoot() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(750, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+
+      playHit() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.09);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.09);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.09);
+      }
+
+      playStalkShock() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(650, this.ctx.currentTime + 0.22);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.22);
+      }
+
+      playUpgrade() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+    }
+
+    const snd = new SoundEngine();
+
+    const tdCanvas = document.getElementById('tdCanvas');
+    const ctx = tdCanvas.getContext('2d');
+    const farmCanvas = document.getElementById('farmCanvas');
+    const farmCtx = farmCanvas.getContext('2d');
+
+    function resizeCanvas() {
+      tdCanvas.width = tdCanvas.parentElement.clientWidth;
+      tdCanvas.height = tdCanvas.parentElement.clientHeight;
+      farmCanvas.width = farmCanvas.parentElement.clientWidth;
+      farmCanvas.height = farmCanvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // State Variables
+    let hp = 10;
+    let sun = 90;
+    let wave = 1;
+    let selectedTowerType = 'blade';
+    let isGameOver = false;
+    let selectedActiveTower = null;
+
+    const pathNodes = [
+      { x: 0.0, y: 0.25 },
+      { x: 0.35, y: 0.25 },
+      { x: 0.35, y: 0.72 },
+      { x: 0.7, y: 0.72 },
+      { x: 0.7, y: 0.3 },
+      { x: 1.0, y: 0.3 }
+    ];
+
+    const towerSlots = [
+      { x: 0.18, y: 0.48, tower: null },
+      { x: 0.52, y: 0.45, tower: null },
+      { x: 0.52, y: 0.88, tower: null },
+      { x: 0.82, y: 0.52, tower: null },
+      { x: 0.20, y: 0.82, tower: null }
+    ];
+
+    let towers = [];
+    let enemies = [];
+    let projectiles = [];
+
+    let spawnTimer = 0;
+    let spawnedCount = 0;
+    const maxEnemiesPerWave = 12;
+
+    function resetTDGame() {
+      towers = [];
+      enemies = [];
+      projectiles = [];
+      towerSlots.forEach(s => s.tower = null);
+      hp = 10;
+      sun = 90;
+      wave = 1;
+      spawnedCount = 0;
+      isGameOver = false;
+      selectedActiveTower = null;
+      document.getElementById('action-panel').classList.add('hidden');
+      document.getElementById('game-overlay').classList.add('hidden');
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('hp-display').innerText = `${hp} / 10`;
+      document.getElementById('sun-display').innerText = `☀️ ${sun}`;
+      document.getElementById('wave-display').innerText = `${wave} / 5`;
+    }
+
+    function updateTD() {
+      if (isGameOver) return;
+
+      const w = tdCanvas.width;
+      const h = tdCanvas.height;
+
+      // Sun Passive Generation
+      if (Math.random() < 0.015) {
+        sun += 1;
+        updateUI();
+      }
+
+      // Spawning Enemies with Varying Types
+      spawnTimer++;
+      if (spawnTimer > (85 - wave * 8) && spawnedCount < maxEnemiesPerWave) {
+        spawnTimer = 0;
+        spawnedCount++;
+
+        let pestType = 'beetle';
+        let healthMultiplier = 1 + (wave - 1) * 0.4;
+        let speedVal = 1.3 + wave * 0.15;
+
+        if (spawnedCount % 4 === 0) {
+          pestType = 'scale'; // Armored
+          healthMultiplier *= 1.8;
+          speedVal *= 0.75;
+        } else if (wave >= 3 && spawnedCount === maxEnemiesPerWave) {
+          pestType = 'borer'; // Boss
+          healthMultiplier *= 3.5;
+          speedVal *= 0.55;
+        }
+
+        enemies.push({
+          nodeIdx: 0,
+          x: pathNodes[0].x * w,
+          y: pathNodes[0].y * h,
+          hp: Math.round(35 * healthMultiplier),
+          maxHp: Math.round(35 * healthMultiplier),
+          speed: speedVal,
+          type: pestType,
+          slowTimer: 0
+        });
+      }
+
+      // Wave Progression
+      if (spawnedCount >= maxEnemiesPerWave && enemies.length === 0 && wave < 5) {
+        wave++;
+        spawnedCount = 0;
+        sun += 70;
+        updateUI();
+      } else if (spawnedCount >= maxEnemiesPerWave && enemies.length === 0 && wave === 5) {
+        triggerEndGame(true);
+      }
+
+      // Move Enemies
+      enemies.forEach((e, idx) => {
+        const targetNode = pathNodes[e.nodeIdx + 1];
+        if (!targetNode) {
+          hp -= (e.type === 'borer' ? 3 : 1);
+          enemies.splice(idx, 1);
+          updateUI();
+          if (hp <= 0) triggerEndGame(false);
+          return;
+        }
+
+        const tx = targetNode.x * w;
+        const ty = targetNode.y * h;
+        const dx = tx - e.x;
+        const dy = ty - e.y;
+        const dist = Math.hypot(dx, dy);
+
+        let currSpeed = e.speed;
+        if (e.slowTimer > 0) {
+          currSpeed *= 0.5;
+          e.slowTimer--;
+        }
+
+        if (dist < currSpeed) {
+          e.nodeIdx++;
+        } else {
+          e.x += (dx / dist) * currSpeed;
+          e.y += (dy / dist) * currSpeed;
+        }
+      });
+
+      // Towers Logic
+      towers.forEach(t => {
+        t.cd = (t.cd || 0) + 1;
+        if (t.cd >= t.maxCd) {
+          let target = null;
+          let minDist = t.range;
+          enemies.forEach(e => {
+            const d = Math.hypot(e.x - t.x, e.y - t.y);
+            if (d < minDist) {
+              minDist = d;
+              target = e;
+            }
+          });
+
+          if (target) {
+            t.cd = 0;
+            if (t.type === 'blade') {
+              snd.playShoot();
+              projectiles.push({
+                x: t.x,
+                y: t.y,
+                targetEnemy: target,
+                damage: t.damage,
+                type: 'blade'
+              });
+            } else if (t.type === 'stalk') {
+              snd.playStalkShock();
+              enemies.forEach(e => {
+                if (Math.hypot(e.x - t.x, e.y - t.y) <= t.range) {
+                  e.hp -= t.damage;
+                  e.x -= 10;
+                }
+              });
+            } else if (t.type === 'net') {
+              snd.playHit();
+              enemies.forEach(e => {
+                if (Math.hypot(e.x - t.x, e.y - t.y) <= t.range) {
+                  e.slowTimer = 90; // Slow down for 90 frames
+                }
+              });
+            }
+          }
+        }
+      });
+
+      // Projectile Movement & Collision
+      projectiles.forEach((p, idx) => {
+        const dx = p.targetEnemy.x - p.x;
+        const dy = p.targetEnemy.y - p.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < 10) {
+          let dmg = p.damage;
+          if (p.targetEnemy.type === 'scale') dmg *= 0.7; // Armor resistance
+          p.targetEnemy.hp -= dmg;
+          snd.playHit();
+          projectiles.splice(idx, 1);
+
+          if (p.targetEnemy.hp <= 0) {
+            const eIdx = enemies.indexOf(p.targetEnemy);
+            if (eIdx !== -1) {
+              enemies.splice(eIdx, 1);
+              sun += (p.targetEnemy.type === 'borer' ? 40 : 15);
+              updateUI();
+            }
+          }
+        } else {
+          p.x += (dx / dist) * 12;
+          p.y += (dy / dist) * 12;
+        }
+      });
+
+      drawTDScene(w, h);
+      requestAnimationFrame(updateTD);
+    }
+
+    function drawTDScene(w, h) {
+      ctx.clearRect(0, 0, w, h);
+
+      // Background Ground Ink Aesthetic
+      ctx.fillStyle = '#1c1510';
+      ctx.fillRect(0, 0, w, h);
+
+      // Path Rendering
+      ctx.beginPath();
+      pathNodes.forEach((pt, i) => {
+        const px = pt.x * w;
+        const py = pt.y * h;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.strokeStyle = '#4a3728';
+      ctx.lineWidth = 32;
+      ctx.stroke();
+
+      // Path Border Lines
+      ctx.strokeStyle = '#85704d';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Building Slots
+      towerSlots.forEach(s => {
+        const sx = s.x * w;
+        const sy = s.y * h;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 22, 0, Math.PI * 2);
+        ctx.fillStyle = s.tower ? '#2b1f17' : '#17110d';
+        ctx.fill();
+        ctx.strokeStyle = (selectedActiveTower && selectedActiveTower.slot === s) ? '#38bdf8' : (s.tower ? '#eab308' : '#85704d');
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // Render Towers
+      towers.forEach(t => {
+        ctx.save();
+        ctx.translate(t.x, t.y);
+
+        if (t.type === 'blade') {
+          // Sharp Spiky Agave Rosette
+          for (let i = 0; i < 8; i++) {
+            ctx.rotate((Math.PI * 2) / 8);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-6, -18);
+            ctx.lineTo(0, -28 - (t.level - 1) * 4);
+            ctx.lineTo(6, -18);
+            ctx.closePath();
+            ctx.fillStyle = t.level > 1 ? '#84cc16' : '#65a30d';
+            ctx.fill();
+            ctx.strokeStyle = '#365314';
+            ctx.stroke();
+          }
+        } else if (t.type === 'stalk') {
+          // Giant Flower Stalk
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fillStyle = '#84cc16';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -32);
+          ctx.strokeStyle = '#4d7c0f';
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, -35, 10 + t.level * 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#facc15';
+          ctx.fill();
+        } else if (t.type === 'net') {
+          // Fiber Trap Net Tower
+          ctx.beginPath();
+          ctx.arc(0, 0, 12, 0, Math.PI * 2);
+          ctx.fillStyle = '#a8a29e';
+          ctx.fill();
+          ctx.strokeStyle = '#e7e5e4';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-10, -10); ctx.lineTo(10, 10);
+          ctx.moveTo(10, -10); ctx.lineTo(-10, 10);
+          ctx.strokeStyle = '#d6d3d1';
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+
+      // Render Enemies
+      enemies.forEach(e => {
+        ctx.beginPath();
+        let radius = 12;
+        if (e.type === 'borer') radius = 18;
+        ctx.arc(e.x, e.y, radius, 0, Math.PI * 2);
+
+        if (e.type === 'beetle') ctx.fillStyle = '#d97706';
+        else if (e.type === 'scale') ctx.fillStyle = '#991b1b';
+        else if (e.type === 'borer') ctx.fillStyle = '#7f1d1d';
+
+        ctx.fill();
+        ctx.strokeStyle = e.slowTimer > 0 ? '#38bdf8' : '#fef08a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // HP Bar
+        const barW = radius * 2;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(e.x - barW / 2, e.y - radius - 6, barW, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(e.x - barW / 2, e.y - radius - 6, Math.max(0, barW * (e.hp / e.maxHp)), 4);
+      });
+
+      // Render Projectiles
+      projectiles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#facc15';
+        ctx.fill();
+      });
+    }
+
+    tdCanvas.addEventListener('click', (e) => {
+      if (isGameOver) return;
+      const rect = tdCanvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const w = tdCanvas.width;
+      const h = tdCanvas.height;
+
+      let clickedSlot = null;
+      towerSlots.forEach(s => {
+        const sx = s.x * w;
+        const sy = s.y * h;
+        const dist = Math.hypot(cx - sx, cy - sy);
+
+        if (dist < 26) {
+          clickedSlot = s;
+        }
+      });
+
+      if (clickedSlot) {
+        if (clickedSlot.tower) {
+          // Select existing tower for upgrade
+          selectedActiveTower = { tower: clickedSlot.tower, slot: clickedSlot };
+          showActionPanel();
+        } else {
+          // Build new tower
+          const costs = { blade: 45, stalk: 90, net: 60 };
+          const cost = costs[selectedTowerType];
+
+          if (sun >= cost) {
+            sun -= cost;
+            const newTower = {
+              x: clickedSlot.x * w,
+              y: clickedSlot.y * h,
+              type: selectedTowerType,
+              level: 1,
+              range: selectedTowerType === 'blade' ? 140 : (selectedTowerType === 'stalk' ? 110 : 130),
+              damage: selectedTowerType === 'blade' ? 26 : (selectedTowerType === 'stalk' ? 22 : 5),
+              maxCd: selectedTowerType === 'blade' ? 28 : (selectedTowerType === 'stalk' ? 55 : 40),
+              cd: 0
+            };
+            clickedSlot.tower = newTower;
+            towers.push(newTower);
+            updateUI();
+          }
+          deselectTower();
+        }
+      } else {
+        deselectTower();
+      }
+    });
+
+    function showActionPanel() {
+      if (!selectedActiveTower) return;
+      const t = selectedActiveTower.tower;
+      const panel = document.getElementById('action-panel');
+      const title = document.getElementById('panel-title');
+      const level = document.getElementById('panel-level');
+      const btnUp = document.getElementById('btn-upgrade');
+
+      const names = { blade: '🌵 葉刃刺塔', stalk: '🌾 天尺巨花莖塔', net: '🧵 龍舌纖維網' };
+      title.innerText = names[t.type];
+      level.innerText = `等級：Lv.${t.level}`;
+
+      const upgradeCost = t.level * 45;
+      btnUp.innerText = `升級 ☀️ ${upgradeCost}`;
+      panel.classList.remove('hidden');
+    }
+
+    function upgradeSelectedTower() {
+      if (!selectedActiveTower) return;
+      const t = selectedActiveTower.tower;
+      const upgradeCost = t.level * 45;
+
+      if (sun >= upgradeCost) {
+        sun -= upgradeCost;
+        t.level++;
+        t.damage = Math.round(t.damage * 1.4);
+        t.range += 15;
+        snd.playUpgrade();
+        updateUI();
+        showActionPanel();
+      }
+    }
+
+    function deselectTower() {
+      selectedActiveTower = null;
+      document.getElementById('action-panel').classList.add('hidden');
+    }
+
+    function selectTowerType(type) {
+      selectedTowerType = type;
+      document.getElementById('btn-tower-blade').className = type === 'blade'
+        ? "flex flex-col items-center p-2 rounded-lg bg-amber-900/90 border border-amber-500 text-amber-100 hover:bg-amber-800 transition"
+        : "flex flex-col items-center p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition";
+
+      document.getElementById('btn-tower-stalk').className = type === 'stalk'
+        ? "flex flex-col items-center p-2 rounded-lg bg-amber-900/90 border border-amber-500 text-amber-100 hover:bg-amber-800 transition"
+        : "flex flex-col items-center p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition";
+
+      document.getElementById('btn-tower-net').className = type === 'net'
+        ? "flex flex-col items-center p-2 rounded-lg bg-amber-900/90 border border-amber-500 text-amber-100 hover:bg-amber-800 transition"
+        : "flex flex-col items-center p-2 rounded-lg bg-stone-800 border border-stone-700 text-stone-300 hover:bg-stone-700 transition";
+    }
+
+    function triggerEndGame(victory) {
+      isGameOver = true;
+      const overlay = document.getElementById('game-overlay');
+      const title = document.getElementById('overlay-title');
+      const desc = document.getElementById('overlay-desc');
+
+      overlay.classList.remove('hidden');
+      if (victory) {
+        title.innerText = "🎉 防線大獲全勝！";
+        desc.innerText = "龍舌蘭堅硬帶刺的葉片與巨大的花莖成功護衛草本園，展現千斤挺拔之威！";
+      } else {
+        title.innerText = "⚠️ 防線遭突破";
+        desc.innerText = "害蟲入侵草本園，請調整防禦塔構建與升級策略，再次嘗試佈署龍舌蘭防線！";
+      }
+    }
+
+    let farmState = { sun: false, drain: false, dry: false };
+
+    function farmCare(type) {
+      const fb = document.getElementById('farm-feedback');
+      if (type === 'sun') {
+        farmState.sun = true;
+        fb.innerText = "☀️ 全日照強光照耀，龍舌蘭葉肉更顯飽滿千斤挺拔！";
+      } else if (type === 'drain') {
+        farmState.drain = true;
+        fb.innerText = "🪨 鋪設砂石基質，展現絕佳透氣排水效果！";
+      } else if (type === 'dry') {
+        farmState.dry = true;
+        fb.innerText = "🌵 嚴格控水防積水，避免根系腐爛。";
+      }
+      renderFarm();
+    }
+
+    function renderFarm() {
+      const w = farmCanvas.width;
+      const h = farmCanvas.height;
+      farmCtx.clearRect(0, 0, w, h);
+
+      farmCtx.fillStyle = '#1c1510';
+      farmCtx.fillRect(0, 0, w, h);
+
+      // Gravel Base
+      if (farmState.drain) {
+        for (let i = 0; i < 60; i++) {
+          farmCtx.beginPath();
+          farmCtx.arc((i * 13) % w, h - (i * 7) % 35 - 5, 3 + (i % 3), 0, Math.PI * 2);
+          farmCtx.fillStyle = '#78716c';
+          farmCtx.fill();
+        }
+      }
+
+      // Agave Central Rosette
+      const cx = w / 2;
+      const cy = h * 0.72;
+
+      for (let i = 0; i < 14; i++) {
+        const angle = (i / 14) * Math.PI - Math.PI / 2;
+        farmCtx.save();
+        farmCtx.translate(cx, cy);
+        farmCtx.rotate(angle);
+        farmCtx.beginPath();
+        farmCtx.moveTo(0, 0);
+        farmCtx.quadraticCurveTo(-15, -60, 0, -95);
+        farmCtx.quadraticCurveTo(15, -60, 0, 0);
+        farmCtx.fillStyle = farmState.sun ? '#84cc16' : '#4d7c0f';
+        farmCtx.fill();
+        farmCtx.strokeStyle = '#365314';
+        farmCtx.lineWidth = 2;
+        farmCtx.stroke();
+
+        // Sharp Tip Spike
+        farmCtx.beginPath();
+        farmCtx.arc(0, -95, 3, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#dc2626';
+        farmCtx.fill();
+        farmCtx.restore();
+      }
+    }
+
+    // Tab Navigation
+    function switchMode(mode) {
+      document.getElementById('section-td').classList.toggle('hidden', mode !== 'td');
+      document.getElementById('section-farm').classList.toggle('hidden', mode !== 'farm');
+
+      document.getElementById('btn-tab-td').className = mode === 'td'
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700";
+
+      document.getElementById('btn-tab-farm').className = mode === 'farm'
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow border border-amber-600/50"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition border border-stone-700";
+
+      if (mode === 'farm') renderFarm();
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup Initialization
+    window.onload = () => {
+      resizeCanvas();
+      resetTDGame();
+      requestAnimationFrame(updateTD);
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第十九關：三葉草【尋找幸運】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #05140c;
+      color: #e2f1e7;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #16a34a;
+      box-shadow: 0 0 25px rgba(22, 163, 74, 0.25);
+    }
+
+    .pulse-glow {
+      animation: emeraldPulse 2s infinite alternate;
+    }
+
+    @keyframes emeraldPulse {
+      0% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+      100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.8); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-emerald-950/90 text-stone-100">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center border-b border-emerald-800/60 pb-3 mb-2 gap-2">
+    <div>
+      <span class="text-emerald-400 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第十九關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-emerald-300">三葉草 ── 【尋找幸運】</h1>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button id="tab-find" onclick="switchMode('find')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-emerald-800 text-emerald-100 hover:bg-emerald-700 transition shadow border border-emerald-500/50 font-bold">
+        🍀 尋找幸運四葉草
+      </button>
+      <button id="tab-lawn" onclick="switchMode('lawn')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-emerald-300 hover:bg-stone-800 transition border border-emerald-900">
+        🌱 綠化與邊界控管
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-emerald-950/80 text-emerald-200 hover:bg-emerald-800 border border-emerald-700/60">
+        📜 本草典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Stage -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- MODE 1: LUCKY FOUR-LEAF CLOVER CHALLENGE -->
+    <div id="sec-find" class="w-full flex flex-col items-center gap-3">
+      <div class="w-full flex flex-wrap justify-between items-center bg-stone-900/90 px-4 py-2 rounded-xl border border-emerald-800/50 text-xs sm:text-sm gap-2">
+        <div class="flex items-center gap-4">
+          <span class="text-emerald-300 font-semibold">✨ 尋獲幸運草：<span id="clover-found-text" class="text-amber-300 font-bold text-base">0 / 4</span></span>
+          <span class="text-stone-300">⏱️ 倒數：<span id="clover-timer-text" class="text-emerald-400 font-bold text-base">45s</span></span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="restartFindGame()" class="px-3 py-1 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 rounded-lg text-xs border border-emerald-500 font-semibold transition">
+            🔄 重新整理草坪
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[440px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex items-center justify-center">
+        <canvas id="findCanvas" class="w-full h-full cursor-pointer"></canvas>
+        
+        <!-- Instruction Banner Overlay -->
+        <div id="find-instruction" class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-emerald-600/60 text-emerald-200 text-xs backdrop-blur-md text-center">
+          💡 請在滿屏三羽複葉中找出帶有吉兆的【四葉變異株】！點擊三葉草可解鎖藥性知識。
+        </div>
+
+        <!-- Floating Tip Message Box -->
+        <div id="tip-banner" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-950/95 border border-emerald-400/80 px-4 py-2 rounded-xl text-xs text-emerald-100 backdrop-blur-md text-center max-w-md shadow-2xl transition-all">
+          <span id="tip-text"></span>
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/70 p-3 rounded-xl border border-stone-800 text-xs text-stone-300 leading-relaxed text-center">
+        <strong class="text-emerald-400">特徵解析：</strong>三葉草（Clover）通常具三小葉複葉。罕見的四葉變異株象徵「草木吉兆」。全草可入藥，具<strong class="text-emerald-200">清熱利濕、解毒消腫、涼血散瘀</strong>之功。
+      </div>
+    </div>
+
+    <!-- MODE 2: LAWN & SPREAD CONTROL SIMULATION -->
+    <div id="sec-lawn" class="hidden w-full flex-col items-center gap-3">
+      <div class="w-full bg-stone-900/90 p-3 rounded-xl border border-emerald-800/50 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div class="text-xs sm:text-sm">
+          <span class="text-emerald-400 font-semibold">綠化覆蓋與邊界狀態：</span>
+          <span id="lawn-status-text" class="text-emerald-300 font-bold">邊界良好，草坪蓬勃生長中</span>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-trim" onclick="trimBoundaries()" class="px-3 py-1.5 bg-amber-800 hover:bg-amber-700 text-amber-100 rounded-xl border border-amber-500 text-xs font-bold shadow-lg transition">
+            ✂️ 邊界剪裁 (防侵佔藥圃)
+          </button>
+          <button onclick="trampleLawn()" class="px-3 py-1.5 bg-emerald-900 hover:bg-emerald-800 text-emerald-100 rounded-xl border border-emerald-600 text-xs font-bold shadow-lg transition">
+            👣 踏壓草坪 (測試耐踐踏性)
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[420px] bg-stone-950 rounded-2xl overflow-hidden ink-border flex flex-col items-center justify-center p-2">
+        <canvas id="lawnCanvas" class="w-full h-full"></canvas>
+
+        <div id="lawn-instruction" class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-emerald-700/60 text-emerald-300 text-xs backdrop-blur-md">
+          🌱 三葉草生長迅猛且極耐踐踏。請定期修剪邊界，切勿讓其侵佔兩側藥草圃！
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/80 p-3 rounded-xl border border-emerald-900/50 text-xs text-stone-300 leading-relaxed text-center">
+        💡 <strong class="text-emerald-300">種植建議：</strong> 三葉草喜濕潤陽光、適應力極強且耐踐踏，非常適合做綠化草坪。但生長旺盛，必須控制生長範圍以防侵佔其他植物床。
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-emerald-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-emerald-400 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-emerald-400 mb-4 border-b border-emerald-800 pb-2">三葉草 (Clover) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-emerald-400 font-semibold mb-1">🌿 形態特徵與草木吉兆：</h3>
+          <p class="leading-relaxed">
+            掌狀三小葉複葉，葉片上有倒心形小葉與白色V型斑紋。罕有四葉突變株，象徵「幸運與草木吉兆」，極具觀賞與文化價值。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-emerald-400 font-semibold mb-1">💊 藥用價值與功效：</h3>
+          <p class="leading-relaxed">
+            全草均可入藥。性涼，味微甘。具<strong class="text-emerald-200">清熱利濕、解毒消腫、涼血散瘀</strong>之功效。常用於調理熱感黃疸、黃疸型肝炎、腸炎、跌打損傷及腫毒。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-emerald-400 font-semibold mb-1">🌱 栽培要領與防侵佔管理：</h3>
+          <p class="leading-relaxed">
+            極為<strong class="text-emerald-200">耐踐踏</strong>，喜溫暖濕潤及陽光充足之環境。常作為地被綠化植物。因其蔓延與繁殖能力極強，栽種時務必<strong class="text-emerald-200">設置邊界石牆或進行定期剪裁</strong>，防止侵佔其他中草藥植物的生長領地。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-emerald-700 hover:bg-emerald-600 text-emerald-100 rounded-lg text-sm font-bold shadow transition">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Engine & Interactive Logic -->
+  <script>
+    class SoundSynthesizer {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playRustle() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300 + Math.random() * 100, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playLuckyFind() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.3);
+        });
+      }
+
+      playTrim() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const bufferSize = this.ctx.sampleRate * 0.12;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        noise.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+
+      playWin() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const now = this.ctx.currentTime;
+        [440, 554.37, 659.25, 880].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          gain.gain.setValueAtTime(0.15, now + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+          osc.start(now + i * 0.1);
+          osc.stop(now + i * 0.1 + 0.4);
+        });
+      }
+    }
+
+    const sound = new SoundSynthesizer();
+
+    // Game State Variables
+    let currentMode = 'find';
+    let findClovers = [];
+    let foundFourLeafCount = 0;
+    const totalFourLeafTarget = 4;
+    let findTimer = 45;
+    let timerInterval = null;
+    let particles = [];
+
+    // Lawn Simulation Variables
+    let lawnExpansion = 0.35; // 0.1 to 0.95 (Ratio of canvas width)
+    let lawnHealth = 100;
+    let isTrampled = false;
+    let trampleTimeout = null;
+
+    // Canvas Contexts
+    const findCanvas = document.getElementById('findCanvas');
+    const findCtx = findCanvas.getContext('2d');
+    const lawnCanvas = document.getElementById('lawnCanvas');
+    const lawnCtx = lawnCanvas.getContext('2d');
+
+    // Educational Tips List
+    const tips = [
+      "🌿 三葉草具三小葉複葉，全草可入藥。",
+      "💊 藥用功效：【清熱利濕】，舒緩體內濕熱。",
+      "✨ 藥用功效：【解毒消腫】，調理跌打與癰腫。",
+      "🩸 藥用功效：【涼血散瘀】，促進血液循環。",
+      "🌱 栽培特性：極為耐踐踏，生長迅速生機勃勃。",
+      "✂️ 種植提醒：喜濕潤陽光，但需控管範圍防止侵佔！"
+    ];
+
+    function resizeAllCanvases() {
+      [findCanvas, lawnCanvas].forEach(c => {
+        if (c && c.parentElement) {
+          c.width = c.parentElement.clientWidth;
+          c.height = c.parentElement.clientHeight;
+        }
+      });
+      if (currentMode === 'find') renderFindScene();
+      else if (currentMode === 'lawn') renderLawnScene();
+    }
+    window.addEventListener('resize', resizeAllCanvases);
+
+    /* -------------------------------------------------------------
+       MODE 1: LUCKY FOUR-LEAF CLOVER FINDER
+    ------------------------------------------------------------- */
+    function initFindGame() {
+      foundFourLeafCount = 0;
+      findTimer = 45;
+      particles = [];
+      document.getElementById('clover-found-text').innerText = `${foundFourLeafCount} / ${totalFourLeafTarget}`;
+      document.getElementById('clover-timer-text').innerText = `${findTimer}s`;
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (currentMode === 'find' && findTimer > 0) {
+          findTimer--;
+          document.getElementById('clover-timer-text').innerText = `${findTimer}s`;
+          if (findTimer <= 0) {
+            clearInterval(timerInterval);
+            showTip("⏱️ 時間到！點擊「重新整理草坪」再挑戰一次！");
+          }
+        }
+      }, 1000);
+
+      generateCloverField();
+      renderFindScene();
+    }
+
+    function generateCloverField() {
+      findClovers = [];
+      const w = findCanvas.width || 600;
+      const h = findCanvas.height || 400;
+
+      const cols = 8;
+      const rows = 6;
+      const cellW = w / cols;
+      const cellH = h / rows;
+
+      // Pick 4 random cell indices for 4-leaf clovers
+      const totalCells = cols * rows;
+      const luckyIndices = new Set();
+      while (luckyIndices.size < totalFourLeafTarget) {
+        luckyIndices.add(Math.floor(Math.random() * totalCells));
+      }
+
+      let index = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cx = c * cellW + cellW / 2 + (Math.random() * 20 - 10);
+          const cy = r * cellH + cellH / 2 + (Math.random() * 20 - 10);
+          const isFour = luckyIndices.has(index);
+
+          findClovers.push({
+            x: cx,
+            y: cy,
+            isFourLeaf: isFour,
+            found: false,
+            scale: 0.8 + Math.random() * 0.3,
+            rotation: Math.random() * Math.PI * 2
+          });
+          index++;
+        }
+      }
+    }
+
+    function restartFindGame() {
+      initFindGame();
+      sound.playRustle();
+    }
+
+    function renderFindScene() {
+      const w = findCanvas.width;
+      const h = findCanvas.height;
+      if (!w || !h) return;
+
+      findCtx.clearRect(0, 0, w, h);
+
+      // Deep Ink Lawn Background
+      const bgGrad = findCtx.createRadialGradient(w/2, h/2, 50, w/2, h/2, w);
+      bgGrad.addColorStop(0, '#062012');
+      bgGrad.addColorStop(1, '#020d07');
+      findCtx.fillStyle = bgGrad;
+      findCtx.fillRect(0, 0, w, h);
+
+      // Background Ink Texture
+      findCtx.strokeStyle = 'rgba(34, 197, 94, 0.05)';
+      for (let i = 0; i < h; i += 12) {
+        findCtx.beginPath();
+        findCtx.moveTo(0, i);
+        findCtx.lineTo(w, i);
+        findCtx.stroke();
+      }
+
+      // Draw All Clovers
+      findClovers.forEach(clover => {
+        drawClover(findCtx, clover.x, clover.y, clover.isFourLeaf, clover.scale, clover.rotation, clover.found);
+      });
+
+      // Render Active Particles
+      updateAndDrawParticles(findCtx);
+    }
+
+    function drawClover(ctx, x, y, isFourLeaf, scale, rotation, isFound) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.scale(scale, scale);
+
+      const leafCount = isFourLeaf ? 4 : 3;
+      const leafColor = isFound ? '#f59e0b' : (isFourLeaf ? '#4ade80' : '#15803d');
+      const strokeColor = isFound ? '#fef08a' : '#22c55e';
+
+      // Stem
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(5, 15, 2, 28);
+      ctx.strokeStyle = '#166534';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Leaves (Heart Shaped)
+      for (let i = 0; i < leafCount; i++) {
+        const angle = (i * (2 * Math.PI / leafCount)) - Math.PI / 2;
+        ctx.save();
+        ctx.rotate(angle);
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-12, -18, -18, -8, 0, -22);
+        ctx.bezierCurveTo(18, -8, 12, -18, 0, 0);
+        
+        ctx.fillStyle = leafColor;
+        ctx.fill();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Inner V-shaped White Chevron Pattern
+        ctx.beginPath();
+        ctx.moveTo(-4, -8);
+        ctx.lineTo(0, -14);
+        ctx.lineTo(4, -8);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // Glow effect if found
+      if (isFound) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    // Interactive Click Handler on Find Canvas
+    findCanvas.addEventListener('click', (e) => {
+      const rect = findCanvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let clickedClover = null;
+
+      findClovers.forEach(clover => {
+        const dist = Math.hypot(clover.x - clickX, clover.y - clickY);
+        if (dist < 26) {
+          clickedClover = clover;
+        }
+      });
+
+      if (clickedClover) {
+        if (clickedClover.isFourLeaf) {
+          if (!clickedClover.found) {
+            clickedClover.found = true;
+            foundFourLeafCount++;
+            sound.playLuckyFind();
+            createBurstParticles(clickedClover.x, clickedClover.y);
+            document.getElementById('clover-found-text').innerText = `${foundFourLeafCount} / ${totalFourLeafTarget}`;
+            showTip("✨ 找到四葉草【草木吉兆】！全草涼血散瘀、解毒消腫！");
+
+            if (foundFourLeafCount >= totalFourLeafTarget) {
+              sound.playWin();
+              clearInterval(timerInterval);
+              showTip("🎉 恭喜！集齊所有四葉吉兆草！領悟三葉草極佳藥用效應！");
+            }
+          }
+        } else {
+          sound.playRustle();
+          const randomTip = tips[Math.floor(Math.random() * tips.length)];
+          showTip(randomTip);
+        }
+        renderFindScene();
+      }
+    });
+
+    function createBurstParticles(x, y) {
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 1,
+          color: Math.random() > 0.5 ? '#f59e0b' : '#4ade80'
+        });
+      }
+    }
+
+    function updateAndDrawParticles(ctx) {
+      particles.forEach((p, idx) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.03;
+
+        if (p.life > 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3 * p.life, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+        } else {
+          particles.splice(idx, 1);
+        }
+      });
+      if (particles.length > 0) {
+        requestAnimationFrame(() => renderFindScene());
+      }
+    }
+
+    function showTip(text) {
+      const banner = document.getElementById('tip-banner');
+      const tipText = document.getElementById('tip-text');
+      tipText.innerText = text;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3500);
+    }
+
+    /* -------------------------------------------------------------
+       MODE 2: LAWN EXPANSION & BOUNDARY TRIM SIMULATION
+    ------------------------------------------------------------- */
+    function renderLawnScene() {
+      const w = lawnCanvas.width;
+      const h = lawnCanvas.height;
+      if (!w || !h) return;
+
+      lawnCtx.clearRect(0, 0, w, h);
+
+      // Main Ground
+      lawnCtx.fillStyle = '#1c140e'; // Soil bed outside boundary
+      lawnCtx.fillRect(0, 0, w, h);
+
+      // Side Medicinal Herb Beds (Protected Areas)
+      const bedWidth = w * 0.18;
+      
+      // Left Herb Bed
+      lawnCtx.fillStyle = '#291d18';
+      lawnCtx.fillRect(0, 0, bedWidth, h);
+      lawnCtx.fillStyle = '#16a34a';
+      lawnCtx.font = '12px sans-serif';
+      lawnCtx.fillText('🌿 珍貴中藥圃', 10, 30);
+
+      // Right Herb Bed
+      lawnCtx.fillStyle = '#291d18';
+      lawnCtx.fillRect(w - bedWidth, 0, bedWidth, h);
+      lawnCtx.fillText('🌱 告達藥草區', w - bedWidth + 10, 30);
+
+      // Boundaries Lines
+      lawnCtx.strokeStyle = '#d97706';
+      lawnCtx.setLineDash([6, 6]);
+      lawnCtx.lineWidth = 2;
+      
+      lawnCtx.beginPath();
+      lawnCtx.moveTo(bedWidth, 0);
+      lawnCtx.lineTo(bedWidth, h);
+      lawnCtx.stroke();
+
+      lawnCtx.beginPath();
+      lawnCtx.moveTo(w - bedWidth, 0);
+      lawnCtx.lineTo(w - bedWidth, h);
+      lawnCtx.stroke();
+      lawnCtx.setLineDash([]); // Reset line dash
+
+      // Clover Turf Center Width based on Expansion Ratio
+      const turfWidth = w * lawnExpansion;
+      const turfX = (w - turfWidth) / 2;
+
+      // Draw Lush Clover Turf
+      lawnCtx.fillStyle = isTrampled ? '#15803d' : '#22c55e';
+      lawnCtx.fillRect(turfX, 0, turfWidth, h);
+
+      // Add Clover Textures
+      const density = Math.floor(turfWidth / 15);
+      for (let i = 0; i < density; i++) {
+        const cx = turfX + Math.random() * turfWidth;
+        const cy = Math.random() * h;
+        lawnCtx.beginPath();
+        lawnCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+        lawnCtx.fillStyle = '#86efac';
+        lawnCtx.fill();
+      }
+
+      // Check Invasion Status
+      const statusText = document.getElementById('lawn-status-text');
+      if (turfWidth >= (w - bedWidth * 2)) {
+        statusText.innerText = "⚠️ 警告：三葉草蔓延過快！已侵佔周圍草藥圃！請立即修剪！";
+        statusText.className = "text-amber-400 font-bold pulse-glow";
+      } else {
+        statusText.innerText = "邊界良好，草坪蓬勃生長中 (綠化率佳)";
+        statusText.className = "text-emerald-300 font-bold";
+      }
+    }
+
+    function trimBoundaries() {
+      sound.playTrim();
+      lawnExpansion = 0.35; // Reset boundary to optimal width
+      renderLawnScene();
+      showTip("✂️ 邊界修剪完成！防止蔓延侵佔鄰近中藥圃領地。");
+    }
+
+    function trampleLawn() {
+      sound.playRustle();
+      isTrampled = true;
+      renderLawnScene();
+      showTip("👣 踩踏測試：三葉草極具【耐踐踏】韌性，片刻後即恢復昂揚！");
+
+      if (trampleTimeout) clearTimeout(trampleTimeout);
+      trampleTimeout = setTimeout(() => {
+        isTrampled = false;
+        renderLawnScene();
+      }, 1500);
+    }
+
+    // Automatic Natural Growth Loop for Lawn Mode
+    setInterval(() => {
+      if (currentMode === 'lawn') {
+        if (lawnExpansion < 0.85) {
+          lawnExpansion += 0.008; // Gradual natural spread
+          renderLawnScene();
+        }
+      }
+    }, 1000);
+
+    /* -------------------------------------------------------------
+       NAVIGATION & MODAL TOGGLE
+    ------------------------------------------------------------- */
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('sec-find').classList.toggle('hidden', mode !== 'find');
+      document.getElementById('sec-lawn').classList.toggle('hidden', mode !== 'lawn');
+
+      document.getElementById('tab-find').className = mode === 'find' ? 
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-emerald-800 text-emerald-100 hover:bg-emerald-700 transition shadow border border-emerald-500/50 font-bold' : 
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-emerald-300 hover:bg-stone-800 transition border border-emerald-900';
+
+      document.getElementById('tab-lawn').className = mode === 'lawn' ? 
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-emerald-800 text-emerald-100 hover:bg-emerald-700 transition shadow border border-emerald-500/50 font-bold' : 
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-emerald-300 hover:bg-stone-800 transition border border-emerald-900';
+
+      if (mode === 'find') {
+        initFindGame();
+      } else if (mode === 'lawn') {
+        renderLawnScene();
+      }
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup Initializer
+    window.onload = () => {
+      resizeAllCanvases();
+      switchMode('find');
+    };
+  </script>
+</body>
+</html>

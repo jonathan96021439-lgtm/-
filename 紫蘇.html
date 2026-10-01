@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>明愛聖若瑟中學草本園 - 第二十關：紫蘇【紫氣東來】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #12071f;
+      color: #f3e8ff;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border-purple {
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.25);
+    }
+
+    .pulse-purple-glow {
+      animation: perillaPulse 2.5s infinite alternate;
+    }
+
+    @keyframes perillaPulse {
+      0% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+      100% { box-shadow: 0 0 35px rgba(218, 112, 214, 0.7); }
+    }
+
+    /* Custom Steam Animation for Brew Canvas Container */
+    .steam-container {
+      position: relative;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-purple-950/90 text-stone-100">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex flex-col sm:flex-row justify-between items-center border-b border-purple-800/60 pb-3 mb-2 gap-2">
+    <div>
+      <span class="text-purple-400 text-xs sm:text-sm font-semibold tracking-widest">明愛聖若瑟中學草本園 · 第二十關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-purple-300">紫蘇 ── 【紫氣東來】</h1>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-center">
+      <button id="tab-cook" onclick="switchMode('cook')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-purple-800 text-purple-100 hover:bg-purple-700 transition shadow border border-purple-500/50 font-bold">
+        🍲 魚蟹配對與紫蘇飲
+      </button>
+      <button id="tab-grow" onclick="switchMode('grow')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-purple-300 hover:bg-stone-800 transition border border-purple-900">
+        🌱 播種摘心與繁茂
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-purple-950/80 text-purple-200 hover:bg-purple-800 border border-purple-700/60">
+        📜 本草典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Interactive Display Container -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+
+    <!-- MODE 1: COOKING & PAIRING / BREWING -->
+    <div id="sec-cook" class="w-full flex flex-col items-center gap-3">
+      <!-- Submode Selector -->
+      <div class="w-full flex justify-between items-center bg-stone-900/90 px-4 py-2 rounded-xl border border-purple-800/50 text-xs sm:text-sm gap-2">
+        <div class="flex gap-2">
+          <button id="btn-sub-pair" onclick="setCookSubmode('pair')" class="px-3 py-1 bg-purple-900 text-purple-100 rounded-lg text-xs border border-purple-500 font-bold shadow">
+            🦀 1A. 海鮮毒性平衡
+          </button>
+          <button id="btn-sub-tea" onclick="setCookSubmode('tea')" class="px-3 py-1 bg-stone-800 text-purple-300 rounded-lg text-xs border border-purple-900 hover:bg-stone-700">
+            🍵 1B. 紫蘇飲發汗解表
+          </button>
+        </div>
+        <div class="text-xs text-purple-300 font-semibold hidden sm:block">
+          【特異芳香 · 行氣和胃 · 解魚蟹毒】
+        </div>
+      </div>
+
+      <!-- 1A: Seafood Pairing Stage -->
+      <div id="sub-stage-pair" class="w-full flex flex-col items-center gap-2">
+        <div class="w-full flex justify-between items-center bg-stone-900/80 px-4 py-1.5 rounded-lg border border-purple-900 text-xs">
+          <span>解毒進度：<strong id="pair-score" class="text-amber-300 text-sm font-bold">0 / 3</strong> 配對成功</span>
+          <button onclick="resetPairingGame()" class="px-2 py-0.5 bg-purple-950 hover:bg-purple-900 text-purple-200 rounded border border-purple-700">
+            🔄 重置廚台
+          </button>
+        </div>
+
+        <div class="relative w-full aspect-[4/3] max-h-[380px] bg-stone-950 rounded-2xl overflow-hidden ink-border-purple flex flex-col items-center justify-center">
+          <canvas id="pairCanvas" class="w-full h-full cursor-pointer"></canvas>
+          
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-purple-600/60 text-purple-200 text-xs backdrop-blur-md text-center">
+            💡 拖曳或點擊【紫蘇葉】至帶寒毒的蟹、魚、蝦上，以紫蘇之溫解其寒毒！
+          </div>
+        </div>
+      </div>
+
+      <!-- 1B: Perilla Tea Brewing Stage -->
+      <div id="sub-stage-tea" class="hidden w-full flex-col items-center gap-2">
+        <div class="w-full flex justify-between items-center bg-stone-900/80 px-4 py-1.5 rounded-lg border border-purple-900 text-xs">
+          <div class="flex gap-3 items-center">
+            <span>水溫：<strong id="tea-temp-text" class="text-rose-400 font-bold">25°C</strong></span>
+            <span>材料：<strong id="tea-ingredients-text" class="text-purple-300 font-bold">未放入</strong></span>
+          </div>
+          <button onclick="resetTeaBrewing()" class="px-2 py-0.5 bg-purple-950 hover:bg-purple-900 text-purple-200 rounded border border-purple-700">
+            🍵 清空茶壺
+          </button>
+        </div>
+
+        <div class="relative w-full aspect-[4/3] max-h-[380px] bg-stone-950 rounded-2xl overflow-hidden ink-border-purple flex items-center justify-center">
+          <canvas id="teaCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+          <!-- Interactive Tea Control Overlay -->
+          <div class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-stone-900/90 p-2 rounded-xl border border-purple-700/60 backdrop-blur-md flex gap-2 sm:gap-3 text-xs items-center">
+            <button onclick="addTeaIngredient('leaf')" class="px-2.5 py-1.5 bg-purple-900 hover:bg-purple-800 text-purple-100 rounded-lg border border-purple-500 font-semibold shadow">
+              🌿 加紫蘇葉
+            </button>
+            <button onclick="addTeaIngredient('ginger')" class="px-2.5 py-1.5 bg-amber-900 hover:bg-amber-800 text-amber-100 rounded-lg border border-amber-600 font-semibold shadow">
+              🫚 加生薑
+            </button>
+            <button onclick="addTeaIngredient('peel')" class="px-2.5 py-1.5 bg-orange-900 hover:bg-orange-800 text-orange-100 rounded-lg border border-orange-500 font-semibold shadow">
+              🍊 加陳皮
+            </button>
+            <button id="btn-heat" onclick="toggleHeating()" class="px-3 py-1.5 bg-rose-900 hover:bg-rose-800 text-rose-100 rounded-lg border border-rose-500 font-bold shadow">
+              🔥 加熱烹煮
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/70 p-3 rounded-xl border border-stone-800 text-xs text-stone-300 leading-relaxed text-center">
+        <strong class="text-purple-400">藥性解析：</strong>紫蘇葉性溫味辛，具特異芳香。能<strong class="text-purple-200">解表散寒、行氣和胃、解魚蟹毒</strong>。煮成紫蘇飲，能使機體微微汗出，散寒解表舒緩感冒。
+      </div>
+    </div>
+
+    <!-- MODE 2: SUNLIGHT & PINCHING CULTIVATION -->
+    <div id="sec-grow" class="hidden w-full flex-col items-center gap-3">
+      <div class="w-full bg-stone-900/90 p-3 rounded-xl border border-purple-800/50 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm">
+        <div>
+          <span class="text-purple-400 font-semibold">植株狀態：</span>
+          <span id="plant-stage-text" class="text-purple-300 font-bold">幼苗期 (生長中)</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="waterPlant()" class="px-3 py-1.5 bg-cyan-900 hover:bg-cyan-800 text-cyan-100 rounded-xl border border-cyan-600 text-xs font-bold shadow transition">
+            💧 澆水灌溉
+          </button>
+          <button onclick="pinchPlantTop()" class="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-purple-100 rounded-xl border border-purple-500 text-xs font-bold shadow transition pulse-purple-glow">
+            ✂️ 頂芽摘心 (促分枝)
+          </button>
+          <button onclick="resetCultivation()" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl border border-stone-600 text-xs font-bold shadow transition">
+            🔄 重新播種
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full aspect-[4/3] max-h-[400px] bg-stone-950 rounded-2xl overflow-hidden ink-border-purple flex flex-col items-center justify-center">
+        <canvas id="growCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 px-4 py-1.5 rounded-full border border-purple-700/60 text-purple-300 text-xs backdrop-blur-md text-center">
+          ☀️ 一年生草本，喜陽光充足。點擊枝頂進行「摘心」，可促進側枝發育，使紫蘇繁茂！
+        </div>
+      </div>
+
+      <div class="w-full bg-stone-900/80 p-3 rounded-xl border border-purple-900/50 text-xs text-stone-300 leading-relaxed text-center">
+        💡 <strong class="text-purple-300">種植建議：</strong> 紫蘇播種極易發芽。生長期需給予充足陽光，並定期實施<strong class="text-purple-200">「摘心」（去除頂端優勢）</strong>，可誘發大量側芽，獲得更豐滿紫紅的芳香葉片。
+      </div>
+    </div>
+
+    <!-- Dynamic Tip Banner Overlay -->
+    <div id="tip-banner" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-purple-950/95 border border-purple-400/80 px-4 py-2 rounded-xl text-xs text-purple-100 backdrop-blur-md text-center max-w-md shadow-2xl transition-all z-40">
+      <span id="tip-text"></span>
+    </div>
+
+  </main>
+
+  <!-- BOTANICAL CODEX MODAL -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-purple-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-purple-400 text-2xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-purple-300 mb-4 border-b border-purple-800 pb-2">紫蘇 (Perilla) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-purple-400 font-semibold mb-1">🌿 形態特徵與特異芳香：</h3>
+          <p class="leading-relaxed">
+            葉片呈紫紅色或綠紫相間，邊緣具鋸齒。全株具獨特的特異芳香，揮發油成分豐富，觀賞與食用價值兼備。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-purple-400 font-semibold mb-1">💊 藥用價值與功效：</h3>
+          <p class="leading-relaxed">
+            性溫，味辛。歸肺、脾經。具<strong class="text-purple-200">解表散寒、行氣和胃、解魚蟹毒</strong>之功效。常用於風寒感冒、咳嗽嘔惡，以及進食魚蟹發生的腹痛吐瀉。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-purple-400 font-semibold mb-1">🌱 栽培要領與摘心管理：</h3>
+          <p class="leading-relaxed">
+            為<strong class="text-purple-200">一年生草本</strong>，喜陽光充足與溫暖濕潤環境。播種極易發芽。生長旺盛期需定期進行<strong class="text-purple-200">「摘心」</strong>處理，消除頂端優勢，促進多級分枝與紫葉繁茂。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-purple-100 rounded-lg text-sm font-bold shadow transition">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------------------------------------------
+       AUDIO SYNTHESIZER (Web Audio API)
+    ------------------------------------------------------------- */
+    class SoundSynthesizer {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      playSizzle() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const bufferSize = this.ctx.sampleRate * 0.15;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        noise.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      }
+
+      playBubbling() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200 + Math.random() * 200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400 + Math.random() * 100, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+
+      playPinch() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playSuccess() {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          gain.gain.setValueAtTime(0.1, now + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.35);
+          osc.start(now + idx * 0.09);
+          osc.stop(now + idx * 0.09 + 0.35);
+        });
+      }
+    }
+
+    const sound = new SoundSynthesizer();
+
+    /* -------------------------------------------------------------
+       GLOBAL APP STATE
+    ------------------------------------------------------------- */
+    let currentMode = 'cook'; // 'cook' or 'grow'
+    let cookSubmode = 'pair'; // 'pair' or 'tea'
+
+    // Canvas Contexts
+    const pairCanvas = document.getElementById('pairCanvas');
+    const pairCtx = pairCanvas.getContext('2d');
+    const teaCanvas = document.getElementById('teaCanvas');
+    const teaCtx = teaCanvas.getContext('2d');
+    const growCanvas = document.getElementById('growCanvas');
+    const growCtx = growCanvas.getContext('2d');
+
+    /* -------------------------------------------------------------
+       MODE 1A: SEAFOOD PAIRING GAME LOGIC
+    ------------------------------------------------------------- */
+    let pairSeafoods = [];
+    let perillaLeafDeck = [];
+    let pairScore = 0;
+    let draggedLeaf = null;
+
+    function initPairingGame() {
+      pairScore = 0;
+      document.getElementById('pair-score').innerText = `${pairScore} / 3`;
+      
+      const w = pairCanvas.width || 600;
+      const h = pairCanvas.height || 400;
+
+      // Seafood targets
+      pairSeafoods = [
+        { id: 'crab', name: '大閘蟹 (寒毒)', x: w * 0.25, y: h * 0.4, r: 40, paired: false, icon: '🦀' },
+        { id: 'fish', name: '深海鮮魚 (魚毒)', x: w * 0.5, y: h * 0.4, r: 40, paired: false, icon: '🐟' },
+        { id: 'prawn', name: '草蝦 (濕寒)', x: w * 0.75, y: h * 0.4, r: 40, paired: false, icon: '🦐' }
+      ];
+
+      // Perilla Leaves to drag
+      perillaLeafDeck = [
+        { id: 1, x: w * 0.3, y: h * 0.8, origX: w * 0.3, origY: h * 0.8, r: 28, used: false },
+        { id: 2, x: w * 0.5, y: h * 0.8, origX: w * 0.5, origY: h * 0.8, r: 28, used: false },
+        { id: 3, x: w * 0.7, y: h * 0.8, origX: w * 0.7, origY: h * 0.8, r: 28, used: false }
+      ];
+
+      renderPairingScene();
+    }
+
+    function resetPairingGame() {
+      sound.playSizzle();
+      initPairingGame();
+    }
+
+    function renderPairingScene() {
+      const w = pairCanvas.width;
+      const h = pairCanvas.height;
+      if (!w || !h) return;
+
+      pairCtx.clearRect(0, 0, w, h);
+
+      // Kitchen Counter Ink Background
+      const bg = pairCtx.createRadialGradient(w/2, h/2, 50, w/2, h/2, w);
+      bg.addColorStop(0, '#1f0d2c');
+      bg.addColorStop(1, '#0c0414');
+      pairCtx.fillStyle = bg;
+      pairCtx.fillRect(0, 0, w, h);
+
+      // Draw Seafood Dish Circles
+      pairSeafoods.forEach(food => {
+        pairCtx.save();
+        pairCtx.translate(food.x, food.y);
+
+        // Outer Plate
+        pairCtx.beginPath();
+        pairCtx.arc(0, 0, food.r + 10, 0, Math.PI * 2);
+        pairCtx.fillStyle = food.paired ? 'rgba(168, 85, 247, 0.25)' : 'rgba(239, 68, 68, 0.15)';
+        pairCtx.fill();
+        pairCtx.strokeStyle = food.paired ? '#c084fc' : '#f87171';
+        pairCtx.lineWidth = 2;
+        pairCtx.stroke();
+
+        // Icon
+        pairCtx.font = '36px sans-serif';
+        pairCtx.textAlign = 'center';
+        pairCtx.textBaseline = 'middle';
+        pairCtx.fillText(food.icon, 0, -5);
+
+        // Label
+        pairCtx.font = '11px sans-serif';
+        pairCtx.fillStyle = food.paired ? '#e9d5ff' : '#fca5a5';
+        pairCtx.fillText(food.paired ? '✨ 已解毒 (紫香溫中)' : food.name, 0, food.r + 22);
+
+        pairCtx.restore();
+      });
+
+      // Draw Dragable Perilla Leaves
+      perillaLeafDeck.forEach(leaf => {
+        if (!leaf.used) {
+          drawPerillaLeaf(pairCtx, leaf.x, leaf.y, leaf.r);
+        }
+      });
+    }
+
+    function drawPerillaLeaf(ctx, x, y, size) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Heart/Oval Serrated Leaf Shape
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.bezierCurveTo(size * 1.2, -size * 0.5, size * 1.1, size * 0.8, 0, size * 1.1);
+      ctx.bezierCurveTo(-size * 1.1, size * 0.8, -size * 1.2, -size * 0.5, 0, -size);
+
+      // Purple Color Gradient
+      const leafGrad = ctx.createLinearGradient(0, -size, 0, size);
+      leafGrad.addColorStop(0, '#7e22ce');
+      leafGrad.addColorStop(0.6, '#581c87');
+      leafGrad.addColorStop(1, '#3b0764');
+      ctx.fillStyle = leafGrad;
+      ctx.fill();
+
+      // Golden Serrated Border & Leaf Veins
+      ctx.strokeStyle = '#e9d5ff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Main Vein
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.8);
+      ctx.lineTo(0, size * 0.9);
+      ctx.strokeStyle = '#f3e8ff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // Interactive Dragging on Pairing Canvas
+    let isDragging = false;
+
+    pairCanvas.addEventListener('mousedown', handlePairStart);
+    pairCanvas.addEventListener('mousemove', handlePairMove);
+    pairCanvas.addEventListener('mouseup', handlePairEnd);
+    pairCanvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      handlePairStart({ clientX: touch.clientX, clientY: touch.clientY });
+    });
+    pairCanvas.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      handlePairMove({ clientX: touch.clientX, clientY: touch.clientY });
+    });
+    pairCanvas.addEventListener('touchend', handlePairEnd);
+
+    function handlePairStart(e) {
+      const rect = pairCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      perillaLeafDeck.forEach(leaf => {
+        if (!leaf.used && Math.hypot(leaf.x - mx, leaf.y - my) < leaf.r) {
+          draggedLeaf = leaf;
+          isDragging = true;
+        }
+      });
+    }
+
+    function handlePairMove(e) {
+      if (isDragging && draggedLeaf) {
+        const rect = pairCanvas.getBoundingClientRect();
+        draggedLeaf.x = e.clientX - rect.left;
+        draggedLeaf.y = e.clientY - rect.top;
+        renderPairingScene();
+      }
+    }
+
+    function handlePairEnd() {
+      if (isDragging && draggedLeaf) {
+        let matched = false;
+        pairSeafoods.forEach(food => {
+          if (!food.paired && Math.hypot(draggedLeaf.x - food.x, draggedLeaf.y - food.y) < food.r + 20) {
+            food.paired = true;
+            draggedLeaf.used = true;
+            matched = true;
+            pairScore++;
+            sound.playSizzle();
+            document.getElementById('pair-score').innerText = `${pairScore} / 3`;
+            showTip(`✨ 成功配對！紫蘇葉解毒和胃，調和 ${food.name} 之寒性！`);
+
+            if (pairScore >= 3) {
+              sound.playSuccess();
+              showTip("🎉 全步解毒完成！紫蘇葉具極佳【解魚蟹毒】特異芳香療效！");
+            }
+          }
+        });
+
+        if (!matched) {
+          draggedLeaf.x = draggedLeaf.origX;
+          draggedLeaf.y = draggedLeaf.origY;
+        }
+
+        draggedLeaf = null;
+        isDragging = false;
+        renderPairingScene();
+      }
+    }
+
+    /* -------------------------------------------------------------
+       MODE 1B: PERILLA TEA BREWING LOGIC
+    ------------------------------------------------------------- */
+    let teaTemp = 25;
+    let isHeating = false;
+    let teaIngredients = { leaf: false, ginger: false, peel: false };
+    let steamParticles = [];
+    let brewTimer = null;
+
+    function resetTeaBrewing() {
+      sound.playBubbling();
+      teaTemp = 25;
+      isHeating = false;
+      teaIngredients = { leaf: false, ginger: false, peel: false };
+      steamParticles = [];
+      if (brewTimer) clearInterval(brewTimer);
+      document.getElementById('btn-heat').innerText = '🔥 加熱烹煮';
+      updateTeaUI();
+      renderTeaScene();
+    }
+
+    function addTeaIngredient(type) {
+      sound.playBubbling();
+      teaIngredients[type] = true;
+      updateTeaUI();
+      renderTeaScene();
+
+      if (type === 'leaf') showTip("🍃 加入紫蘇葉：發汗解表，紫氣東來！");
+      else if (type === 'ginger') showTip("🫚 加入生薑：溫中止嘔，增強發汗！");
+      else if (type === 'peel') showTip("🍊 加入陳皮：理氣健脾，燥濕化痰！");
+    }
+
+    function toggleHeating() {
+      isHeating = !isHeating;
+      document.getElementById('btn-heat').innerText = isHeating ? '⏸️ 停止加熱' : '🔥 加熱烹煮';
+
+      if (isHeating) {
+        if (!brewTimer) {
+          brewTimer = setInterval(() => {
+            if (isHeating) {
+              if (teaTemp < 100) teaTemp += 2;
+              if (teaTemp >= 85) sound.playBubbling();
+              updateTeaUI();
+              renderTeaScene();
+
+              if (teaTemp >= 95 && teaIngredients.leaf && teaIngredients.ginger && teaIngredients.peel) {
+                sound.playSuccess();
+                showTip("☕ 紫蘇飲燉煮完成！具有【發汗解表、行氣和胃】完美功效！");
+              }
+            }
+          }, 300);
+        }
+      } else {
+        if (brewTimer) {
+          clearInterval(brewTimer);
+          brewTimer = null;
+        }
+      }
+    }
+
+    function updateTeaUI() {
+      document.getElementById('tea-temp-text').innerText = `${teaTemp}°C`;
+      const added = [];
+      if (teaIngredients.leaf) added.push('紫蘇葉');
+      if (teaIngredients.ginger) added.push('生薑');
+      if (teaIngredients.peel) added.push('陳皮');
+      document.getElementById('tea-ingredients-text').innerText = added.length > 0 ? added.join(' + ') : '未放入';
+    }
+
+    function renderTeaScene() {
+      const w = teaCanvas.width;
+      const h = teaCanvas.height;
+      if (!w || !h) return;
+
+      teaCtx.clearRect(0, 0, w, h);
+
+      // Dark Kitchen Background
+      teaCtx.fillStyle = '#10071c';
+      teaCtx.fillRect(0, 0, w, h);
+
+      // Teapot Base & Pot Body
+      const potX = w / 2;
+      const potY = h * 0.55;
+
+      // Heating Flame Glow
+      if (isHeating) {
+        const flameGrad = teaCtx.createRadialGradient(potX, potY + 70, 10, potX, potY + 70, 60);
+        flameGrad.addColorStop(0, '#f97316');
+        flameGrad.addColorStop(1, 'transparent');
+        teaCtx.fillStyle = flameGrad;
+        teaCtx.fillRect(potX - 80, potY + 30, 160, 80);
+      }
+
+      // Pot Shadow
+      teaCtx.beginPath();
+      teaCtx.ellipse(potX, potY + 65, 80, 20, 0, 0, Math.PI * 2);
+      teaCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      teaCtx.fill();
+
+      // Glass/Clay Pot Body
+      teaCtx.beginPath();
+      teaCtx.arc(potX, potY, 70, 0, Math.PI * 2);
+      teaCtx.fillStyle = 'rgba(59, 7, 100, 0.6)';
+      teaCtx.fill();
+      teaCtx.strokeStyle = '#a855f7';
+      teaCtx.lineWidth = 3;
+      teaCtx.stroke();
+
+      // Liquid Inside Pot (Color depends on ingredients and temp)
+      const liquidLevel = potY + 20;
+      teaCtx.beginPath();
+      teaCtx.arc(potX, potY, 62, 0.2 * Math.PI, 0.8 * Math.PI, false);
+      teaCtx.fillStyle = teaIngredients.leaf ? 'rgba(126, 34, 206, 0.8)' : 'rgba(180, 83, 9, 0.4)';
+      teaCtx.fill();
+
+      // Floating Ingredients Visuals
+      if (teaIngredients.leaf) drawPerillaLeaf(teaCtx, potX - 20, potY + 10, 14);
+      if (teaIngredients.ginger) {
+        teaCtx.fillStyle = '#fde047';
+        teaCtx.beginPath();
+        teaCtx.arc(potX + 25, potY + 15, 10, 0, Math.PI * 2);
+        teaCtx.fill();
+      }
+      if (teaIngredients.peel) {
+        teaCtx.fillStyle = '#f97316';
+        teaCtx.beginPath();
+        teaCtx.arc(potX, potY + 30, 8, 0, Math.PI * 2);
+        teaCtx.fill();
+      }
+
+      // Dynamic Steam Particles
+      if (teaTemp > 40) {
+        if (Math.random() < teaTemp / 100) {
+          steamParticles.push({
+            x: potX + (Math.random() * 40 - 20),
+            y: potY - 60,
+            r: 4 + Math.random() * 6,
+            vy: -1 - Math.random() * 1.5,
+            alpha: 0.6
+          });
+        }
+      }
+
+      // Update and Draw Steam Particles
+      steamParticles.forEach((p, idx) => {
+        p.y += p.vy;
+        p.alpha -= 0.01;
+        if (p.alpha > 0) {
+          teaCtx.beginPath();
+          teaCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          teaCtx.fillStyle = `rgba(243, 232, 255, ${p.alpha})`;
+          teaCtx.fill();
+        } else {
+          steamParticles.splice(idx, 1);
+        }
+      });
+    }
+
+    /* -------------------------------------------------------------
+       MODE 2: PINCHING & CULTIVATION SIMULATION
+    ------------------------------------------------------------- */
+    let plantBranches = [];
+    let growthStage = 1;
+
+    function initCultivation() {
+      growthStage = 1;
+      document.getElementById('plant-stage-text').innerText = "幼苗期 (單莖生長)";
+      
+      const w = growCanvas.width || 600;
+      const h = growCanvas.height || 400;
+
+      plantBranches = [
+        { startX: w / 2, startY: h * 0.85, endX: w / 2, endY: h * 0.55, pinched: false, level: 1 }
+      ];
+
+      renderGrowScene();
+    }
+
+    function resetCultivation() {
+      sound.playPinch();
+      initCultivation();
+    }
+
+    function waterPlant() {
+      sound.playBubbling();
+      showTip("💧 充沛灌溉：紫蘇喜溫暖濕潤環境，蓬勃抽枝！");
+      renderGrowScene();
+    }
+
+    function pinchPlantTop() {
+      let newlyPinched = false;
+      const w = growCanvas.width;
+      const h = growCanvas.height;
+
+      plantBranches.forEach(b => {
+        if (!b.pinched && b.level < 3) {
+          b.pinched = true;
+          newlyPinched = true;
+
+          // Spawn two lateral branches (Pinching effect)
+          const angle = 0.35;
+          const length = 55;
+          
+          plantBranches.push({
+            startX: b.endX,
+            startY: b.endY,
+            endX: b.endX - Math.sin(angle) * length,
+            endY: b.endY - Math.cos(angle) * length,
+            pinched: false,
+            level: b.level + 1
+          });
+
+          plantBranches.push({
+            startX: b.endX,
+            startY: b.endY,
+            endX: b.endX + Math.sin(angle) * length,
+            endY: b.endY - Math.cos(angle) * length,
+            pinched: false,
+            level: b.level + 1
+          });
+        }
+      });
+
+      if (newlyPinched) {
+        sound.playPinch();
+        growthStage++;
+        document.getElementById('plant-stage-text').innerText = `繁茂期 (分枝等級 ${growthStage})`;
+        showTip("✂️ 摘心成功！解除頂端優勢，大量側芽萌發，紫葉倍增！");
+      } else {
+        showTip("🌿 植株已極度繁茂！已達到理想多級分枝狀態！");
+      }
+
+      renderGrowScene();
+    }
+
+    function renderGrowScene() {
+      const w = growCanvas.width;
+      const h = growCanvas.height;
+      if (!w || !h) return;
+
+      growCtx.clearRect(0, 0, w, h);
+
+      // Garden Soil & Sun Background
+      const bg = growCtx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#2d0f4d');
+      bg.addColorStop(0.7, '#18072b');
+      bg.addColorStop(1, '#0c0217');
+      growCtx.fillStyle = bg;
+      growCtx.fillRect(0, 0, w, h);
+
+      // Sun Glow
+      growCtx.beginPath();
+      growCtx.arc(w * 0.85, h * 0.2, 45, 0, Math.PI * 2);
+      growCtx.fillStyle = 'rgba(251, 191, 36, 0.2)';
+      growCtx.fill();
+
+      // Soil Pot
+      growCtx.fillStyle = '#291d18';
+      growCtx.beginPath();
+      growCtx.ellipse(w / 2, h * 0.88, 110, 25, 0, 0, Math.PI * 2);
+      growCtx.fill();
+
+      // Draw Plant Stem Branches
+      plantBranches.forEach(b => {
+        growCtx.beginPath();
+        growCtx.moveTo(b.startX, b.startY);
+        growCtx.lineTo(b.endX, b.endY);
+        growCtx.strokeStyle = '#581c87';
+        growCtx.lineWidth = Math.max(2, 7 - b.level * 1.5);
+        growCtx.stroke();
+
+        // Draw Foliage at End Points
+        drawPerillaLeaf(growCtx, b.endX, b.endY, 16 - b.level * 2);
+        drawPerillaLeaf(growCtx, b.endX - 10, b.endY + 5, 12 - b.level * 2);
+        drawPerillaLeaf(growCtx, b.endX + 10, b.endY + 5, 12 - b.level * 2);
+      });
+    }
+
+    // Grow Canvas Pinch Interactive Click
+    growCanvas.addEventListener('click', (e) => {
+      pinchPlantTop();
+    });
+
+    /* -------------------------------------------------------------
+       NAVIGATION & UI CONTROLS
+    ------------------------------------------------------------- */
+    function setCookSubmode(sub) {
+      cookSubmode = sub;
+      document.getElementById('sub-stage-pair').classList.toggle('hidden', sub !== 'pair');
+      document.getElementById('sub-stage-tea').classList.toggle('hidden', sub !== 'tea');
+
+      document.getElementById('btn-sub-pair').className = sub === 'pair' ?
+        'px-3 py-1 bg-purple-900 text-purple-100 rounded-lg text-xs border border-purple-500 font-bold shadow' :
+        'px-3 py-1 bg-stone-800 text-purple-300 rounded-lg text-xs border border-purple-900 hover:bg-stone-700';
+
+      document.getElementById('btn-sub-tea').className = sub === 'tea' ?
+        'px-3 py-1 bg-purple-900 text-purple-100 rounded-lg text-xs border border-purple-500 font-bold shadow' :
+        'px-3 py-1 bg-stone-800 text-purple-300 rounded-lg text-xs border border-purple-900 hover:bg-stone-700';
+
+      if (sub === 'pair') initPairingGame();
+      else if (sub === 'tea') resetTeaBrewing();
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('sec-cook').classList.toggle('hidden', mode !== 'cook');
+      document.getElementById('sec-grow').classList.toggle('hidden', mode !== 'grow');
+
+      document.getElementById('tab-cook').className = mode === 'cook' ?
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-purple-800 text-purple-100 hover:bg-purple-700 transition shadow border border-purple-500/50 font-bold' :
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-purple-300 hover:bg-stone-800 transition border border-purple-900';
+
+      document.getElementById('tab-grow').className = mode === 'grow' ?
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-purple-800 text-purple-100 hover:bg-purple-700 transition shadow border border-purple-500/50 font-bold' :
+        'px-3 py-1.5 rounded-lg text-xs sm:text-sm bg-stone-900 text-purple-300 hover:bg-stone-800 transition border border-purple-900';
+
+      resizeAllCanvases();
+      if (mode === 'cook') setCookSubmode(cookSubmode);
+      else if (mode === 'grow') initCultivation();
+    }
+
+    function showTip(text) {
+      const banner = document.getElementById('tip-banner');
+      const tipText = document.getElementById('tip-text');
+      tipText.innerText = text;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3500);
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    function resizeAllCanvases() {
+      [pairCanvas, teaCanvas, growCanvas].forEach(c => {
+        if (c && c.parentElement) {
+          c.width = c.parentElement.clientWidth;
+          c.height = c.parentElement.clientHeight;
+        }
+      });
+      if (currentMode === 'cook') {
+        if (cookSubmode === 'pair') renderPairingScene();
+        else renderTeaScene();
+      } else if (currentMode === 'grow') {
+        renderGrowScene();
+      }
+    }
+
+    window.addEventListener('resize', resizeAllCanvases);
+
+    window.onload = () => {
+      resizeAllCanvases();
+      switchMode('cook');
+    };
+  </script>
+</body>
+</html>

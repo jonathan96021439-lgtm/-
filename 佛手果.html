@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【金佛送香】佛手果聞香擺盤與疏肝理氣遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #1a0f07;
+            color: #fef3c7;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
+        }
+        .gold-glow-lg {
+            box-shadow: 0 0 45px rgba(251, 191, 36, 0.65);
+        }
+        .amber-card-glow {
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.35);
+        }
+        .text-glow-amber {
+            text-shadow: 0 0 14px rgba(251, 191, 36, 0.85);
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 20px rgba(245, 158, 11, 0.95);
+        }
+        .tea-slot {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(45, 26, 14, 0.75);
+            border: 2px dashed rgba(245, 158, 11, 0.4);
+        }
+        .tea-slot.slot-highlight {
+            border-color: #f59e0b !important;
+            background: rgba(245, 158, 11, 0.25) !important;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
+            transform: scale(1.03);
+        }
+        .fruit-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .fruit-card:hover {
+            transform: translateY(-4px) scale(1.04);
+        }
+        .piece-dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .tab-btn-active {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: #fffbeb;
+            border-color: #fde047;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        .tab-btn-inactive {
+            background: rgba(45, 26, 14, 0.6);
+            color: #fef3c7;
+            border-color: rgba(217, 119, 6, 0.3);
+        }
+        @keyframes floatAroma {
+            0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+            100% { transform: translateY(-50px) scale(1.3); opacity: 0; }
+        }
+        .animate-aroma-wave {
+            animation: floatAroma 1.8s ease-out forwards;
+        }
+        @keyframes goldenPulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px #f59e0b); }
+        }
+        .animate-golden-pulse {
+            animation: goldenPulse 2.5s infinite ease-in-out;
+        }
+        @keyframes smokeRise {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+            50% { transform: translateY(-25px) rotate(10deg); opacity: 0.7; }
+            100% { transform: translateY(-50px) rotate(-10deg); opacity: 0; }
+        }
+        .incense-smoke {
+            animation: smokeRise 4s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-stone-950 text-amber-100 flex flex-col justify-between overflow-hidden select-none">
+
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-amber-950/80 border border-amber-500/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 gold-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-amber-300/80 block font-medium">雅趣積分 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-amber-300 font-mono text-glow-amber">0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-amber-300/80 block font-medium">茶案吉祥祝福</span>
+                <span id="blessingCountText" class="text-xl sm:text-2xl font-semibold text-amber-200 font-mono text-glow-gold">0 / 4</span>
+            </div>
+        </div>
+
+        <!-- Mode Toggle & Codex Button -->
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-amber-400/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往【養護與剪枝】 ✂️</span>
+            </button>
+            <button id="btnCodex" class="bg-amber-950/90 hover:bg-amber-900 text-amber-200 border border-amber-500/60 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📜 佛手典籍
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: TEA TABLE ARRANGEMENT & SCENT RECOGNITION -->
+        <section id="phaseArrangement" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-amber-200 text-glow-gold">【金佛送香】佛手果茶案聞香擺盤</h1>
+                <p class="text-xs sm:text-sm text-amber-300/90 mt-1">「金佛開手引柑香，疏肝理氣意清涼」── 請辨識佛手形態並尊擺於茶案</p>
+            </div>
+
+            <!-- Main Tea Table Area -->
+            <div class="w-full max-w-3xl bg-amber-950/50 border border-amber-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl gold-glow flex flex-col items-center gap-4 relative">
+                
+                <!-- Zen Incense & Tea Banner Header -->
+                <div class="w-full flex justify-between items-center px-2 text-xs font-bold text-amber-300 border-b border-amber-800/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🕯️</span>
+                        <span>古木紫砂茶案 (點擊茶果可揮發疏肝香氣)</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="timerText" class="text-amber-400 font-mono hidden">⏳ 限時: 60s</span>
+                        <span id="placedCountText" class="text-amber-200 font-mono">擺盤進度: 0 / 4</span>
+                    </div>
+                </div>
+
+                <!-- 2x2 Interactive Tea Table Grid Slots -->
+                <div id="teaGrid" class="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+                    
+                    <!-- Slot 0: Main Tea Host Position -->
+                    <div data-slot="0" class="tea-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-3 relative overflow-hidden group cursor-pointer shadow-inner">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🫖</span>
+                            <span class="text-xs sm:text-sm text-amber-200 font-bold">① 尊客席 · 開手金佛</span>
+                            <span class="text-[10px] text-amber-400/70 block mt-0.5">指狀張開如佛手 · 疏肝理氣</span>
+                        </div>
+                    </div>
+
+                    <!-- Slot 1: Side Tea Position -->
+                    <div data-slot="1" class="tea-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-3 relative overflow-hidden group cursor-pointer shadow-inner">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🍵</span>
+                            <span class="text-xs sm:text-sm text-amber-200 font-bold">② 副茶席 · 握拳金佛</span>
+                            <span class="text-[10px] text-amber-400/70 block mt-0.5">指端緊握如拳 · 和胃止痛</span>
+                        </div>
+                    </div>
+
+                    <!-- Slot 2: Incense Partner Position -->
+                    <div data-slot="2" class="tea-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-3 relative overflow-hidden group cursor-pointer shadow-inner">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🪵</span>
+                            <span class="text-xs sm:text-sm text-amber-200 font-bold">③ 香席位 · 綠萼鮮佛手</span>
+                            <span class="text-[10px] text-amber-400/70 block mt-0.5">清香濃郁蘊綠意 · 燥濕化痰</span>
+                        </div>
+                    </div>
+
+                    <!-- Slot 3: Zen Ornament Position -->
+                    <div data-slot="3" class="tea-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-3 relative overflow-hidden group cursor-pointer shadow-inner">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🌸</span>
+                            <span class="text-xs sm:text-sm text-amber-200 font-bold">④ 觀賞席 · 雙色吉祥果</span>
+                            <span class="text-[10px] text-amber-400/70 block mt-0.5">金綠交輝送奇香 · 增強免疫</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Fruits Tray Dock -->
+                <div class="w-full mt-2">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <span class="text-xs text-amber-300 font-bold">🍋 待賞擺盤佛手果實（點選後點擊案位，或直接拖拽擺放）：</span>
+                        <button id="btnAromaSniff" class="text-[11px] bg-amber-800/80 hover:bg-amber-700 text-amber-200 border border-amber-400/40 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer">
+                            🌬️ 釋放柑橘濃香
+                        </button>
+                    </div>
+                    
+                    <div id="fruitsDock" class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-900/90 border border-amber-700/60 rounded-2xl p-3 backdrop-blur-md min-h-[115px] items-center">
+                        <!-- Dynamic Fruit Cards will render here -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PHASE 2: CULTIVATION & PRUNING MINI GAME -->
+        <section id="phaseCultivation" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-amber-300 text-glow-gold">【金枝秀茂】佛手果植栽養護與精修</h1>
+                <p class="text-xs sm:text-sm text-amber-200/90 mt-1">「喜溫喜陽忌水澇，定期施肥剪密枝」── 體驗佛手的陽光水肥與修剪巧藝</p>
+            </div>
+
+            <div class="w-full max-w-3xl bg-amber-950/50 border border-amber-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl gold-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Tree Interactive Display Viewport -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-stone-900/90 p-4 rounded-2xl border border-amber-800/60 relative">
+                    <div id="treeContainer" class="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center overflow-hidden cursor-crosshair border border-amber-700/40 rounded-xl bg-stone-950/60">
+                        <!-- Dynamic SVG Buddha's Hand Bush -->
+                    </div>
+
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span class="text-sm font-bold text-amber-300 font-calligraphy">金佛手盆栽</span>
+                            <span id="treeStatusBadge" class="ml-2 text-[10px] bg-amber-900/90 text-amber-200 border border-amber-500/50 px-2 py-0.5 rounded-full">等待養護</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-amber-300/80 block">生長茁壯度</span>
+                            <div class="w-24 h-2.5 bg-stone-800 rounded-full overflow-hidden border border-amber-600/40">
+                                <div id="treeHealthBar" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300 w-[40%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cultivation Interactive Control Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-amber-800/60 min-h-[260px]">
+                    <h3 class="text-sm font-bold text-amber-300 text-center border-b border-amber-800/60 pb-2">🌿 佛手果四季養護妙招</h3>
+
+                    <div class="space-y-2 text-xs">
+                        <!-- Action 1: Sunlight -->
+                        <button id="btnSunlight" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">☀️</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">1. 充沛日光照射</div>
+                                    <div class="text-[10px] text-amber-400/80">喜溫暖光照，避免低溫凍害</div>
+                                </div>
+                            </div>
+                            <span id="sunBadge" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">未充足</span>
+                        </button>
+
+                        <!-- Action 2: Drainage & Organic Fertilizer -->
+                        <button id="btnFertilizer" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🪴</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">2. 排水砂土與有機肥</div>
+                                    <div class="text-[10px] text-amber-400/80">忌水澇根腐，定時補充有機養分</div>
+                                </div>
+                            </div>
+                            <span id="fertBadge" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">未補充</span>
+                        </button>
+
+                        <!-- Action 3: Prune Dense Branches -->
+                        <button id="btnPrune" class="w-full p-2.5 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">✂️</span>
+                                <div>
+                                    <div class="font-bold text-amber-200">3. 花後修剪過密枝條</div>
+                                    <div class="text-[10px] text-amber-400/80">剪去徒長弱枝，促進通風掛果</div>
+                                </div>
+                            </div>
+                            <span id="pruneBadge" class="text-[10px] bg-amber-950 px-2 py-1 rounded text-amber-400">未修剪</span>
+                        </button>
+                    </div>
+
+                    <div id="careResultTip" class="bg-amber-950/80 p-2 rounded-xl border border-amber-600/40 text-[11px] text-amber-200 text-center">
+                        請依序點擊上方養護要點，為佛手盆栽注入強健生機！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-amber-950 border border-amber-400/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto gold-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-amber-400 hover:text-amber-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-amber-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-amber-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-800/80 border border-amber-400 flex items-center justify-center text-2xl">🍋</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-amber-200">佛手果（Citrus medica var. sarcodactylis）典籍</h2>
+                    <p class="text-xs text-amber-300/80">別名：金佛手、佛手柑、五指香椽、九爪木</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-amber-100/90 leading-relaxed">
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🖐️ 形態特徵（如佛陀手掌）</h3>
+                    <p>果實在發育過程中裂開成數個指狀肉條，張開者如佛陀伸指，握拳者如佛手合十。成熟時呈金黃色，果皮厚且富含揮髮油，香氣極其濃郁持久，為茶案典雅陳設之珍品。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 性味功效（疏肝理氣、和胃止痛）</h3>
+                    <p>性溫，味辛、苦、酸，歸肝、脾、胃、肺經。具有<b>疏肝理氣、和胃止痛、燥濕化痰</b>之功。常用於肝胃氣滯之胸脅脹痛、胃脘痞滿、嘔吐少食以及咳嗽痰多等症。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-amber-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植與養護建議</h3>
+                    <p>喜<b>溫暖濕潤、陽光充足</b>的環境，極怕水澇與嚴寒霜凍。宜選用富含腐殖質、排水良好的沙質壤土。生長期間需定期施加有機肥，並於花後及時修剪過密枝與弱枝以促進養分集中。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">領悟金佛本草心法</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-amber-950/95 border border-amber-400 text-amber-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME ENGINE LOGIC -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playBell() {
+                this.init();
+                this.playTone(523.25, 0.6, 'sine', 0.2); // C5
+                setTimeout(() => this.playTone(659.25, 0.8, 'sine', 0.2), 150); // E5
+                setTimeout(() => this.playTone(783.99, 1.0, 'sine', 0.25), 300); // G5
+            }
+            playSnap() {
+                this.init();
+                this.playTone(440, 0.12, 'triangle');
+                setTimeout(() => this.playTone(554.37, 0.15, 'sine'), 60);
+            }
+            playAromaSwoosh() {
+                this.init();
+                this.playTone(300 + Math.random() * 200, 0.2, 'sine', 0.1);
+            }
+            playMistake() {
+                this.init();
+                this.playTone(180, 0.25, 'sawtooth', 0.15);
+            }
+            playPrune() {
+                this.init();
+                this.playTone(800, 0.05, 'triangle', 0.15);
+                setTimeout(() => this.playTone(1200, 0.08, 'sine', 0.15), 50);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const FRUIT_DATA = [
+            {
+                id: 0,
+                title: '開手金佛手',
+                desc: '指狀分支展張如手，香氣濃郁，主疏肝理氣',
+                blessing: '✨ 疏肝理氣 · 胸脅舒暢',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 45 85 C 40 70 30 55 20 40 C 18 35 22 30 26 35 C 33 45 42 55 45 60 C 42 45 35 28 32 18 C 30 12 36 10 40 16 C 45 28 48 45 50 50 C 52 35 55 18 58 10 C 61 5 67 8 65 15 C 62 30 58 45 57 52 C 63 42 72 30 78 22 C 82 17 87 22 83 28 C 76 40 65 55 58 68 C 55 78 50 85 45 85 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                    <circle cx="48" cy="65" r="2" fill="#fef3c7"/>
+                    <circle cx="53" cy="58" r="1.5" fill="#fef3c7"/>
+                    <path d="M 45 85 L 45 95" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 1,
+                title: '握拳金佛手',
+                desc: '指端向前緊握如拳，金黃飽滿，主和胃止痛',
+                blessing: '✨ 和胃止痛 · 脘腹安和',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="55" rx="26" ry="30" fill="#d97706" stroke="#92400e" stroke-width="2"/>
+                    <path d="M 32 40 C 35 25 45 22 50 32 C 55 22 65 25 68 40 Z" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
+                    <path d="M 38 48 C 42 38 50 38 52 48 C 56 38 62 40 62 50" fill="none" stroke="#b45309" stroke-width="2"/>
+                    <path d="M 50 85 L 50 95" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 2,
+                title: '綠萼鮮佛手',
+                desc: '清綠帶金香氣持久，主燥濕化痰、咳嗽宜用',
+                blessing: '✨ 燥濕化痰 · 肺氣清爽',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 48 85 C 42 70 32 55 22 42 C 20 37 25 32 28 37 C 35 47 43 57 46 62 C 44 47 38 30 35 20 C 33 14 39 12 43 18 C 47 30 50 47 52 52 C 55 37 60 22 64 15 C 68 10 73 13 70 20 C 66 35 60 48 59 55 C 65 45 75 35 80 28 C 84 23 88 28 84 34 C 77 45 66 60 59 72 Z" fill="#84cc16" stroke="#4d7c0f" stroke-width="2"/>
+                    <path d="M 42 70 C 48 65 52 65 58 70" fill="#eab308" opacity="0.6"/>
+                    <path d="M 48 85 L 48 95" stroke="#365314" stroke-width="4" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 3,
+                title: '雙色吉祥果',
+                desc: '金綠雙色相映，多指如佛手招福，增強免疫',
+                blessing: '✨ 吉祥安康 · 福壽綿長',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 45 85 C 38 72 28 58 18 45 C 15 40 20 35 24 40 C 31 50 40 60 44 65 C 41 50 33 32 30 22 C 28 16 34 14 38 20 C 43 32 47 48 49 53 C 53 38 58 24 62 16 C 66 11 72 14 69 22 C 64 36 59 50 58 57 C 65 47 75 36 81 29 C 85 24 90 29 86 35 C 78 47 67 62 58 74 Z" fill="#eab308" stroke="#a16207" stroke-width="2"/>
+                    <path d="M 28 40 Q 40 55 45 80 L 35 82 Z" fill="#65a30d" opacity="0.7"/>
+                    <path d="M 45 85 L 45 95" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>
+                </svg>`
+            }
+        ];
+
+        let state = {
+            score: 0,
+            blessingsCount: 0,
+            placedSlots: [false, false, false, false],
+            selectedFruitId: null,
+            currentPhase: 'arrangement', // 'arrangement' | 'cultivation'
+            
+            // Cultivation Minigame state
+            sunlightDone: false,
+            fertilizerDone: false,
+            pruneDone: false,
+            treeHealth: 40
+        };
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 35; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1.5 + Math.random() * 3,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: -0.2 - Math.random() * 0.5,
+                    alpha: 0.2 + Math.random() * 0.6
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(245, 158, 11, ${p.alpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        function renderFruitsDock() {
+            const dock = document.getElementById('fruitsDock');
+            dock.innerHTML = '';
+
+            let remaining = 0;
+            FRUIT_DATA.forEach(fruit => {
+                if (!state.placedSlots[fruit.id]) {
+                    remaining++;
+                    const card = document.createElement('div');
+                    card.className = `fruit-card p-2.5 bg-stone-800/90 hover:bg-stone-700/90 border-2 ${state.selectedFruitId === fruit.id ? 'border-amber-400 gold-glow scale-105' : 'border-amber-700/60'} rounded-xl flex flex-col items-center justify-between text-center select-none cursor-grab active:cursor-grabbing`;
+                    card.setAttribute('draggable', 'true');
+                    card.dataset.id = fruit.id;
+
+                    card.innerHTML = `
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 pointer-events-none">${fruit.svg}</div>
+                        <span class="text-[11px] sm:text-xs font-bold text-amber-200 mt-1 pointer-events-none">${fruit.title}</span>
+                    `;
+
+                    card.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        sound.init();
+                        state.selectedFruitId = (state.selectedFruitId === fruit.id) ? null : fruit.id;
+                        renderFruitsDock();
+                        highlightSlots();
+                        if (state.selectedFruitId !== null) {
+                            sound.playAromaSwoosh();
+                            showToast(`已選取【${fruit.title}】，請點擊上方茶案位或拖拽入席！`);
+                        }
+                    });
+
+                    card.addEventListener('dragstart', (e) => {
+                        sound.init();
+                        state.selectedFruitId = fruit.id;
+                        card.classList.add('piece-dragging');
+                        e.dataTransfer.setData('text/plain', fruit.id.toString());
+                        highlightSlots();
+                    });
+
+                    card.addEventListener('dragend', () => {
+                        card.classList.remove('piece-dragging');
+                        clearSlotHighlights();
+                    });
+
+                    dock.appendChild(card);
+                }
+            });
+
+            if (remaining === 0) {
+                dock.parentElement.innerHTML = `
+                    <button id="btnCompleteBlessing" class="w-full py-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-stone-950 font-black text-sm sm:text-base rounded-2xl shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse gold-glow">
+                        🎉 茶案佛手擺盤大圓滿！獲得全套【疏肝理氣與和胃】金佛祝福 ➔
+                    </button>
+                `;
+                document.getElementById('btnCompleteBlessing').addEventListener('click', () => {
+                    sound.playBell();
+                    showToast("✨ 金佛送香，疏肝理氣，和胃止痛，百病不侵！", "🍵");
+                    setTimeout(switchToCultivation, 1200);
+                });
+            }
+        }
+
+        function highlightSlots() {
+            clearSlotHighlights();
+            if (state.selectedFruitId !== null) {
+                const targetSlot = document.querySelector(`.tea-slot[data-slot="${state.selectedFruitId}"]`);
+                if (targetSlot && !state.placedSlots[state.selectedFruitId]) {
+                    targetSlot.classList.add('slot-highlight');
+                }
+            }
+        }
+
+        function clearSlotHighlights() {
+            document.querySelectorAll('.tea-slot').forEach(s => s.classList.remove('slot-highlight'));
+        }
+
+        function tryPlaceFruit(fruitId, slotIdx) {
+            if (fruitId === null || isNaN(slotIdx)) return;
+
+            if (fruitId === slotIdx) {
+                sound.playBell();
+                state.placedSlots[slotIdx] = true;
+                state.score += 200;
+                state.blessingsCount++;
+                state.selectedFruitId = null;
+
+                const fruit = FRUIT_DATA[slotIdx];
+                const slot = document.querySelector(`.tea-slot[data-slot="${slotIdx}"]`);
+                slot.className = "tea-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2.5 relative overflow-hidden bg-amber-900/80 border-2 border-amber-400 gold-glow transition-all";
+                
+                slot.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-center w-full h-full p-1 animate-golden-pulse cursor-pointer">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 mb-1">${fruit.svg}</div>
+                        <span class="text-xs font-bold text-amber-200 font-calligraphy">${fruit.title}</span>
+                        <span class="text-[10px] text-amber-300 font-mono mt-0.5">${fruit.blessing}</span>
+                    </div>
+                `;
+
+                // Add aroma click trigger on placed slot
+                slot.addEventListener('click', () => {
+                    sound.playAromaSwoosh();
+                    triggerAromaParticles(slot);
+                    showToast(`🌬️ 揮發【${fruit.title}】柑橘清香：${fruit.desc}`);
+                });
+
+                updateHeaderUI();
+                document.getElementById('placedCountText').innerText = `擺盤進度: ${state.blessingsCount} / 4`;
+                showToast(`🎉 尊擺歸位！觸發祝福：${fruit.blessing}`, '🍋');
+                renderFruitsDock();
+            } else {
+                sound.playMistake();
+                showToast(`⚠️ 案位不對！【${FRUIT_DATA[fruitId].title}】應擺放於專屬茶席位`, '❌');
+            }
+            clearSlotHighlights();
+        }
+
+        function triggerAromaParticles(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2 + (Math.random() - 0.5) * 40,
+                    y: rect.top + rect.height / 2,
+                    radius: 3 + Math.random() * 4,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: -1.5 - Math.random() * 2,
+                    alpha: 0.9
+                });
+            }
+        }
+
+        function setupTeaSlots() {
+            const slots = document.querySelectorAll('.tea-slot');
+            slots.forEach(slot => {
+                slot.addEventListener('click', () => {
+                    const slotIdx = parseInt(slot.dataset.slot);
+                    if (state.placedSlots[slotIdx]) return;
+
+                    if (state.selectedFruitId !== null) {
+                        tryPlaceFruit(state.selectedFruitId, slotIdx);
+                    } else {
+                        showToast(`請先在下方托盤選取佛手果實！`, '👇');
+                    }
+                });
+
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    slot.classList.add('slot-highlight');
+                });
+
+                slot.addEventListener('dragleave', () => {
+                    slot.classList.remove('slot-highlight');
+                });
+
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('slot-highlight');
+                    const fruitId = parseInt(e.dataTransfer.getData('text/plain'));
+                    const slotIdx = parseInt(slot.dataset.slot);
+                    tryPlaceFruit(fruitId, slotIdx);
+                });
+            });
+        }
+
+        function renderCultivationTree() {
+            const container = document.getElementById('treeContainer');
+            
+            let foliageColor = state.pruneDone ? '#f59e0b' : '#84cc16';
+            let fruitScale = state.sunlightDone ? '1.2' : '0.8';
+            let potDetail = state.fertilizerDone ? 'stroke="#f59e0b" stroke-width="3"' : 'stroke="#78350f" stroke-width="2"';
+
+            container.innerHTML = `
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Pot -->
+                    <path d="M 30 75 L 35 95 L 65 95 L 70 75 Z" fill="#451a03" ${potDetail}/>
+                    <ellipse cx="50" cy="75" rx="20" ry="4" fill="#78350f"/>
+                    
+                    <!-- Main Stem -->
+                    <path d="M 50 75 C 50 60 48 50 50 35" stroke="#78350f" stroke-width="5" fill="none" stroke-linecap="round"/>
+                    <path d="M 50 55 C 40 48 35 45 28 42" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M 50 50 C 60 45 65 42 72 38" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    
+                    <!-- Dense Unpruned Weak Branches -->
+                    ${!state.pruneDone ? `<path d="M 45 60 L 32 68 M 52 58 L 68 64 M 48 42 L 58 30" stroke="#a16207" stroke-width="2" stroke-dasharray="2,2"/>` : ''}
+
+                    <!-- Foliage Bush -->
+                    <circle cx="50" cy="30" r="18" fill="${foliageColor}" opacity="0.85"/>
+                    <circle cx="36" cy="38" r="14" fill="${foliageColor}" opacity="0.8"/>
+                    <circle cx="64" cy="36" r="14" fill="${foliageColor}" opacity="0.8"/>
+
+                    <!-- Buddha's Hand Fruits -->
+                    <g transform="translate(42, 28) scale(${fruitScale})">
+                        <path d="M 0 0 C -3 -5 -8 -8 -10 -4 C -7 2 0 8 0 12 C 3 8 8 2 10 -4 C 8 -8 3 -5 0 0 Z" fill="#f59e0b"/>
+                    </g>
+                    <g transform="translate(30, 42) scale(${fruitScale})">
+                        <path d="M 0 0 C -3 -5 -8 -8 -10 -4 C -7 2 0 8 0 12 Z" fill="#eab308"/>
+                    </g>
+                    <g transform="translate(62, 40) scale(${fruitScale})">
+                        <path d="M 0 0 C 3 -5 8 -8 10 -4 C 7 2 0 8 0 12 Z" fill="#f59e0b"/>
+                    </g>
+
+                    <!-- Sun Effect -->
+                    ${state.sunlightDone ? `<circle cx="82" cy="18" r="10" fill="#fef08a" opacity="0.9" class="animate-pulse"/>` : ''}
+                </svg>
+            `;
+
+            // Update health bar & badge
+            document.getElementById('treeHealthBar').style.width = `${state.treeHealth}%`;
+            const badge = document.getElementById('treeStatusBadge');
+            
+            if (state.treeHealth >= 100) {
+                badge.className = "ml-2 text-[10px] bg-amber-500 text-stone-950 font-bold border border-amber-300 px-2 py-0.5 rounded-full animate-bounce";
+                badge.innerText = "✨ 枝繁果碩 · 大圓滿";
+            } else if (state.treeHealth >= 70) {
+                badge.className = "ml-2 text-[10px] bg-amber-800 text-amber-200 border border-amber-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "🌱 茁壯生長中";
+            } else {
+                badge.className = "ml-2 text-[10px] bg-stone-800 text-amber-400 border border-amber-700/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "等待養護";
+            }
+        }
+
+        function setupCultivationEvents() {
+            document.getElementById('btnSunlight').addEventListener('click', () => {
+                sound.playBell();
+                state.sunlightDone = true;
+                state.treeHealth = Math.min(100, state.treeHealth + 20);
+                document.getElementById('sunBadge').className = "text-[10px] bg-amber-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('sunBadge').innerText = "☀️ 陽光充足";
+                showToast("☀️ 注入溫暖日光，避免低溫凍害！", "✨");
+                renderCultivationTree();
+                checkCultivationComplete();
+            });
+
+            document.getElementById('btnFertilizer').addEventListener('click', () => {
+                sound.playSnap();
+                state.fertilizerDone = true;
+                state.treeHealth = Math.min(100, state.treeHealth + 20);
+                document.getElementById('fertBadge').className = "text-[10px] bg-amber-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('fertBadge').innerText = "🪴 砂土水肥優";
+                showToast("🪴 施加有機肥並保持沙質土良好排水防澇！", "🌿");
+                renderCultivationTree();
+                checkCultivationComplete();
+            });
+
+            document.getElementById('btnPrune').addEventListener('click', () => {
+                sound.playPrune();
+                state.pruneDone = true;
+                state.treeHealth = Math.min(100, state.treeHealth + 20);
+                document.getElementById('pruneBadge').className = "text-[10px] bg-amber-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('pruneBadge').innerText = "✂️ 弱枝已修剪";
+                showToast("✂️ 剪去過密弱枝，養分集中，金佛果實碩大！", "🍋");
+                renderCultivationTree();
+                checkCultivationComplete();
+            });
+        }
+
+        function checkCultivationComplete() {
+            if (state.sunlightDone && state.fertilizerDone && state.pruneDone) {
+                document.getElementById('careResultTip').innerHTML = `
+                    <span class="text-amber-300 font-bold text-xs">🎉 佛手植栽養護大功告成！得「金佛送香」與全套健康祝福！</span>
+                `;
+                state.score += 300;
+                updateHeaderUI();
+            }
+        }
+
+        function switchToCultivation() {
+            sound.playSnap();
+            state.currentPhase = 'cultivation';
+            document.getElementById('phaseArrangement').classList.add('hidden');
+            document.getElementById('phaseCultivation').classList.remove('hidden');
+            document.getElementById('phaseCultivation').classList.add('flex');
+            document.getElementById('phaseBtnLabel').innerText = "返回【茶案聞香】 🫖";
+            renderCultivationTree();
+        }
+
+        function switchToArrangement() {
+            sound.playSnap();
+            state.currentPhase = 'arrangement';
+            document.getElementById('phaseCultivation').classList.add('hidden');
+            document.getElementById('phaseCultivation').classList.remove('flex');
+            document.getElementById('phaseArrangement').classList.remove('hidden');
+            document.getElementById('phaseBtnLabel').innerText = "前往【養護與剪枝】 ✂️";
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            document.getElementById('blessingCountText').innerText = `${state.blessingsCount} / 4`;
+        }
+
+        function bindEvents() {
+            window.addEventListener('resize', resizeCanvas);
+
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                if (state.currentPhase === 'arrangement') {
+                    switchToCultivation();
+                } else {
+                    switchToArrangement();
+                }
+            });
+
+            document.getElementById('btnAromaSniff').addEventListener('click', () => {
+                sound.playAromaSwoosh();
+                for (let i = 0; i < 15; i++) {
+                    particles.push({
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        y: window.innerHeight / 2 + (Math.random() - 0.5) * 100,
+                        radius: 3 + Math.random() * 5,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -1 - Math.random() * 2,
+                        alpha: 0.9
+                    });
+                }
+                showToast("🌬️ 茶案漫溢佛手柑橘清香，心曠神怡，疏肝理氣！", "🍊");
+            });
+
+            // Codex Modal Controls
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playBell();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initParticles();
+            animateCanvas();
+
+            setupTeaSlots();
+            renderFruitsDock();
+            setupCultivationEvents();
+
+            bindEvents();
+        };
+    </script>
+</body>
+</html>

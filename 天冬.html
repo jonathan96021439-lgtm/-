@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>玉髓潤燥 ── 天冬主題掘寶淘沙與藥方配對遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #120e0a;
+            color: #fef3c7;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(40, 25, 12, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 3px;
+        }
+        .jade-glow {
+            box-shadow: 0 0 25px rgba(52, 211, 153, 0.4);
+        }
+        .sand-glow {
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.35);
+        }
+        .text-glow-jade {
+            text-shadow: 0 0 12px rgba(110, 231, 183, 0.8);
+        }
+        .text-glow-amber {
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+        }
+        @keyframes pulseJade {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.6)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 15px rgba(110, 231, 183, 0.9)); }
+        }
+        .pulse-jade {
+            animation: pulseJade 2.5s ease-in-out infinite;
+        }
+        @keyframes shimmerSand {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-shimmer {
+            background-size: 200% 200%;
+            animation: shimmerSand 6s ease infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-stone-950 text-amber-50 flex flex-col justify-between overflow-hidden">
+
+    <header class="relative z-20 w-full max-w-4xl mx-auto p-3 sm:p-4 flex justify-between items-center pointer-events-auto">
+        <div class="bg-amber-950/80 border border-amber-600/50 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 sand-glow">
+            <div>
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">淘沙得分 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-amber-200 font-mono text-glow-amber">0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60"></div>
+            <div>
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">連勝 Combo</span>
+                <span id="comboText" class="text-xl sm:text-2xl font-semibold text-emerald-300 font-mono">x0</span>
+            </div>
+            <div class="h-8 w-px bg-amber-800/60 hidden sm:block"></div>
+            <div class="hidden sm:block">
+                <span class="text-xs text-amber-300/80 block uppercase tracking-wider">關卡 Progress</span>
+                <span id="levelText" class="text-lg font-semibold text-emerald-200 font-mono">1 / 5</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="btnCodex" class="bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-amber-500/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                天冬本草典籍
+            </button>
+            <button id="btnSound" class="bg-amber-900/80 hover:bg-amber-800 text-amber-100 border border-amber-500/50 p-2.5 rounded-xl transition-all shadow-md">
+                <svg id="soundOnIcon" class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                <svg id="soundOffIcon" class="w-5 h-5 text-amber-500/50 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-between p-2 sm:p-4 max-w-4xl w-full mx-auto">
+        
+        <!-- Target Task Quest Banner -->
+        <div id="questBanner" class="w-full mb-2 transition-all duration-300">
+            <div class="bg-gradient-to-r from-stone-950/90 via-amber-950/90 to-stone-950/90 border-2 border-amber-500/60 rounded-2xl p-3 sm:p-4 shadow-xl text-center relative overflow-hidden backdrop-blur-md">
+                <div id="stepIndicator" class="text-xs text-emerald-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block animate-ping"></span>
+                    <span id="stepTitleText">階段一：沙盤淘寶 ‧ 撥開沙土尋覓如玉塊根</span>
+                </div>
+                <h2 id="questInstruction" class="text-base sm:text-lg font-bold text-amber-100 font-calligraphy leading-snug">
+                    在沙壤中滑動或輕點「撥開細沙」，掘出晶瑩半透明、肉質肥厚如羊脂玉的真正「天冬」塊根！
+                </h2>
+                <p id="subHintText" class="text-xs text-amber-300/80 mt-1">提示：天冬塊根呈紡錘形，肥厚潤澤如玉，切勿誤採粗糙雜根與礫石。</p>
+            </div>
+        </div>
+
+        <!-- Interactive Sandbox Area -->
+        <div id="fieldContainer" class="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] bg-amber-950/40 rounded-2xl overflow-hidden border-4 border-amber-800/80 shadow-2xl sand-glow flex flex-col justify-between p-3">
+            
+            <!-- Dynamic Canvas Sand Texture -->
+            <canvas id="sandCanvas" class="absolute inset-0 z-0 cursor-crosshair"></canvas>
+
+            <!-- Grid of Buried Treasures in Sand Bed -->
+            <div id="sandboxGrid" class="relative z-10 w-full h-full grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 p-2 pointer-events-none">
+                <!-- Buried treasure cards will be dynamically mounted here -->
+            </div>
+
+            <!-- Recipe Matching Phase UI (Appears in Phase 2) -->
+            <div id="recipeContainer" class="relative z-20 w-full h-full flex flex-col justify-between hidden p-2">
+                
+                <!-- Discovered Tian Dong Display Card -->
+                <div id="harvestCard" class="bg-gradient-to-r from-emerald-950/90 via-stone-900/90 to-amber-950/90 border-2 border-emerald-400/80 rounded-2xl p-3 text-center shadow-xl pulse-jade">
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <span class="text-3xl">✨💎</span>
+                        <span id="harvestTitle" class="text-xl font-bold text-emerald-300 font-calligraphy text-glow-jade">淘得羊脂玉髓 ‧ 溫潤天冬</span>
+                    </div>
+                    <p id="recipeTaskPrompt" class="text-sm font-semibold text-amber-100 mb-1">
+                        處方載入中...
+                    </p>
+                    <span class="text-xs text-emerald-200/80 italic">請配對合適之「養陰潤燥 ‧ 清肺生津」藥方或養護配詞</span>
+                </div>
+
+                <!-- Recipe Pairing Options Grid -->
+                <div id="recipeOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                    <!-- Options injected by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Floating Toast Alert Overlay -->
+            <div id="gameToast" class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none bg-black/85 border border-amber-400 text-amber-200 text-xs sm:text-sm px-5 py-2.5 rounded-full backdrop-blur-md shadow-2xl opacity-0 transition-opacity duration-300 flex items-center gap-2">
+                <span id="toastIcon">✨</span>
+                <span id="toastText">撥開細沙尋找天冬...</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-20 w-full text-center py-2 text-xs text-amber-400/60 font-light">
+        【玉髓潤燥】天冬（Asparagus cochinchinensis） ── 肉質肥厚如玉 ‧ 養陰潤燥 ‧ 清肺生津
+    </footer>
+
+    <div id="startModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="bg-gradient-to-b from-amber-950 via-stone-900 to-stone-950 border-2 border-amber-500/60 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-emerald-400 to-amber-600"></div>
+            
+            <div class="mb-5">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs tracking-widest mb-2 border border-amber-500/30">本草玉髓 ‧ 掘寶淘沙</span>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-300 font-calligraphy text-glow-amber mb-2">玉髓潤燥</h1>
+                <p class="text-sm sm:text-base text-amber-200/80">天冬主題掘寶淘沙與藥方配對遊戲</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-left text-xs sm:text-sm">
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-emerald-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>⏳</span> 第一步：沙盤掘寶淘沙
+                    </div>
+                    <p class="text-amber-100/80 leading-relaxed">
+                        在沙盤壤土中滑動擦除細沙，辨識出<strong class="text-emerald-300">肉質肥厚如羊脂玉</strong>的正宗天冬塊根，避開普通野薑與粗礫石！
+                    </p>
+                </div>
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-emerald-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>📜</span> 第二步：潤燥藥方配對
+                    </div>
+                    <p class="text-amber-100/80 leading-relaxed">
+                        淘得天冬後，配對相應之<strong class="text-amber-300">「養陰潤燥、清肺生津」</strong>名方處方與種植養護秘訣！
+                    </p>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-amber-500 via-emerald-400 to-amber-600 hover:from-amber-400 hover:to-emerald-300 text-stone-950 font-bold text-lg rounded-2xl shadow-xl hover:shadow-amber-500/30 transition-all cursor-pointer">
+                淘沙尋玉 ‧ 開啟挑戰
+            </button>
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-stone-950 via-amber-950 to-stone-950 border-2 border-emerald-500/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl">
+            <div id="gameOverTitle" class="text-3xl sm:text-4xl font-bold text-emerald-300 font-calligraphy mb-2 text-glow-jade">玉髓潤燥 ‧ 金沙滿載</div>
+            <p id="gameOverSubtitle" class="text-sm text-amber-200/80 mb-6">您已掌握天冬之塊根形態、潤燥養陰功效與沙培種植之法！</p>
+
+            <div class="bg-stone-900/80 border border-amber-800/60 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-xs text-amber-400/80 block">淘沙總分</span>
+                    <span id="finalScore" class="text-3xl font-extrabold text-amber-300 font-mono">0</span>
+                </div>
+                <div>
+                    <span class="text-xs text-amber-400/80 block">最高連勝</span>
+                    <span id="finalCombo" class="text-3xl font-extrabold text-emerald-300 font-mono">x0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnRestart" class="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer">
+                    再淘一次
+                </button>
+                <button id="btnOpenCodexEnd" class="flex-1 py-3 bg-stone-900 hover:bg-amber-950 border border-amber-600/60 text-amber-300 font-bold rounded-xl transition-all cursor-pointer">
+                    閱讀天冬典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="codexModal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-amber-950 to-stone-950 border-2 border-amber-500/60 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-amber-800/50 flex justify-between items-center bg-amber-900/40">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">✨💎</span>
+                    <h3 class="text-2xl font-bold text-amber-300 font-calligraphy">天冬（Asparagus）本草典籍</h3>
+                </div>
+                <button id="btnCloseCodex" class="text-amber-400 hover:text-amber-200 p-1 text-2xl transition-all cursor-pointer">&times;</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-5 text-sm sm:text-base text-amber-100/90 leading-relaxed">
+                <!-- Visual Traits -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-emerald-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【形態特徵 ‧ 玉髓塊根】</span>
+                    </div>
+                    <p>
+                        天冬為百合科植物天門冬之乾燥塊根。長紡錘形，微彎曲。<strong class="text-emerald-300">肉質肥厚，表面黃白色至淡黃棕色，半透明，潤澤如羊脂白玉</strong>，質堅硬或柔韌，具細縱紋。
+                    </p>
+                </div>
+
+                <!-- Medicinal Uses -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-amber-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【特性用處 ‧ 潤燥養陰】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-emerald-300">養陰潤燥：</strong> 專滋肺胃之陰，能緩解津液虧損、咽乾口渴。</li>
+                        <li><strong class="text-emerald-300">清肺生津：</strong> 能清肺熱而生津液，特別適用於<strong class="text-amber-300">肺燥乾咳與虛勞久咳</strong>。</li>
+                        <li><strong class="text-emerald-300">腸燥便秘：</strong> 性甘苦微寒，兼具滋陰潤腸通便之功。</li>
+                    </ul>
+                </div>
+
+                <!-- Planting & Cultivation Guide -->
+                <div class="bg-amber-900/25 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-emerald-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【種植建議 ‧ 砂壤攀援】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-amber-300">氣候環境：</strong> 喜溫暖濕潤環境，不耐寒，嚴冬需防凍害。</li>
+                        <li><strong class="text-amber-300">土壤選擇：</strong> 宜選擇土層深厚、疏鬆肥沃、富含腐殖質的<strong class="text-emerald-300">砂質壤土</strong>，排水需良好。</li>
+                        <li><strong class="text-amber-300">攀援支架：</strong> 蔓生莖長出後，需搭設矮架供其蔓生攀援，以利通風透光與塊根膨大。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-950 border-t border-amber-800/50 text-center">
+                <button id="btnConfirmCodex" class="px-8 py-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer">
+                    明曉典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playDig() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(280, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } catch(e){}
+            }
+
+            playMatch(isCorrect) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    if (isCorrect) {
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(659.25, now); // E5
+                        osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.25); // E6
+                        gain.gain.setValueAtTime(0.25, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                        osc.start(now);
+                        osc.stop(now + 0.35);
+                    } else {
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(180, now);
+                        osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                        osc.start(now);
+                        osc.stop(now + 0.25);
+                    }
+                } catch(e){}
+            }
+
+            playWin() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    notes.forEach((freq, i) => {
+                        const now = this.ctx.currentTime + i * 0.1;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.3);
+                    });
+                } catch(e){}
+            }
+        }
+
+        const TREASURES = {
+            TIAN_DONG: {
+                id: 'tiandong',
+                name: '天冬（天門冬塊根）',
+                isTarget: true,
+                texture: '潤澤半透明 ‧ 羊脂玉色',
+                shape: '肉質肥厚紡錘形',
+                tag: '✨ 潤燥養陰正藥',
+                iconSvg: `<svg class="w-12 h-12 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" viewBox="0 0 64 64" fill="currentColor">
+                    <path d="M22 12 C14 24 16 42 26 54 C34 60 42 52 44 40 C48 26 36 14 22 12 Z" fill="#a7f3d0" stroke="#34d399" stroke-width="2"/>
+                    <path d="M28 18 C24 28 26 40 32 48" stroke="#ffffff" stroke-width="2" opacity="0.7" stroke-linecap="round"/>
+                    <ellipse cx="28" cy="24" rx="3" ry="8" fill="#ecfdf5" opacity="0.9"/>
+                </svg>`
+            },
+            WILD_GINGER: {
+                id: 'ginger',
+                name: '野生山薑根',
+                isTarget: false,
+                texture: '粗糙褐色 ‧ 辛辣辛燥',
+                shape: '多節扁平塊狀',
+                tag: '🍂 性溫燥烈（非養陰藥）',
+                iconSvg: `<svg class="w-12 h-12 text-amber-600" viewBox="0 0 64 64" fill="currentColor">
+                    <path d="M16 28 C12 36 20 48 32 48 C42 48 50 38 46 26 C40 20 30 22 24 18 Z" fill="#d97706" stroke="#92400e" stroke-width="2"/>
+                    <circle cx="20" cy="28" r="5" fill="#b45309"/>
+                    <circle cx="36" cy="32" r="6" fill="#b45309"/>
+                </svg>`
+            },
+            RIVER_GRAVEL: {
+                id: 'gravel',
+                name: '細砂粗礫石',
+                isTarget: false,
+                texture: '堅硬無藥性 ‧ 溪砂濁石',
+                shape: '不規則橢圓石',
+                tag: '🪨 溪砂普通石塊',
+                iconSvg: `<svg class="w-12 h-12 text-stone-500" viewBox="0 0 64 64" fill="currentColor">
+                    <path d="M18 36 C18 24 30 16 42 22 C52 30 48 48 36 50 C24 50 18 44 18 36 Z" fill="#78716c" stroke="#44403c" stroke-width="2"/>
+                </svg>`
+            },
+            DRIED_RADISH: {
+                id: 'radish',
+                name: '乾枯野蘿蔔根',
+                isTarget: false,
+                texture: '空心幹癟 ‧ 質輕無玉澤',
+                shape: '直根鬚根多',
+                tag: '🌾 枯萎野根',
+                iconSvg: `<svg class="w-12 h-12 text-yellow-700" viewBox="0 0 64 64" fill="currentColor">
+                    <path d="M30 10 L34 10 L38 48 L26 48 Z" fill="#ca8a04" stroke="#854d0e" stroke-width="2"/>
+                    <path d="M26 48 L22 58 M38 48 L42 58" stroke="#854d0e" stroke-width="2"/>
+                </svg>`
+            }
+        };
+
+        const RECIPE_QUESTS = [
+            {
+                prompt: "主治症狀：「肺燥乾咳、虛勞久咳與咽乾口渴」（急需清肺生津、滋陰潤燥）",
+                correctIdx: 0,
+                options: [
+                    { title: "【養陰潤燥】天冬膏 / 二冬膏", desc: "天冬配伍麥冬，專潤肺胃之陰，生津止咳", isCorrect: true },
+                    { title: "【麻辣川味】辣子雞丁蘸水", desc: "辛辣香燥之食，耗傷陰液（非藥用）", isCorrect: false },
+                    { title: "【發汗解表】麻黃桂枝湯", desc: "發汗解表散寒，適用於風寒感冒", isCorrect: false },
+                    { title: "【溫中祛寒】理中人參丸", desc: "溫脾胃祛寒濕，適用於脾胃虛寒", isCorrect: false }
+                ],
+                explanation: "天冬甘苦微寒，能養陰潤燥、清肺生津，配伍麥冬即為著名之二冬膏！"
+            },
+            {
+                prompt: "種植養護秘訣：「天冬喜溫潤，深厚肥沃沙質壤土」之最佳搭架管理法？",
+                correctIdx: 1,
+                options: [
+                    { title: "曝曬嚴寒不用管", desc: "任其遭受強烈凍害與嚴重乾旱", isCorrect: false },
+                    { title: "【搭架攀援】搭設矮架供其蔓生", desc: "喜溫潤砂壤土，搭設矮架通風透光助塊根膨大", isCorrect: true },
+                    { title: "浸泡於深水池塘", desc: "長期水淹會導致塊根爛根死亡", isCorrect: false },
+                    { title: "種植於純水泥硬地", desc: "塊根無法伸展生長膨大", isCorrect: false }
+                ],
+                explanation: "天冬喜溫潤與富含腐殖質的砂質壤土，搭矮架可促其蔓生攀援與塊根壯大。"
+            },
+            {
+                prompt: "塊根形態鑑別：「淘沙所得天冬塊根之核心外觀特徵」？",
+                correctIdx: 0,
+                options: [
+                    { title: "【玉髓肥厚】肉質肥厚潤澤，黃白半透明如羊脂玉", desc: "紡錘形，半透明潤澤質堅", isCorrect: true },
+                    { title: "表面呈黑色劇毒斑點", desc: "變質壞死之塊根", isCorrect: false },
+                    { title: "乾枯空心如木柴", desc: "無藥用品質之枯根", isCorrect: false },
+                    { title: "極度辛辣氣味刺鼻", desc: "薑科植物特徵", isCorrect: false }
+                ],
+                explanation: "正品天冬塊根肉質肥厚，黃白色半透明，潤澤如羊脂白玉。"
+            },
+            {
+                prompt: "本草功效拓展：「天冬兼具腸燥便秘之滋陰潤腸功效」？",
+                correctIdx: 2,
+                options: [
+                    { title: "大熱大燥收斂止瀉", desc: "加重陰虛腸燥", isCorrect: false },
+                    { title: "苦寒大下傷正氣", desc: "峻下瀉藥非滋陰之品", isCorrect: false },
+                    { title: "【潤腸通便】滋陰生津，潤滑腸道", desc: "適合津虧血少之腸燥便秘", isCorrect: true },
+                    { title: "利水消腫排石", desc: "主要作用於膀胱小便", isCorrect: false }
+                ],
+                explanation: "天冬性滋潤，能滋陰生津，對陰虛津虧引致之腸燥便秘有良好潤通作用。"
+            },
+            {
+                prompt: "藥性歸經：「天冬之性味歸經與傳統中藥記載」？",
+                correctIdx: 0,
+                options: [
+                    { title: "【甘苦微寒】歸肺、腎經", desc: "甘能補潤，苦能清熱，微寒清肺滋腎", isCorrect: true },
+                    { title: "大辛大熱歸心經", desc: "溫陽藥性味", isCorrect: false },
+                    { title: "純酸鹹澀歸膽經", desc: "收斂固澀藥性", isCorrect: false },
+                    { title: "淡無味歸大腸經", desc: "淡滲利濕藥性", isCorrect: false }
+                ],
+                explanation: "天冬性味甘、苦，微寒；歸肺、腎經，能清肺熱、滋腎陰。"
+            }
+        ];
+
+        let currentRound = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let currentPhase = 1;
+
+        const sounds = new SoundEngine();
+
+        const sandCanvas = document.getElementById('sandCanvas');
+        const sandCtx = sandCanvas.getContext('2d');
+        let isDigging = false;
+
+        function resizeSandCanvas() {
+            const rect = sandCanvas.parentElement.getBoundingClientRect();
+            sandCanvas.width = rect.width;
+            sandCanvas.height = rect.height;
+            drawSandLayer();
+        }
+
+        function drawSandLayer() {
+            if (!sandCtx) return;
+            const w = sandCanvas.width;
+            const h = sandCanvas.height;
+
+            // Sand base gradient
+            const grad = sandCtx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#78350f');
+            grad.addColorStop(0.5, '#92400e');
+            grad.addColorStop(1, '#451a03');
+            sandCtx.fillStyle = grad;
+            sandCtx.fillRect(0, 0, w, h);
+
+            // Grains texture
+            sandCtx.fillStyle = 'rgba(251, 191, 36, 0.15)';
+            for (let i = 0; i < 200; i++) {
+                const x = (Math.sin(i * 123) * 0.5 + 0.5) * w;
+                const y = (Math.cos(i * 321) * 0.5 + 0.5) * h;
+                const r = 1 + (i % 3);
+                sandCtx.beginPath();
+                sandCtx.arc(x, y, r, 0, Math.PI * 2);
+                sandCtx.fill();
+            }
+        }
+
+        // Brush away sand on canvas interaction
+        function brushSand(e) {
+            if (!sandCtx || currentPhase !== 1) return;
+            const rect = sandCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            sounds.playDig();
+
+            sandCtx.save();
+            sandCtx.globalCompositeOperation = 'destination-out';
+            sandCtx.beginPath();
+            sandCtx.arc(x, y, 40, 0, Math.PI * 2);
+            sandCtx.fill();
+            sandCtx.restore();
+        }
+
+        sandCanvas.addEventListener('mousedown', (e) => { isDigging = true; brushSand(e); });
+        sandCanvas.addEventListener('mousemove', (e) => { if (isDigging) brushSand(e); });
+        window.addEventListener('mouseup', () => { isDigging = false; });
+
+        sandCanvas.addEventListener('touchstart', (e) => { isDigging = true; brushSand(e); }, { passive: true });
+        sandCanvas.addEventListener('touchmove', (e) => { if (isDigging) brushSand(e); }, { passive: true });
+        window.addEventListener('touchend', () => { isDigging = false; });
+
+        function startNewGame() {
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            currentRound = 0;
+            updateHeaderUI();
+            loadRound(currentRound);
+
+            document.getElementById('startModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('codexModal').classList.add('hidden');
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = score;
+            document.getElementById('comboText').innerText = 'x' + combo;
+            document.getElementById('levelText').innerText = `${currentRound + 1} / ${RECIPE_QUESTS.length}`;
+        }
+
+        function loadRound(roundIdx) {
+            if (roundIdx >= RECIPE_QUESTS.length) {
+                endGame();
+                return;
+            }
+
+            currentPhase = 1;
+            updateHeaderUI();
+            resizeSandCanvas();
+
+            document.getElementById('stepTitleText').innerText = "階段一：沙盤淘寶 ‧ 撥開沙土尋覓如玉塊根";
+            document.getElementById('questInstruction').innerText = "在沙壤中滑動或輕點「撥開細沙」，掘出晶瑩半透明、肉質肥厚如羊脂玉的真正「天冬」塊根！";
+            document.getElementById('subHintText').innerText = "提示：天冬塊根呈紡錘形，肥厚潤澤如玉，切勿誤採粗糙雜根與礫石。";
+            
+            document.getElementById('sandboxGrid').classList.remove('hidden');
+            document.getElementById('recipeContainer').classList.add('hidden');
+
+            renderSandboxGrid();
+        }
+
+        function renderSandboxGrid() {
+            const grid = document.getElementById('sandboxGrid');
+            grid.innerHTML = '';
+
+            const pool = [TREASURES.TIAN_DONG, TREASURES.WILD_GINGER, TREASURES.RIVER_GRAVEL, TREASURES.DRIED_RADISH];
+            const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = "pointer-events-auto bg-gradient-to-b from-stone-900/90 to-amber-950/90 border-2 border-amber-700/50 hover:border-amber-400 rounded-2xl p-3 flex flex-col justify-between items-center text-center transition-all duration-300 hover:scale-[1.03] active:scale-95 cursor-pointer backdrop-blur-sm relative overflow-hidden group";
+                
+                card.innerHTML = `
+                    <div class="my-1 group-hover:scale-110 transition-transform duration-300">
+                        ${item.iconSvg}
+                    </div>
+                    <div class="text-xs space-y-0.5 text-amber-200/90">
+                        <div class="font-bold text-amber-300 text-sm mb-1">${item.name}</div>
+                        <div>質地：${item.texture}</div>
+                        <div>外觀：${item.shape}</div>
+                    </div>
+                    <button class="dig-btn mt-2 w-full py-1.5 px-2 bg-amber-800/80 group-hover:bg-amber-600 text-amber-100 font-bold text-xs rounded-xl border border-amber-500/50 transition-colors shadow-md">
+                        ⛏️ 掘沙鑑定塊根
+                    </button>
+                `;
+
+                card.addEventListener('click', () => handleRootInspect(item, card));
+                grid.appendChild(card);
+            });
+        }
+
+        function handleRootInspect(item, cardElement) {
+            sounds.init();
+
+            showToast(item.tag);
+
+            if (item.isTarget) {
+                sounds.playMatch(true);
+                score += 60 + combo * 10;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                updateHeaderUI();
+
+                cardElement.classList.add('border-emerald-400', 'jade-glow');
+
+                setTimeout(() => {
+                    transitionToPhase2();
+                }, 800);
+            } else {
+                sounds.playMatch(false);
+                combo = 0;
+                updateHeaderUI();
+
+                cardElement.classList.add('border-red-500/80');
+                setTimeout(() => {
+                    cardElement.classList.remove('border-red-500/80');
+                }, 600);
+            }
+        }
+
+        function transitionToPhase2() {
+            currentPhase = 2;
+
+            document.getElementById('stepTitleText').innerText = "階段二：潤燥配對 ‧ 天冬名方與養護配對";
+            document.getElementById('questInstruction').innerText = "已淘得玉髓天冬！請根據本草需求配對正確之養陰潤燥藥方或養護秘訣。";
+            document.getElementById('subHintText').innerText = "提示：天冬主治肺燥乾咳，配伍麥冬為二冬膏，喜砂質壤土與搭架攀援。";
+
+            document.getElementById('sandboxGrid').classList.add('hidden');
+            document.getElementById('recipeContainer').classList.remove('hidden');
+
+            const quest = RECIPE_QUESTS[currentRound];
+            document.getElementById('recipeTaskPrompt').innerText = `「${quest.prompt}」`;
+
+            renderRecipeOptions(quest);
+        }
+
+        function renderRecipeOptions(quest) {
+            const grid = document.getElementById('recipeOptionsGrid');
+            grid.innerHTML = '';
+
+            quest.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "group bg-gradient-to-b from-stone-900/90 to-amber-950/80 hover:from-amber-900/90 hover:to-amber-950/95 border-2 border-amber-700/60 hover:border-emerald-400 rounded-2xl p-3.5 text-left transition-all shadow-lg hover:scale-[1.01] active:scale-95 flex flex-col justify-between cursor-pointer";
+
+                btn.innerHTML = `
+                    <div class="font-bold text-amber-300 text-base mb-1 font-calligraphy group-hover:text-emerald-300">${opt.title}</div>
+                    <p class="text-xs text-amber-200/80 leading-snug">${opt.desc}</p>
+                `;
+
+                btn.addEventListener('click', () => handleRecipeChoice(opt, quest));
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleRecipeChoice(selectedOpt, quest) {
+            sounds.init();
+
+            if (selectedOpt.isCorrect) {
+                sounds.playMatch(true);
+                score += 100 + combo * 20;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                updateHeaderUI();
+
+                showToast(`✅ 配對精準！${quest.explanation}`);
+            } else {
+                sounds.playMatch(false);
+                combo = 0;
+                updateHeaderUI();
+                showToast(`❌ 選擇未合！${quest.explanation}`);
+            }
+
+            setTimeout(() => {
+                currentRound++;
+                loadRound(currentRound);
+            }, 1800);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('gameToast');
+            const toastText = document.getElementById('toastText');
+            toastText.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 1700);
+        }
+
+        function endGame() {
+            sounds.playWin();
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalCombo').innerText = 'x' + maxCombo;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        window.addEventListener('load', () => {
+            resizeSandCanvas();
+            window.addEventListener('resize', resizeSandCanvas);
+
+            document.getElementById('btnStartGame').addEventListener('click', () => {
+                sounds.init();
+                startNewGame();
+            });
+
+            document.getElementById('btnRestart').addEventListener('click', () => {
+                startNewGame();
+            });
+
+            const openCodex = () => {
+                document.getElementById('codexModal').classList.remove('hidden');
+            };
+            const closeCodex = () => {
+                document.getElementById('codexModal').classList.add('hidden');
+            };
+
+            document.getElementById('btnCodex').addEventListener('click', openCodex);
+            document.getElementById('btnOpenCodexEnd').addEventListener('click', openCodex);
+            document.getElementById('btnCloseCodex').addEventListener('click', closeCodex);
+            document.getElementById('btnConfirmCodex').addEventListener('click', closeCodex);
+
+            const btnSound = document.getElementById('btnSound');
+            const soundOnIcon = document.getElementById('soundOnIcon');
+            const soundOffIcon = document.getElementById('soundOffIcon');
+
+            btnSound.addEventListener('click', () => {
+                sounds.enabled = !sounds.enabled;
+                if (sounds.enabled) {
+                    soundOnIcon.classList.remove('hidden');
+                    soundOffIcon.classList.add('hidden');
+                } else {
+                    soundOnIcon.classList.add('hidden');
+                    soundOffIcon.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

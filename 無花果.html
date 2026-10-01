@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>聖若瑟草本園 - 第十五關：無花果【隱花結實】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #1a1612;
+      color: #f3ece0;
+      touch-action: manipulation;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #a3704c;
+      box-shadow: 0 0 15px rgba(163, 112, 76, 0.25);
+    }
+
+    .lens-glow {
+      box-shadow: 0 0 20px rgba(234, 179, 8, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-radial-dark">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex justify-between items-center border-b border-amber-900/50 pb-3 mb-2">
+    <div>
+      <span class="text-amber-500 text-xs sm:text-sm font-semibold tracking-widest">聖若瑟草本園 · 第十五關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-amber-300">無花果 ── 【隱花結實】</h1>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-tab-inspect" onclick="switchMode('inspect')" class="px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow">
+        🔍 剖面解密
+      </button>
+      <button id="btn-tab-farm" onclick="switchMode('farm')" class="px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition">
+        🛡️ 防天牛害蟲
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-sm bg-amber-900/60 text-amber-200 hover:bg-amber-800 border border-amber-700/50">
+        📜 典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+    
+    <!-- PHASE 1: 解密剖面圖 (隱頭花序) -->
+    <div id="section-inspect" class="w-full flex flex-col items-center gap-3">
+      <div class="w-full flex justify-between items-center bg-stone-900/80 px-4 py-2 rounded-xl border border-amber-900/40 text-xs sm:text-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">解密探測進度：</span>
+          <span id="inspect-progress-text" class="text-amber-300 font-bold">0 / 3 結構</span>
+        </div>
+        <div>
+          <span class="text-amber-400">花序狀態：</span>
+          <span id="syconium-status" class="text-emerald-400 font-semibold">肉質花托包裹中</span>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas -->
+      <div class="relative w-full aspect-[4/3] max-h-[480px] bg-stone-950 rounded-2xl overflow-hidden ink-border cursor-crosshair">
+        <canvas id="inspectCanvas" class="w-full h-full"></canvas>
+
+        <!-- Dynamic Tooltip Panel -->
+        <div id="structure-info" class="absolute bottom-4 left-4 right-4 bg-stone-900/90 border border-amber-600/60 p-3 rounded-xl text-xs sm:text-sm text-amber-100 shadow-xl transition-opacity opacity-0 pointer-events-none">
+          <h4 id="info-title" class="font-bold text-amber-400 text-sm mb-1">🔍 移動放大鏡探索隱頭花序</h4>
+          <p id="info-desc" class="text-stone-300">拖動放大鏡觀察無花果內部肉質花托、密集小花與苞片孔孔道。</p>
+        </div>
+      </div>
+
+      <p class="text-xs sm:text-sm text-stone-400 text-center">
+        💡 <strong class="text-amber-300">操作提示：</strong> 移動/觸控拖動放大鏡，尋找並觀察無花果內部的 <strong class="text-amber-400">「1. 肉質花托壁」、「2. 內部小花群」、「3. 頂端苞片孔」</strong>！
+      </p>
+    </div>
+
+    <!-- PHASE 2: 養護與防治天牛 -->
+    <div id="section-farm" class="hidden w-full flex-col items-center gap-4">
+      <div class="bg-stone-900/90 border border-amber-800 p-4 rounded-xl w-full max-w-xl text-center">
+        <h2 class="text-xl font-calligraphy text-amber-300 mb-2">避風向陽與天牛害蟲防禦</h2>
+        <p class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-4">
+          無花果根系發達喜溫暖陽光，但莖幹極易受<strong class="text-red-400">桑天牛</strong>幼蟲蛀食。需及時進行塗白與捕捉！
+        </p>
+
+        <!-- Plant Interactive Canvas -->
+        <div class="relative w-full h-56 bg-stone-950 rounded-xl overflow-hidden border border-amber-900/50 mb-4">
+          <canvas id="farmCanvas" class="w-full h-full cursor-pointer"></canvas>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="farmAction('sun')" class="py-2 px-3 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            ☀️ 避風向陽
+          </button>
+          <button onclick="farmAction('paint')" class="py-2 px-3 bg-stone-800 hover:bg-stone-700 text-amber-200 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            🖌️ 莖幹塗白防蟲
+          </button>
+          <button onclick="farmAction('beetle')" class="py-2 px-3 bg-red-950/80 hover:bg-red-900 text-red-200 rounded-lg text-xs sm:text-sm border border-red-800/50 transition">
+            🪲 捕捉天牛害蟲
+          </button>
+        </div>
+        <div id="farm-feedback" class="mt-3 text-xs text-amber-400 h-4"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Codex Modal -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-amber-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-amber-400 text-xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-amber-300 mb-4 border-b border-amber-800 pb-2">無花果 (Syconium) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌸 隱頭花序（不開花而結實）：</h3>
+          <p class="leading-relaxed">
+            無花果並非真正無花，其無數微小的花朵著生於凹陷的肉質花托內部，形成名為「隱頭花序（Syconium）」的結構。外觀看似直接結果，實則花隱於果內。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌿 特性與用處：</h3>
+          <p class="leading-relaxed">
+            性味甘平。具<strong class="text-amber-200">健脾開胃、潤肺止咳、清熱解毒、潤腸通便</strong>之功。廣泛用於食欲不振、咽喉腫痛、咳嗽及便秘。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌱 種植與防蟲建議：</h3>
+          <p class="leading-relaxed">
+            喜光、喜溫暖，根系發達。宜栽於避風向陽、排水良好的土壤。生長期間需重點防範<strong class="text-amber-200">天牛等莖幹害蟲</strong>蛀食樹幹。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm shadow">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer
+    class SoundEngine {
+      constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      playFind() {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.exponentialRampToValueAtTime(1046.5, this.ctx.currentTime + 0.15); // C6
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+    }
+    const snd = new SoundEngine();
+
+    // Canvas Setup
+    const inspectCanvas = document.getElementById('inspectCanvas');
+    const ctx = inspectCanvas.getContext('2d');
+    const farmCanvas = document.getElementById('farmCanvas');
+    const farmCtx = farmCanvas.getContext('2d');
+
+    function resizeCanvas() {
+      inspectCanvas.width = inspectCanvas.parentElement.clientWidth;
+      inspectCanvas.height = inspectCanvas.parentElement.clientHeight;
+      farmCanvas.width = farmCanvas.parentElement.clientWidth;
+      farmCanvas.height = farmCanvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Magnifying Lens Position
+    let lens = { x: 200, y: 200, radius: 65 };
+    let isDragging = false;
+
+    // Inspection Key Hotspots
+    const hotspots = [
+      { id: 'wall', xRatio: 0.38, yRatio: 0.5, name: "1. 肉質花托壁 (Receptacle)", desc: "肉質肥厚的花托包裹住所有小花，形成外觀如果實的結構，成熟後甘甜可口。", found: false },
+      { id: 'flowers', xRatio: 0.52, yRatio: 0.52, name: "2. 隱頭小花群 (Internal Flowers)", desc: "內部著生密密麻麻的微小花朵（雄花、雌花與癭花），由傳粉小蜂進入授粉。", found: false },
+      { id: 'ostiole', xRatio: 0.68, yRatio: 0.48, name: "3. 頂端苞片孔 (Ostiole)", desc: "無花果頂端的小微孔，由重疊的苞片覆蓋，是榕小蜂進出傳授花粉的唯一通道。", found: false }
+    ];
+
+    function updateInspect() {
+      drawInspectScene();
+      requestAnimationFrame(updateInspect);
+    }
+
+    function drawInspectScene() {
+      const w = inspectCanvas.width;
+      const h = inspectCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Background Ink Style
+      ctx.fillStyle = '#1c1712';
+      ctx.fillRect(0, 0, w, h);
+
+      // Render Overview Fig Fruit (Outer view & faint section outline)
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const radiusX = Math.min(w, h) * 0.28;
+      const radiusY = Math.min(w, h) * 0.24;
+
+      // Outer Fruit Shape (Whole Fig)
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#3a2d21';
+      ctx.fill();
+      ctx.strokeStyle = '#6b4d32';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Stem
+      ctx.beginPath();
+      ctx.moveTo(cx - radiusX, cy);
+      ctx.quadraticCurveTo(cx - radiusX - 30, cy - 20, cx - radiusX - 40, cy - 40);
+      ctx.strokeStyle = '#4a5d31';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      ctx.restore();
+
+      // RENDER MAGNIFIED LENS VIEW
+      ctx.save();
+      
+      // Lens Clip
+      ctx.beginPath();
+      ctx.arc(lens.x, lens.y, lens.radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Zoomed In Internal Anatomy Background
+      ctx.fillStyle = '#2b1a15';
+      ctx.fillRect(0, 0, w, h);
+
+      // Section Cut - Receptacle Wall
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radiusX * 1.05, radiusY * 1.05, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#8c3838'; // Flesh color
+      ctx.fill();
+
+      // Inner Cavity
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radiusX * 0.75, radiusY * 0.65, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#421616';
+      ctx.fill();
+
+      // Dense Flowers (Tiny Fibers / Dots)
+      for (let i = 0; i < 180; i++) {
+        const angle = (i / 180) * Math.PI * 2;
+        const fx = cx + Math.cos(angle) * (radiusX * 0.7);
+        const fy = cy + Math.sin(angle) * (radiusY * 0.6);
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx - Math.cos(angle) * 20, fy - Math.sin(angle) * 15);
+        ctx.strokeStyle = i % 2 === 0 ? '#f59e0b' : '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Ostiole Opening at tip
+      ctx.beginPath();
+      ctx.ellipse(cx + radiusX * 0.75, cy, 18, 10, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#1c1712';
+      ctx.fill();
+      ctx.strokeStyle = '#a3e635';
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Draw Magnifying Glass Frame
+      ctx.beginPath();
+      ctx.arc(lens.x, lens.y, lens.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d4a017';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Glass handle
+      ctx.beginPath();
+      ctx.moveTo(lens.x + lens.radius * 0.7, lens.y + lens.radius * 0.7);
+      ctx.lineTo(lens.x + lens.radius * 1.3, lens.y + lens.radius * 1.3);
+      ctx.strokeStyle = '#8c5a2b';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Check Hotspot Inspection Collision
+      checkHotspots(w, h);
+    }
+
+    function checkHotspots(w, h) {
+      let activeHotspot = null;
+      let foundCount = 0;
+
+      hotspots.forEach(spot => {
+        const hx = spot.xRatio * w;
+        const hy = spot.yRatio * h;
+        const dist = Math.hypot(lens.x - hx, lens.y - hy);
+
+        if (dist < lens.radius * 0.8) {
+          activeHotspot = spot;
+          if (!spot.found) {
+            spot.found = true;
+            snd.playFind();
+          }
+        }
+        if (spot.found) foundCount++;
+      });
+
+      document.getElementById('inspect-progress-text').innerText = `${foundCount} / ${hotspots.length} 結構`;
+
+      const infoBox = document.getElementById('structure-info');
+      if (activeHotspot) {
+        infoBox.classList.remove('opacity-0');
+        document.getElementById('info-title').innerText = `✨ 解密：${activeHotspot.name}`;
+        document.getElementById('info-desc').innerText = activeHotspot.desc;
+      } else {
+        infoBox.classList.add('opacity-0');
+      }
+
+      if (foundCount === hotspots.length) {
+        document.getElementById('syconium-status').innerText = "完全解密 (隱頭花序奧秘)";
+        document.getElementById('syconium-status').className = "text-amber-300 font-bold animate-pulse";
+      }
+    }
+
+    // Pointer Events for Magnifying Glass Dragging
+    function handlePointerMove(e) {
+      const rect = inspectCanvas.getBoundingClientRect();
+      const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+      const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+
+      if (x >= 0 && x <= inspectCanvas.width && y >= 0 && y <= inspectCanvas.height) {
+        lens.x = x;
+        lens.y = y;
+      }
+    }
+
+    inspectCanvas.addEventListener('mousemove', handlePointerMove);
+    inspectCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      handlePointerMove(e);
+    }, { passive: false });
+
+    // Farm Mini Game Logic
+    let farmState = { sun: false, painted: false, beetlesCaught: 0 };
+
+    function renderFarm() {
+      const w = farmCanvas.width;
+      const h = farmCanvas.height;
+      farmCtx.clearRect(0, 0, w, h);
+
+      // Ground
+      farmCtx.fillStyle = '#221810';
+      farmCtx.fillRect(0, 0, w, h);
+
+      // Fig Tree Trunk
+      const cx = w / 2;
+      farmCtx.beginPath();
+      farmCtx.moveTo(cx - 20, h);
+      farmCtx.lineTo(cx - 15, h - 100);
+      farmCtx.lineTo(cx + 15, h - 100);
+      farmCtx.lineTo(cx + 20, h);
+      farmCtx.fillStyle = farmState.painted ? '#f8fafc' : '#523b2b'; // White painted vs brown
+      farmCtx.fill();
+
+      // Branches & Foliage
+      farmCtx.beginPath();
+      farmCtx.arc(cx - 30, h - 120, 45, 0, Math.PI * 2);
+      farmCtx.arc(cx + 30, h - 130, 50, 0, Math.PI * 2);
+      farmCtx.arc(cx, h - 150, 55, 0, Math.PI * 2);
+      farmCtx.fillStyle = farmState.sun ? '#65a30d' : '#3f6212';
+      farmCtx.fill();
+
+      // Sun Effect
+      if (farmState.sun) {
+        farmCtx.beginPath();
+        farmCtx.arc(w - 40, 40, 25, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#fbbf24';
+        farmCtx.shadowBlur = 15;
+        farmCtx.shadowColor = '#fbbf24';
+        farmCtx.fill();
+        farmCtx.shadowBlur = 0;
+      }
+
+      // Beetle on Trunk (if not caught)
+      if (farmState.beetlesCaught < 2 && !farmState.painted) {
+        farmCtx.beginPath();
+        farmCtx.ellipse(cx - 5, h - 50, 6, 10, 0, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#1e293b'; // Beetle body
+        farmCtx.fill();
+      }
+    }
+
+    function farmAction(action) {
+      const fb = document.getElementById('farm-feedback');
+      if (action === 'sun') {
+        farmState.sun = true;
+        fb.innerText = "☀️️ 移至避風向陽處，光合作用與果實發育良好！";
+      } else if (action === 'paint') {
+        farmState.painted = true;
+        fb.innerText = "🖌️ 塗白莖幹，阻止天牛成蟲產卵！";
+      } else if (action === 'beetle') {
+        farmState.beetlesCaught++;
+        fb.innerText = "🪲 捕獲莖幹害蟲天牛，維護樹體健康！";
+      }
+      renderFarm();
+    }
+
+    // Navigation Tabs
+    function switchMode(mode) {
+      document.getElementById('section-inspect').classList.toggle('hidden', mode !== 'inspect');
+      document.getElementById('section-farm').classList.toggle('hidden', mode !== 'farm');
+
+      document.getElementById('btn-tab-inspect').className = mode === 'inspect'
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition";
+
+      document.getElementById('btn-tab-farm').className = mode === 'farm'
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-800 text-amber-100 hover:bg-amber-700 transition shadow"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition";
+
+      if (mode === 'farm') renderFarm();
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup
+    window.onload = () => {
+      resizeCanvas();
+      lens.x = inspectCanvas.width * 0.4;
+      lens.y = inspectCanvas.height * 0.5;
+      requestAnimationFrame(updateInspect);
+    };
+  </script>
+</body>
+</html>

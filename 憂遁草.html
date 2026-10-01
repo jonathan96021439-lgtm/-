@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【解毒靈仙】憂遁草連連看與半陰濕潤養護遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #03140e;
+            color: #f0fdf4;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .lime-glow {
+            box-shadow: 0 0 25px rgba(132, 204, 22, 0.35);
+        }
+        .emerald-glow-lg {
+            box-shadow: 0 0 45px rgba(16, 185, 129, 0.55);
+        }
+        .text-glow-lime {
+            text-shadow: 0 0 14px rgba(163, 230, 53, 0.85);
+        }
+        .text-glow-emerald {
+            text-shadow: 0 0 16px rgba(52, 211, 153, 0.9);
+        }
+        .matching-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            perspective: 1000px;
+        }
+        .matching-card:hover {
+            transform: translateY(-4px) scale(1.03);
+        }
+        .card-selected {
+            border-color: #a3e635 !important;
+            box-shadow: 0 0 20px rgba(163, 230, 53, 0.8);
+            transform: scale(1.05);
+        }
+        .card-matched {
+            opacity: 0.85;
+            border-color: #34d399 !important;
+            background: rgba(6, 78, 59, 0.8) !important;
+            pointer-events: none;
+        }
+        .pulse-toxin {
+            animation: pulseToxin 1.8s infinite ease-in-out;
+        }
+        @keyframes pulseToxin {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px #ef4444); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 16px #f87171); }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-emerald-950/95 text-emerald-100 flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Canvas Background for Moisture/Leaf particle effects -->
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-emerald-950/80 border border-lime-500/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 lime-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-lime-300/80 block font-medium">熱毒消解數 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-lime-400 font-mono text-glow-lime">0</span>
+            </div>
+            <div class="h-8 w-px bg-emerald-800/60"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-emerald-300/80 block font-medium">連連看解毒對數</span>
+                <span id="progressText" class="text-xl sm:text-2xl font-semibold text-emerald-300 font-mono text-glow-emerald">0 / 4</span>
+            </div>
+        </div>
+
+        <!-- Mode Switcher & Codex Button -->
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-emerald-900/90 hover:bg-emerald-800 text-lime-200 border border-lime-400/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往【憂遁草栽植：半陰濕潤】 🌿</span>
+            </button>
+            <button id="btnCodex" class="bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📜 憂遁草典籍
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: HERBAL PAIR MATCHING (解毒靈仙 · 藥草連連看) -->
+        <section id="phaseMatching" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-lime-300 text-glow-lime">【解毒靈仙】憂遁草配對連連看</h1>
+                <p class="text-xs sm:text-sm text-emerald-300/90 mt-1">「又名扭續花，清熱利濕活血痛」── 將憂遁草對應功效與熱毒病症圖標配對消解熱毒</p>
+            </div>
+
+            <!-- Game Control Status Bar -->
+            <div class="w-full max-w-3xl bg-emerald-950/60 border border-lime-600/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl lime-glow flex flex-col gap-4">
+                
+                <div class="flex justify-between items-center border-b border-emerald-800/80 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-lime-300 font-bold">🧪 熱毒消解進度條：</span>
+                        <div class="w-36 sm:w-48 h-3 bg-stone-900 rounded-full overflow-hidden border border-lime-500/40">
+                            <div id="detoxBar" class="h-full bg-gradient-to-r from-lime-500 to-emerald-400 transition-all duration-500 w-[0%]"></div>
+                        </div>
+                    </div>
+                    <button id="btnBrewTea" class="text-[11px] bg-lime-800/80 hover:bg-lime-700 text-lime-100 border border-lime-400/60 px-3 py-1.5 rounded-xl transition-all shadow flex items-center gap-1 cursor-pointer">
+                        🍵 煎服憂遁草鮮汁
+                    </button>
+                </div>
+
+                <!-- Matching Grid (2 Rows of 4 Cards = 8 Cards total) -->
+                <div id="matchingGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full my-1">
+                    <!-- Cards will be populated by JS -->
+                </div>
+
+                <!-- Dynamic Hint & Educational Tip Box -->
+                <div id="matchTipBox" class="bg-stone-900/90 p-3 rounded-2xl border border-emerald-700/60 text-xs text-emerald-200 text-center leading-relaxed">
+                    💡 <b>連連看玩法：</b>請點擊一張【憂遁草本草卡】，再點擊對應的【熱毒病症/功效卡】進行配對消解！
+                </div>
+            </div>
+        </section>
+
+        <!-- PHASE 2: CULTIVATION MINI-GAME (半陰濕潤與防積水養護) -->
+        <section id="phaseCultivation" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-lime-300 text-glow-lime">【解毒靈仙】憂遁草半陰濕潤栽培</h1>
+                <p class="text-xs sm:text-sm text-emerald-200/90 mt-1">「喜濕潤半陰，宜有機肥充足忌積水」── 體會憂遁草養護心法</p>
+            </div>
+
+            <div class="w-full max-w-3xl bg-emerald-950/60 border border-lime-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl lime-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Plant Container & SVG Visual -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-stone-900/90 p-4 rounded-2xl border border-emerald-800/60 relative">
+                    <div id="plantContainer" class="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center overflow-hidden cursor-pointer border border-emerald-700/40 rounded-xl bg-slate-950/80">
+                        <!-- Dynamic SVG Clinacanthus Nutans Plant Visual -->
+                    </div>
+
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span class="text-sm font-bold text-lime-300 font-calligraphy">盆栽憂遁草（扭續花）</span>
+                            <span id="plantStatusBadge" class="ml-2 text-[10px] bg-emerald-900/90 text-emerald-200 border border-emerald-500/50 px-2 py-0.5 rounded-full">環境待調整</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-lime-300/80 block">長勢生長度</span>
+                            <div class="w-24 h-2.5 bg-stone-800 rounded-full overflow-hidden border border-lime-600/40">
+                                <div id="plantHealthBar" class="h-full bg-gradient-to-r from-lime-500 to-emerald-400 transition-all duration-300 w-[30%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cultivation Guide & Action Control Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-emerald-800/60 min-h-[260px]">
+                    <h3 class="text-sm font-bold text-lime-300 text-center border-b border-emerald-800/60 pb-2">🌿 憂遁草栽植要點與水肥指南</h3>
+
+                    <div class="space-y-2 text-xs">
+                        <!-- Action 1: Shade & Humidity -->
+                        <button id="btnShadeEnv" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">⛅</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">1. 搭設半陰避光棚</div>
+                                    <div class="text-[10px] text-emerald-400/80">喜濕潤半陰環境，忌烈日暴曬</div>
+                                </div>
+                            </div>
+                            <span id="badgeShade" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">強光直射</span>
+                        </button>
+
+                        <!-- Action 2: Organic Fertilizer -->
+                        <button id="btnOrganicFert" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🍂</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">2. 施加有機肥料</div>
+                                    <div class="text-[10px] text-emerald-400/80">宜施有機肥，促進葉肉繁茂生長</div>
+                                </div>
+                            </div>
+                            <span id="badgeFert" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">缺少肥力</span>
+                        </button>
+
+                        <!-- Action 3: Moisture without Waterlogging -->
+                        <button id="btnMoistureControl" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">💧</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">3. 旺盛期充足灌溉（防積水）</div>
+                                    <div class="text-[10px] text-emerald-400/80">需充足水分，且排水防根部積水腐爛</div>
+                                </div>
+                            </div>
+                            <span id="badgeWater" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">水分不足</span>
+                        </button>
+                    </div>
+
+                    <div id="plantCareResultTip" class="bg-emerald-950/80 p-2 rounded-xl border border-emerald-600/40 text-[11px] text-emerald-200 text-center">
+                        請依序進行半陰養護與有機施肥，確保濕潤防積水！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-emerald-950 border border-lime-400/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto lime-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-emerald-400 hover:text-emerald-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-emerald-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-emerald-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-800/80 border border-lime-400 flex items-center justify-center text-2xl">🌱</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-lime-300">憂遁草（Clinacanthus nutans）典籍</h2>
+                    <p class="text-xs text-emerald-300/80">別名：扭續花、鱷嘴花、沙巴蛇草、解毒靈仙</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-lime-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🌿 形態特徵（披針形葉、紅橘色扭續花）</h3>
+                    <p>爵床科鱷嘴花屬直立草本。葉披針形，全緣或具不規則波狀微齒。花冠紅橘色，筒狀扭轉，故名<b>「扭續花」</b>。</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-lime-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 性味功效（清熱利濕、活血疏通、消腫解毒）</h3>
+                    <p>味甘、微苦，性平微涼。具有<b>清熱利濕、活血疏通、消腫解毒</b>之功。常用於保肝調理、消解熱毒、舒緩腫結與蛇蟲咬傷，民間尊稱為解毒良藥。</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-lime-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植建議（喜濕潤半陰、宜有機肥、忌積水）</h3>
+                    <p>喜<b>濕潤、半陰環境</b>，避開高溫強光直射。宜選用富含有機質的疏鬆土壤，<b>施有機肥</b>促進生長。生長旺盛期需補充<b>充足水分，但土壤不可積水</b>以防爛根。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-lime-500 hover:bg-lime-400 text-slate-950 font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">領悟憂遁草清熱解毒本草之妙</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-emerald-950/95 border border-lime-400 text-emerald-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME ENGINE LOGIC -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playMatchChime() {
+                this.init();
+                this.playTone(523.25, 0.25, 'sine', 0.2); // C5
+                setTimeout(() => this.playTone(659.25, 0.35, 'sine', 0.2), 100); // E5
+                setTimeout(() => this.playTone(783.99, 0.5, 'sine', 0.25), 200); // G5
+                setTimeout(() => this.playTone(1046.50, 0.7, 'sine', 0.3), 300); // C6
+            }
+            playCardSelect() {
+                this.init();
+                this.playTone(440, 0.1, 'sine', 0.15);
+            }
+            playMistSplash() {
+                this.init();
+                this.playTone(320, 0.2, 'triangle', 0.15);
+                setTimeout(() => this.playTone(480, 0.3, 'sine', 0.12), 80);
+            }
+            playSnap() {
+                this.init();
+                this.playTone(587.33, 0.12, 'triangle', 0.15);
+            }
+            playError() {
+                this.init();
+                this.playTone(220, 0.2, 'sawtooth', 0.1);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // Matching Pair Raw Data (4 Pairs = 8 Cards)
+        const MATCHING_PAIRS = [
+            {
+                pairId: 1,
+                herbTitle: '🌱 憂遁草嫩葉 (清熱解毒)',
+                herbSub: '又名扭續花，性涼解毒',
+                targetTitle: '🔥 咽喉腫痛 / 熱毒癰腫',
+                targetSub: '瀉火解毒，消解熱毒火氣',
+                benefitTip: '✨ 憂遁草清熱解毒，專克熱毒癰腫與咽喉發炎！'
+            },
+            {
+                pairId: 2,
+                herbTitle: '🍵 憂遁草鮮汁 (保肝調理)',
+                herbSub: '清肝利膽，輔助調理',
+                targetTitle: '🩺 肝火鬱結 / 保肝需求',
+                targetSub: '疏肝理氣，減輕肝臟火毒',
+                benefitTip: '✨ 憂遁草具良好保肝調理之效，疏通肝氣！'
+            },
+            {
+                pairId: 3,
+                herbTitle: '🌸 扭續花瓣 (活血疏通)',
+                herbSub: '通絡散瘀，舒緩阻滯',
+                targetTitle: '🩸 經絡阻滯 / 腫痛不通',
+                targetSub: '活血行氣，疏通經脈瘀結',
+                benefitTip: '✨ 扭續花通絡活血，暢通經脈氣血阻滯！'
+            },
+            {
+                pairId: 4,
+                herbTitle: '💧 憂遁草煎劑 (清熱利濕)',
+                herbSub: '利濕退黃，消腫散結',
+                targetTitle: '🟡 濕熱黃疸 / 結節腫塊',
+                targetSub: '清熱化濕，消散硬結腫塊',
+                benefitTip: '✨ 憂遁草清熱利濕，消腫散結，退濕熱黃毒！'
+            }
+        ];
+
+        let state = {
+            score: 0,
+            matchesFound: 0,
+            selectedCardEl: null,
+            selectedCardData: null,
+            currentPhase: 'matching', // 'matching' | 'cultivation'
+            
+            // Cultivation parameters
+            shadeEnv: false,
+            organicFert: false,
+            moistureControl: false,
+            plantHealth: 30
+        };
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 35; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1.5 + Math.random() * 3,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: -0.3 - Math.random() * 0.5,
+                    alpha: 0.25 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(163, 230, 53, ${p.alpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            document.getElementById('progressText').innerText = `${state.matchesFound} / 4`;
+            const pct = (state.matchesFound / 4) * 100;
+            document.getElementById('detoxBar').style.width = `${pct}%`;
+        }
+
+        function generateMatchingCards() {
+            const cardsList = [];
+            
+            MATCHING_PAIRS.forEach(pair => {
+                // Herb Card
+                cardsList.push({
+                    id: `herb-${pair.pairId}`,
+                    pairId: pair.pairId,
+                    type: 'herb',
+                    title: pair.herbTitle,
+                    sub: pair.herbSub,
+                    tip: pair.benefitTip
+                });
+                // Target Card
+                cardsList.push({
+                    id: `target-${pair.pairId}`,
+                    pairId: pair.pairId,
+                    type: 'target',
+                    title: pair.targetTitle,
+                    sub: pair.targetSub,
+                    tip: pair.benefitTip
+                });
+            });
+
+            // Shuffle cards randomly
+            cardsList.sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('matchingGrid');
+            grid.innerHTML = '';
+
+            cardsList.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'matching-card bg-emerald-950/80 border-2 border-emerald-600/60 p-3 sm:p-4 rounded-2xl flex flex-col justify-between items-center text-center shadow-lg min-h-[110px] sm:min-h-[125px]';
+                cardEl.dataset.id = card.id;
+                cardEl.dataset.pairId = card.pairId;
+                cardEl.dataset.type = card.type;
+
+                cardEl.innerHTML = `
+                    <div class="text-xs sm:text-sm font-bold ${card.type === 'herb' ? 'text-lime-300' : 'text-rose-300'}">${card.title}</div>
+                    <div class="text-[10px] sm:text-[11px] text-emerald-200/80 mt-1">${card.sub}</div>
+                    <div class="mt-2 text-[9px] px-2 py-0.5 rounded-full font-bold ${card.type === 'herb' ? 'bg-lime-900/60 text-lime-200 border border-lime-500/40' : 'bg-rose-950/60 text-rose-200 border border-rose-500/40'}">
+                        ${card.type === 'herb' ? '🌿 憂遁本草' : '🔥 熱毒病症'}
+                    </div>
+                `;
+
+                cardEl.addEventListener('click', () => handleCardClick(cardEl, card));
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function handleCardClick(cardEl, cardData) {
+            if (cardEl.classList.contains('card-matched')) return;
+
+            // First card selection
+            if (!state.selectedCardEl) {
+                sound.playCardSelect();
+                state.selectedCardEl = cardEl;
+                state.selectedCardData = cardData;
+                cardEl.classList.add('card-selected');
+                return;
+            }
+
+            // Clicked same card again -> deselect
+            if (state.selectedCardEl === cardEl) {
+                cardEl.classList.remove('card-selected');
+                state.selectedCardEl = null;
+                state.selectedCardData = null;
+                return;
+            }
+
+            // Second card selection -> Match Check
+            const prevEl = state.selectedCardEl;
+            const prevData = state.selectedCardData;
+
+            if (prevData.pairId === cardData.pairId && prevData.type !== cardData.type) {
+                // SUCCESS MATCH!
+                sound.playMatchChime();
+                prevEl.classList.remove('card-selected');
+                prevEl.classList.add('card-matched');
+                cardEl.classList.add('card-matched');
+
+                state.score += 300;
+                state.matchesFound++;
+                updateHeaderUI();
+
+                document.getElementById('matchTipBox').innerHTML = `
+                    <div class="text-lime-300 font-bold text-xs sm:text-sm">✨ 熱毒消解成功！</div>
+                    <div class="text-emerald-100 mt-1">${cardData.tip}</div>
+                `;
+
+                triggerLimeBurst(cardEl);
+                triggerLimeBurst(prevEl);
+
+                showToast(`✨ 配對成功！${cardData.title}`, '🌿');
+
+                state.selectedCardEl = null;
+                state.selectedCardData = null;
+            } else {
+                // MATCH FAILED
+                sound.playError();
+                cardEl.classList.add('border-rose-500', 'animate-bounce');
+                prevEl.classList.add('border-rose-500');
+
+                setTimeout(() => {
+                    cardEl.classList.remove('border-rose-500', 'animate-bounce');
+                    prevEl.classList.remove('border-rose-500', 'card-selected');
+                    state.selectedCardEl = null;
+                    state.selectedCardData = null;
+                }, 600);
+
+                showToast("⚠️ 配對不吻合！請將憂遁草功效與正確熱毒病症配對", "❌");
+            }
+        }
+
+        function triggerLimeBurst(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2 + (Math.random() - 0.5) * 30,
+                    y: rect.top + rect.height / 2,
+                    radius: 3 + Math.random() * 4,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -1.5 - Math.random() * 2,
+                    alpha: 0.95
+                });
+            }
+        }
+
+        function renderPlant() {
+            const container = document.getElementById('plantContainer');
+            let leafScale = state.shadeEnv ? '1.2' : '0.85';
+            let flowerVisibility = state.organicFert ? 'inline' : 'none';
+            let leafColor = state.moistureControl ? '#84cc16' : '#15803d';
+
+            container.innerHTML = `
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Moist Soil Pot -->
+                    <polygon points="25,90 75,90 82,65 18,65" fill="#3f2e21"/>
+                    <ellipse cx="50" cy="65" rx="32" ry="7" fill="${state.moistureControl ? '#5c4033' : '#2d1f18'}"/>
+
+                    <!-- Semi-Shade Net Overlay Effect -->
+                    ${state.shadeEnv ? `
+                        <path d="M 10 15 L 90 15 M 10 22 L 90 22 M 20 10 L 20 30 M 40 10 L 40 30 M 60 10 L 60 30 M 80 10 L 80 30" 
+                              stroke="#84cc16" stroke-width="0.8" opacity="0.4" stroke-dasharray="2,2"/>
+                        <rect x="8" y="8" width="84" height="24" fill="#84cc16" opacity="0.08" rx="4"/>
+                    ` : ''}
+
+                    <!-- Clinacanthus Nutans Plant Group -->
+                    <g transform="translate(50, 65) scale(${leafScale})">
+                        <!-- Stems -->
+                        <path d="M 0 0 C -12 -18 -18 -38 -22 -52" stroke="#166534" stroke-width="2.5" fill="none"/>
+                        <path d="M 0 0 C 12 -18 18 -38 22 -52" stroke="#166534" stroke-width="2.5" fill="none"/>
+                        <path d="M 0 0 C 0 -22 0 -42 0 -58" stroke="#15803d" stroke-width="3" fill="none"/>
+
+                        <!-- Lanceolate Leaves -->
+                        <path d="M 0 -20 C -18 -25 -28 -28 -32 -20 C -22 -12 -10 -15 0 -20 Z" fill="${leafColor}"/>
+                        <path d="M 0 -20 C 18 -25 28 -28 32 -20 C 22 -12 10 -15 0 -20 Z" fill="${leafColor}"/>
+
+                        <path d="M 0 -38 C -22 -45 -32 -48 -36 -38 C -25 -28 -12 -32 0 -38 Z" fill="#a3e635"/>
+                        <path d="M 0 -38 C 22 -45 32 -48 36 -38 C 25 -28 12 -32 0 -38 Z" fill="#a3e635"/>
+
+                        <!-- Twisted Tubular Flowers (扭續花 - Red/Orange) -->
+                        <g style="display: ${flowerVisibility}">
+                            <path d="M 0 -58 C -4 -65 -2 -72 0 -76 C 2 -72 4 -65 0 -58 Z" fill="#f43f5e"/>
+                            <path d="M -22 -52 C -26 -58 -25 -64 -22 -68 C -19 -64 -18 -58 -22 -52 Z" fill="#fb7185"/>
+                            <path d="M 22 -52 C 26 -58 25 -64 22 -68 C 19 -64 18 -58 22 -52 Z" fill="#fb7185"/>
+                        </g>
+                    </g>
+                </svg>
+            `;
+
+            document.getElementById('plantHealthBar').style.width = `${state.plantHealth}%`;
+            const badge = document.getElementById('plantStatusBadge');
+            if (state.plantHealth >= 100) {
+                badge.className = "ml-2 text-[10px] bg-lime-400 text-slate-950 font-bold border border-lime-200 px-2 py-0.5 rounded-full animate-bounce";
+                badge.innerText = "✨ 解毒靈仙 · 繁茂結花";
+            } else if (state.plantHealth >= 60) {
+                badge.className = "ml-2 text-[10px] bg-emerald-800 text-emerald-200 border border-emerald-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "🌿 濕潤茁壯中";
+            }
+        }
+
+        function setupCultivationEvents() {
+            document.getElementById('btnShadeEnv').addEventListener('click', () => {
+                sound.playSnap();
+                state.shadeEnv = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeShade').className = "text-[10px] bg-lime-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeShade').innerText = "⛅ 半陰環境";
+                showToast("⛅ 搭建半陰避光棚，避開陽光暴曬！", "✨");
+                renderPlant();
+            });
+
+            document.getElementById('btnOrganicFert').addEventListener('click', () => {
+                sound.playMistSplash();
+                state.organicFert = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeFert').className = "text-[10px] bg-lime-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeFert').innerText = "🍂 有機肥足";
+                showToast("🍂 施加有機肥料，促使扭續花綻放！", "🌸");
+                renderPlant();
+            });
+
+            document.getElementById('btnMoistureControl').addEventListener('click', () => {
+                sound.playMistSplash();
+                state.moistureControl = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 20);
+                document.getElementById('badgeWater').className = "text-[10px] bg-lime-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeWater').innerText = "💧 濕潤無積水";
+                showToast("💧 生長旺盛期保持土壤濕潤且無積水！", "🌿");
+                renderPlant();
+            });
+        }
+
+        function setupPhaseToggle() {
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                sound.playSnap();
+                if (state.currentPhase === 'matching') {
+                    state.currentPhase = 'cultivation';
+                    document.getElementById('phaseMatching').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('hidden');
+                    document.getElementById('phaseCultivation').classList.add('flex');
+                    document.getElementById('phaseBtnLabel').innerText = "返回【解毒靈仙：配對連連看】 🧪";
+                    renderPlant();
+                } else {
+                    state.currentPhase = 'matching';
+                    document.getElementById('phaseCultivation').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('flex');
+                    document.getElementById('phaseMatching').classList.remove('hidden');
+                    document.getElementById('phaseBtnLabel').innerText = "前往【憂遁草栽植：半陰濕潤】 🌿";
+                }
+            });
+        }
+
+        function setupExtraControls() {
+            document.getElementById('btnBrewTea').addEventListener('click', () => {
+                sound.playMistSplash();
+                for (let i = 0; i < 20; i++) {
+                    particles.push({
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        y: window.innerHeight / 2,
+                        radius: 3 + Math.random() * 5,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -1 - Math.random() * 2,
+                        alpha: 0.95
+                    });
+                }
+                showToast("🍵 煎服憂遁草鮮汁！清熱利濕、活血疏通，消解熱毒火氣！", "✨");
+            });
+
+            // Codex Modal Controls
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playMatchChime();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initParticles();
+            animateCanvas();
+
+            generateMatchingCards();
+            setupCultivationEvents();
+            setupPhaseToggle();
+            setupExtraControls();
+
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+</html>

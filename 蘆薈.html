@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【翠劍凝霜】蘆薈植物救護站與多肉養護遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #061512;
+            color: #e6fcf5;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .teal-glow {
+            box-shadow: 0 0 25px rgba(20, 184, 166, 0.35);
+        }
+        .teal-glow-lg {
+            box-shadow: 0 0 45px rgba(45, 212, 191, 0.55);
+        }
+        .ice-glow {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+        }
+        .text-glow-teal {
+            text-shadow: 0 0 14px rgba(45, 212, 191, 0.85);
+        }
+        .text-glow-ice {
+            text-shadow: 0 0 16px rgba(56, 189, 248, 0.9);
+        }
+        .wound-node {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .wound-node:hover {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 12px #38bdf8);
+        }
+        .wound-active {
+            animation: pulseWound 1.6s infinite ease-in-out;
+        }
+        @keyframes pulseWound {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px #ef4444); }
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 16px #f87171); }
+        }
+        .aloe-leaf-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        .aloe-leaf-card:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+        @keyframes gelDrip {
+            0% { transform: translateY(-5px) scale(0.9); opacity: 0.6; }
+            50% { transform: translateY(10px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(25px) scale(0.8); opacity: 0; }
+        }
+        .gel-drip-anim {
+            animation: gelDrip 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-teal-950/95 text-teal-100 flex flex-col justify-between overflow-hidden select-none">
+
+    <!-- Canvas Background for Cooling Frost particles -->
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-teal-950/80 border border-teal-500/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 teal-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-teal-300/80 block font-medium">清涼救癒值 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-teal-300 font-mono text-glow-teal">0</span>
+            </div>
+            <div class="h-8 w-px bg-teal-800/60"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-teal-300/80 block font-medium">瀉火生肌進度</span>
+                <span id="progressText" class="text-xl sm:text-2xl font-semibold text-sky-300 font-mono text-glow-ice">0 / 4</span>
+            </div>
+        </div>
+
+        <!-- Mode Switcher & Codex Button -->
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-teal-900/90 hover:bg-teal-800 text-teal-100 border border-teal-400/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往【多肉栽植：寧乾勿濕】 🪴</span>
+            </button>
+            <button id="btnCodex" class="bg-teal-950/90 hover:bg-teal-900 text-teal-200 border border-teal-500/60 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📜 蘆薈典籍
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: PLANT RESCUE STATION (GET GEL & APPLY TO SUNBURNS/BURNS) -->
+        <section id="phaseRescue" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-teal-200 text-glow-teal">【翠劍凝霜】蘆薈植物救護站</h1>
+                <p class="text-xs sm:text-sm text-teal-300/90 mt-1">「剖開鋸齒厚肉葉，凝膠塗抹退灼熱」── 提取透明凝膠，塗抹曬傷與燙傷皮膚</p>
+            </div>
+
+            <!-- Rescue Station Panel Layout -->
+            <div class="w-full max-w-3xl bg-teal-950/60 border border-teal-600/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl teal-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Patient Character & Injury Canvas View -->
+                <div class="flex-1 w-full flex flex-col items-center justify-center bg-slate-950/80 p-3 rounded-2xl border border-teal-800/60 relative min-h-[300px]">
+                    <span class="text-xs text-sky-300/90 font-bold mb-1">🩹 傷者診察區域（點擊燙傷/曬傷紅腫處敷凝膠）</span>
+                    
+                    <div class="relative w-56 h-64 sm:w-64 sm:h-72 flex items-center justify-center">
+                        <svg viewBox="0 0 100 120" class="w-full h-full">
+                            <!-- Human Figure Silhouette -->
+                            <path d="M 50 12 C 55 12 58 18 58 24 C 58 28 55 31 50 31 C 45 31 42 28 42 24 C 42 18 45 12 50 12 Z 
+                                     M 42 31 L 30 36 L 22 55 L 26 57 L 35 42 L 38 68 L 35 105 L 44 105 L 47 70 L 50 70 L 53 70 L 56 105 L 65 105 L 62 68 L 65 42 L 74 57 L 78 55 L 68 36 L 58 31 Z" 
+                                  fill="#112a23" stroke="#14b8a6" stroke-width="1.2" opacity="0.85"/>
+
+                            <!-- Interactive Burn/Sunburn Injury Spots -->
+                            <!-- Spot 0: Sunburned Shoulder (手臂/肩部曬傷) -->
+                            <g class="wound-node" data-node="0" transform="translate(28, 42)">
+                                <circle id="woundCircle0" cx="0" cy="0" r="5" fill="#ef4444" class="wound-active"/>
+                                <text x="-24" y="2" fill="#fca5a5" font-size="4.5" font-weight="bold">肩部曬傷</text>
+                            </g>
+
+                            <!-- Spot 1: Scalded Arm (前臂熱湯燙傷) -->
+                            <g class="wound-node" data-node="1" transform="translate(73, 50)">
+                                <circle id="woundCircle1" cx="0" cy="0" r="5" fill="#ef4444" class="wound-active"/>
+                                <text x="7" y="2" fill="#fca5a5" font-size="4.5" font-weight="bold">手臂燙傷</text>
+                            </g>
+
+                            <!-- Spot 2: Facial Heat Flush/Sunburn (臉部曬傷發紅) -->
+                            <g class="wound-node" data-node="2" transform="translate(50, 22)">
+                                <circle id="woundCircle2" cx="0" cy="0" r="4.5" fill="#ef4444" class="wound-active"/>
+                                <text x="7" y="2" fill="#fca5a5" font-size="4.5" font-weight="bold">臉部曬傷</text>
+                            </g>
+
+                            <!-- Spot 3: Back Sunburn (背部曬傷灼痛) -->
+                            <g class="wound-node" data-node="3" transform="translate(50, 48)">
+                                <circle id="woundCircle3" cx="0" cy="0" r="5" fill="#ef4444" class="wound-active"/>
+                                <text x="-24" y="2" fill="#fca5a5" font-size="4.5" font-weight="bold">胸背灼痛</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Extraction & Gel Application Control Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-teal-800/60 min-h-[300px]">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-teal-800/60 pb-2 mb-2">
+                            <span class="text-xs text-sky-300 font-bold">🗡️ 切開鋸齒葉片萃取凝膠：</span>
+                            <button id="btnSliceLeaf" class="text-[11px] bg-sky-700/80 hover:bg-sky-600 text-sky-100 border border-sky-400/50 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow">
+                                🔪 剖開葉片·取凝膠
+                            </button>
+                        </div>
+
+                        <!-- Aloe Leaf Extraction Visual Card -->
+                        <div id="aloeGelCard" class="aloe-leaf-card p-3 bg-teal-900/50 border-2 border-teal-400 rounded-xl flex items-center gap-3 ice-glow">
+                            <div class="w-12 h-12 rounded-xl bg-teal-950 flex items-center justify-center text-2xl border border-sky-400 relative overflow-hidden">
+                                🌵
+                                <div id="gelDripIcon" class="absolute inset-0 bg-sky-400/20 backdrop-blur-xs flex items-center justify-center text-sky-200 text-xs font-bold font-mono">
+                                    💧 凝膠
+                                </div>
+                            </div>
+                            <div>
+                                <h4 id="aloeGelTitle" class="text-xs sm:text-sm font-bold text-sky-200">新鮮鋸齒蘆薈厚葉 (多汁肉質)</h4>
+                                <p id="aloeGelStatus" class="text-[10px] text-teal-300/80 mt-0.5">點擊上方按鈕剖開葉皮，提煉透明修護凝膠</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Soothing Advice & Explanation Box -->
+                    <div id="injuryDetailTip" class="bg-teal-950/80 p-3 rounded-xl border border-teal-600/50 text-xs text-teal-200 leading-relaxed">
+                        💡 <b>救護站提示：</b>請先點擊「🔪 剖開葉片」獲取高純度透明凝膠，隨後點擊傷者圖示上的紅腫傷口（曬傷/燙傷），施展<b>瀉火生肌、涼血止痛</b>之效！
+                    </div>
+
+                    <button id="btnApplyCooling" class="w-full py-2 bg-teal-800/80 hover:bg-teal-700 text-teal-100 border border-teal-400/50 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow">
+                        ❄️ 散發凝霜清涼氣（舒緩全場皮膚傷口）
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- PHASE 2: SUCCULENT CULTIVATION & SOIL CARE -->
+        <section id="phaseCultivation" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-teal-300 text-glow-teal">【多肉之王】蘆薈栽培與「寧乾勿濕」原則</h1>
+                <p class="text-xs sm:text-sm text-teal-200/90 mt-1">「肉質厚實邊具刺，疏鬆沙土怕積水」── 體會多肉植物養護心法</p>
+            </div>
+
+            <div class="w-full max-w-3xl bg-teal-950/60 border border-teal-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl teal-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Plant Pot Interactive Canvas -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-stone-900/90 p-4 rounded-2xl border border-teal-800/60 relative">
+                    <div id="plantContainer" class="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center overflow-hidden cursor-pointer border border-teal-700/40 rounded-xl bg-slate-950/80">
+                        <!-- Dynamic SVG Aloe Plant Visual -->
+                    </div>
+
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span class="text-sm font-bold text-teal-300 font-calligraphy">盆栽翠蘆薈</span>
+                            <span id="plantStatusBadge" class="ml-2 text-[10px] bg-teal-900/90 text-teal-200 border border-teal-500/50 px-2 py-0.5 rounded-full">土壤待調理</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-teal-300/80 block">多肉生長活力</span>
+                            <div class="w-24 h-2.5 bg-stone-800 rounded-full overflow-hidden border border-teal-600/40">
+                                <div id="plantHealthBar" class="h-full bg-gradient-to-r from-teal-500 to-sky-400 transition-all duration-300 w-[30%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cultivation Guide & Action Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-teal-800/60 min-h-[260px]">
+                    <h3 class="text-sm font-bold text-sky-300 text-center border-b border-teal-800/60 pb-2">🌵 多肉蘆薈種植要點與防積水指南</h3>
+
+                    <div class="space-y-2 text-xs">
+                        <!-- Step 1: Sandy Soil -->
+                        <button id="btnSoilSand" class="w-full p-2.5 rounded-xl bg-teal-900/60 hover:bg-teal-800/80 border border-teal-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">⏳</span>
+                                <div>
+                                    <div class="font-bold text-teal-200">1. 配置疏鬆透氣沙土</div>
+                                    <div class="text-[10px] text-teal-400/80">排水極佳，防根系爛腐</div>
+                                </div>
+                            </div>
+                            <span id="badgeSoil" class="text-[10px] bg-teal-950 px-2 py-1 rounded text-teal-400">未配土</span>
+                        </button>
+
+                        <!-- Step 2: Sunlight & Ventilation -->
+                        <button id="btnSunVent" class="w-full p-2.5 rounded-xl bg-teal-900/60 hover:bg-teal-800/80 border border-teal-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🌤️</span>
+                                <div>
+                                    <div class="font-bold text-teal-200">2. 通風採光環境</div>
+                                    <div class="text-[10px] text-teal-400/80">充足陽光使葉片肥厚有刺</div>
+                                </div>
+                            </div>
+                            <span id="badgeVent" class="text-[10px] bg-teal-950 px-2 py-1 rounded text-teal-400">通風差</span>
+                        </button>
+
+                        <!-- Step 3: Water Control (Rather dry than wet) -->
+                        <button id="btnDryControl" class="w-full p-2.5 rounded-xl bg-teal-900/60 hover:bg-teal-800/80 border border-teal-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">💧</span>
+                                <div>
+                                    <div class="font-bold text-teal-200">3. 貫徹「寧乾勿濕」節制澆水</div>
+                                    <div class="text-[10px] text-teal-400/80">極怕積水，待土乾透後再澆</div>
+                                </div>
+                            </div>
+                            <span id="badgeWater" class="text-[10px] bg-teal-950 px-2 py-1 rounded text-teal-400">未控制</span>
+                        </button>
+                    </div>
+
+                    <div id="plantCareResultTip" class="bg-teal-950/80 p-2 rounded-xl border border-teal-600/40 text-[11px] text-teal-200 text-center">
+                        請依次進行多肉養護，預防盆土積水爛根！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-teal-950 border border-teal-400/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto teal-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-teal-400 hover:text-teal-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-teal-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-teal-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-teal-800/80 border border-teal-400 flex items-center justify-center text-2xl">🌵</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-teal-200">蘆薈（Aloe vera）典籍</h2>
+                    <p class="text-xs text-teal-300/80">別名：奴會、羅薇、象膽、翠葉蘆薈</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-teal-100/90 leading-relaxed">
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-teal-700/50">
+                    <h3 class="font-bold text-sky-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🌵 形態特徵（葉肉厚實、邊緣有刺）</h3>
+                    <p>多肉植物，葉簇生，大而肥厚多汁，呈狹披針形。葉片邊緣具硬鋸齒刺，葉肉內部蘊含豐富透明粘稠膠質。</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-teal-700/50">
+                    <h3 class="font-bold text-sky-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 性味功效（瀉下通便、清肝殺蟲、外用瀉火生肌）</h3>
+                    <p>性寒，味苦，歸肝、胃、大腸經。內服能<b>瀉下通便、清肝火、殺蟲</b>；外用能<b>瀉火生肌、清熱止痛</b>，能顯著舒緩皮膚燙傷、曬傷及傷口發紅腫痛。</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-teal-700/50">
+                    <h3 class="font-bold text-sky-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植建議（多肉植物，寧乾勿濕）</h3>
+                    <p>極度<b>害怕積水</b>，若盆土積水易招致爛根爛葉。宜使用<b>疏鬆透氣沙土</b>，放置於<b>通風採光處</b>，養護務必貫徹<b>「寧乾勿濕」</b>原則。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">領悟蘆薈清涼生肌之法</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-teal-950/95 border border-teal-400 text-teal-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME ENGINE LOGIC -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playCoolChime() {
+                this.init();
+                this.playTone(659.25, 0.3, 'sine', 0.2); // E5
+                setTimeout(() => this.playTone(880.00, 0.5, 'sine', 0.2), 100); // A5
+                setTimeout(() => this.playTone(1046.50, 0.7, 'sine', 0.25), 200); // C6
+            }
+            playSlice() {
+                this.init();
+                this.playTone(400 + Math.random() * 200, 0.12, 'triangle', 0.18);
+            }
+            playGelApply() {
+                this.init();
+                this.playTone(320, 0.25, 'sine', 0.15);
+                setTimeout(() => this.playTone(520, 0.35, 'sine', 0.15), 80);
+            }
+            playSnap() {
+                this.init();
+                this.playTone(523.25, 0.1, 'triangle', 0.15);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const INJURY_DATA = [
+            {
+                id: 0,
+                name: '肩部曬傷',
+                desc: '烈日曝曬致紅腫灼痛。',
+                benefit: '❄️ 瀉火生肌 · 舒緩曬傷紅腫'
+            },
+            {
+                id: 1,
+                name: '手臂燙傷',
+                desc: '接觸熱湯致皮膚發紅刺痛。',
+                benefit: '❄️ 清熱止痛 · 促進創面修護'
+            },
+            {
+                id: 2,
+                name: '臉部曬傷',
+                desc: '紫外線照射發紅乾燥。',
+                benefit: '❄️ 涼血降溫 · 補水凝霜保護'
+            },
+            {
+                id: 3,
+                name: '胸背灼痛',
+                desc: '曬後肌膚火辣刺痛。',
+                benefit: '❄️ 清肝瀉火 · 冰涼敷鎮肌膚'
+            }
+        ];
+
+        let state = {
+            score: 0,
+            hasGelExtracted: false,
+            woundsHealed: [false, false, false, false],
+            currentPhase: 'rescue', // 'rescue' | 'cultivation'
+            
+            // Cultivation states
+            soilSand: false,
+            sunVent: false,
+            dryControl: false,
+            plantHealth: 30
+        };
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 35; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1.5 + Math.random() * 3,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: -0.3 - Math.random() * 0.5,
+                    alpha: 0.25 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            let count = state.woundsHealed.filter(Boolean).length;
+            document.getElementById('progressText').innerText = `${count} / 4`;
+        }
+
+        function setupWoundEvents() {
+            const nodes = document.querySelectorAll('.wound-node');
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const idx = parseInt(node.dataset.node);
+                    
+                    if (!state.hasGelExtracted) {
+                        sound.playSlice();
+                        showToast("⚠️ 請先點擊「🔪 剖開葉片」獲取透明蘆薈凝膠！", "🌵");
+                        return;
+                    }
+
+                    if (state.woundsHealed[idx]) {
+                        sound.playGelApply();
+                        showToast(`💧 【${INJURY_DATA[idx].name}】已塗抹蘆薈凝膠，清涼舒緩中！`);
+                        return;
+                    }
+
+                    sound.playCoolChime();
+                    state.woundsHealed[idx] = true;
+                    state.score += 250;
+
+                    // Update Circle Visual
+                    const circle = node.querySelector('circle');
+                    circle.setAttribute('fill', '#38bdf8');
+                    circle.classList.remove('wound-active');
+                    circle.setAttribute('r', '6');
+
+                    const data = INJURY_DATA[idx];
+                    document.getElementById('injuryDetailTip').innerHTML = `
+                        <div class="text-sky-300 font-bold text-xs sm:text-sm">💧 【${data.name}】成功塗抹透明凝膠！</div>
+                        <div class="text-teal-200 mt-0.5">${data.benefit}</div>
+                        <div class="text-[10px] text-teal-300/80 mt-1">${data.desc} 外用瀉火生肌、舒緩燙傷曬傷。</div>
+                    `;
+
+                    triggerFrostEffect(node);
+                    updateHeaderUI();
+                    showToast(`💧 蘆薈凝膠敷於${data.name}！${data.benefit}`, '❄️');
+                });
+            });
+        }
+
+        function triggerFrostEffect(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2 + (Math.random() - 0.5) * 20,
+                    y: rect.top + rect.height / 2,
+                    radius: 3 + Math.random() * 4,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -1 - Math.random() * 2,
+                    alpha: 0.9
+                });
+            }
+        }
+
+        function setupLeafSlice() {
+            document.getElementById('btnSliceLeaf').addEventListener('click', () => {
+                sound.playSlice();
+                state.hasGelExtracted = true;
+                
+                document.getElementById('aloeGelTitle').innerText = "透明晶瑩蘆薈凝膠 (高純度)";
+                document.getElementById('aloeGelStatus').innerHTML = "✨ 已萃取！具<b>瀉火生肌、清熱止痛</b>特效";
+                document.getElementById('aloeGelCard').className = "aloe-leaf-card p-3 bg-sky-950/70 border-2 border-sky-300 rounded-xl flex items-center gap-3 ice-glow";
+                
+                showToast("🔪 切開鋸齒厚肉葉，提取透明膠質！", "💧");
+            });
+        }
+
+        function renderPlant() {
+            const container = document.getElementById('plantContainer');
+            let leafScale = state.sunVent ? '1.25' : '0.9';
+            let leafColor = state.dryControl ? '#2dd4bf' : '#14b8a6';
+
+            container.innerHTML = `
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Sandy Soil Pot -->
+                    <polygon points="25,90 75,90 82,65 18,65" fill="${state.soilSand ? '#8d6e63' : '#4e342e'}"/>
+                    <ellipse cx="50" cy="65" rx="32" ry="7" fill="${state.soilSand ? '#d7ccc8' : '#3e2723'}"/>
+
+                    <!-- Aloe Rosette Succulent Leaves with Spikes -->
+                    <g transform="translate(50, 65) scale(${leafScale})">
+                        <!-- Left Leaves -->
+                        <path d="M 0 0 C -15 -10 -28 -20 -35 -38 C -22 -32 -8 -15 0 0 Z" fill="${leafColor}"/>
+                        <!-- Serrated Spikes -->
+                        ${state.sunVent ? `<circle cx="-25" cy="-28" r="1" fill="#e6fcf5"/><circle cx="-18" cy="-20" r="1" fill="#e6fcf5"/>` : ''}
+
+                        <!-- Right Leaves -->
+                        <path d="M 0 0 C 15 -10 28 -20 35 -38 C 22 -32 8 -15 0 0 Z" fill="${leafColor}"/>
+                        ${state.sunVent ? `<circle cx="25" cy="-28" r="1" fill="#e6fcf5"/><circle cx="18" cy="-20" r="1" fill="#e6fcf5"/>` : ''}
+
+                        <!-- Center Plump Leaves -->
+                        <path d="M 0 0 C -8 -18 -12 -35 -15 -48 C -3 -38 2 -20 0 0 Z" fill="#5eead4"/>
+                        <path d="M 0 0 C 8 -18 12 -35 15 -48 C 3 -38 -2 -20 0 0 Z" fill="#5eead4"/>
+
+                        <path d="M 0 0 C -4 -20 0 -45 0 -55 C 4 -45 4 -20 0 0 Z" fill="#99f6e4"/>
+                    </g>
+
+                    <!-- Sun & Air Flow effect -->
+                    ${state.sunVent ? `
+                        <circle cx="80" cy="20" r="8" fill="#38bdf8" opacity="0.7" class="animate-pulse"/>
+                        <path d="M 10 20 Q 25 15 40 25" stroke="#38bdf8" stroke-width="1.5" fill="none" opacity="0.6"/>
+                    ` : ''}
+                </svg>
+            `;
+
+            document.getElementById('plantHealthBar').style.width = `${state.plantHealth}%`;
+            const badge = document.getElementById('plantStatusBadge');
+            if (state.plantHealth >= 100) {
+                badge.className = "ml-2 text-[10px] bg-sky-400 text-slate-950 font-bold border border-sky-200 px-2 py-0.5 rounded-full animate-bounce";
+                badge.innerText = "✨ 多肉之王 · 翠綠生肌";
+            } else if (state.plantHealth >= 60) {
+                badge.className = "ml-2 text-[10px] bg-teal-800 text-teal-200 border border-teal-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "🌵 健壯生長中";
+            }
+        }
+
+        function setupCultivationEvents() {
+            document.getElementById('btnSoilSand').addEventListener('click', () => {
+                sound.playSnap();
+                state.soilSand = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeSoil').className = "text-[10px] bg-sky-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeSoil').innerText = "⏳ 沙土良好";
+                showToast("⏳ 換用疏鬆透氣沙土，根系呼吸暢通！", "✨");
+                renderPlant();
+            });
+
+            document.getElementById('btnSunVent').addEventListener('click', () => {
+                sound.playCoolChime();
+                state.sunVent = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('badgeVent').className = "text-[10px] bg-sky-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeVent').innerText = "🌤️ 陽光通風";
+                showToast("🌤️ 通風採光充足，多肉葉片肥厚有刺！", "🌵");
+                renderPlant();
+            });
+
+            document.getElementById('btnDryControl').addEventListener('click', () => {
+                sound.playCoolChime();
+                state.dryControl = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 20);
+                document.getElementById('badgeWater').className = "text-[10px] bg-sky-400 text-slate-950 font-bold px-2 py-1 rounded";
+                document.getElementById('badgeWater').innerText = "💧 寧乾勿濕";
+                showToast("💧 貫徹「寧乾勿濕」！防止盆土積水爛根！", "❄️");
+                renderPlant();
+            });
+        }
+
+        function setupPhaseToggle() {
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                sound.playSnap();
+                if (state.currentPhase === 'rescue') {
+                    state.currentPhase = 'cultivation';
+                    document.getElementById('phaseRescue').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('hidden');
+                    document.getElementById('phaseCultivation').classList.add('flex');
+                    document.getElementById('phaseBtnLabel').innerText = "返回【植物救護站：剖葉塗膠】 🩹";
+                    renderPlant();
+                } else {
+                    state.currentPhase = 'rescue';
+                    document.getElementById('phaseCultivation').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('flex');
+                    document.getElementById('phaseRescue').classList.remove('hidden');
+                    document.getElementById('phaseBtnLabel').innerText = "前往【多肉栽植：寧乾勿濕】 🪴";
+                }
+            });
+        }
+
+        function setupExtraControls() {
+            document.getElementById('btnApplyCooling').addEventListener('click', () => {
+                sound.playCoolChime();
+                for (let i = 0; i < 20; i++) {
+                    particles.push({
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        y: window.innerHeight / 2,
+                        radius: 3 + Math.random() * 5,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -1 - Math.random() * 2,
+                        alpha: 0.95
+                    });
+                }
+                showToast("❄️ 散發凝霜清涼氣！瀉火生肌、舒緩灼痛！", "💧");
+            });
+
+            // Codex Modal
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playCoolChime();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initParticles();
+            animateCanvas();
+
+            setupWoundEvents();
+            setupLeafSlice();
+            setupCultivationEvents();
+            setupPhaseToggle();
+            setupExtraControls();
+
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+</html>

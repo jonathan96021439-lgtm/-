@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【奇籽淨水】辣木籽主題水質澄清實驗與本草保健遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #06181b;
+            color: #e0f2fe;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(6, 44, 48, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #14b8a6;
+            border-radius: 3px;
+        }
+        .teal-glow {
+            box-shadow: 0 0 25px rgba(20, 184, 166, 0.45);
+        }
+        .aqua-glow {
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+        }
+        .text-glow-teal {
+            text-shadow: 0 0 14px rgba(45, 212, 191, 0.9);
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 12px rgba(250, 204, 21, 0.85);
+        }
+        @keyframes waveFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(2deg); }
+        }
+        .float-wave {
+            animation: waveFloat 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-slate-950 text-cyan-50 flex flex-col justify-between overflow-hidden">
+
+    <header class="relative z-20 w-full max-w-4xl mx-auto p-3 sm:p-4 flex justify-between items-center pointer-events-auto">
+        <div class="bg-teal-950/80 border border-teal-500/50 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 teal-glow">
+            <div>
+                <span class="text-xs text-teal-300/80 block uppercase tracking-wider">淨水積分 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-teal-300 font-mono text-glow-teal">0</span>
+            </div>
+            <div class="h-8 w-px bg-teal-800/60"></div>
+            <div>
+                <span class="text-xs text-teal-300/80 block uppercase tracking-wider">水質澄清度 Cleanliness</span>
+                <span id="purityText" class="text-xl sm:text-2xl font-semibold text-cyan-300 font-mono">15%</span>
+            </div>
+            <div class="h-8 w-px bg-teal-800/60 hidden sm:block"></div>
+            <div class="hidden sm:block">
+                <span class="text-xs text-teal-300/80 block uppercase tracking-wider">實驗關卡 Round</span>
+                <span id="levelText" class="text-lg font-semibold text-teal-200 font-mono">1 / 5</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="btnCodex" class="bg-teal-900/80 hover:bg-teal-800 text-teal-100 border border-teal-400/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                辣木籽典籍
+            </button>
+            <button id="btnSound" class="bg-teal-900/80 hover:bg-teal-800 text-teal-100 border border-teal-400/50 p-2.5 rounded-xl transition-all shadow-md cursor-pointer">
+                <svg id="soundOnIcon" class="w-5 h-5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                <svg id="soundOffIcon" class="w-5 h-5 text-teal-500/50 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-between p-2 sm:p-4 max-w-4xl w-full mx-auto">
+        
+        <!-- Task Banner -->
+        <div id="questBanner" class="w-full mb-2 transition-all duration-300">
+            <div class="bg-gradient-to-r from-slate-950/90 via-teal-950/90 to-slate-950/90 border-2 border-teal-500/60 rounded-2xl p-3 sm:p-4 shadow-xl text-center relative overflow-hidden backdrop-blur-md">
+                <div id="stepIndicator" class="text-xs text-teal-300 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block animate-ping"></span>
+                    <span id="stepTitleText">水質澄清實驗 ‧ 第一步：添加三棱辣木籽粉末</span>
+                </div>
+                <h2 id="questInstruction" class="text-base sm:text-lg font-bold text-teal-100 font-calligraphy leading-snug">
+                    「奇籽降濁水，瞬間化清泉」── 點擊「倒入辣木籽粉」啟動天然陽離子凝集反應！
+                </h2>
+                <p id="subHintText" class="text-xs text-cyan-300/80 mt-1">特性：辣木籽具三棱翅，富含陽離子蛋白質，能快速吸附水中懸浮雜質沉澱變清。</p>
+            </div>
+        </div>
+
+        <!-- Interactive Water Clarification Tank -->
+        <div id="fieldContainer" class="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] bg-slate-950/60 rounded-2xl overflow-hidden border-4 border-teal-700/80 shadow-2xl aqua-glow flex flex-col justify-between p-3">
+            
+            <!-- Dynamic Canvas showing turbid/clear water & flocculation -->
+            <canvas id="waterCanvas" class="absolute inset-0 z-0 cursor-pointer"></canvas>
+
+            <div id="experimentControls" class="relative z-20 w-full h-full flex flex-col justify-between p-2 pointer-events-none">
+                <!-- Status Bar -->
+                <div class="flex justify-between items-center bg-slate-900/80 border border-teal-500/50 rounded-xl px-3 py-1.5 backdrop-blur-sm pointer-events-auto">
+                    <span class="text-xs font-bold text-teal-300 flex items-center gap-1">
+                        💧 狀態：<span id="tankStatusText" class="text-cyan-200">渾濁懸浮液 (Silt Suspension)</span>
+                    </span>
+                    <span id="actionGuideBadge" class="text-xs bg-teal-500/20 text-teal-200 px-2.5 py-0.5 rounded-full border border-teal-400/40 animate-pulse">
+                        請點擊下方按鈕倒入辣木籽粉
+                    </span>
+                </div>
+
+                <!-- Floating Quiz / Interaction Box -->
+                <div id="quizOverlay" class="bg-gradient-to-r from-slate-950/95 via-teal-950/95 to-slate-950/95 border-2 border-teal-400/80 rounded-2xl p-3 text-center shadow-2xl backdrop-blur-md pointer-events-auto transition-all">
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <span class="text-2xl sm:text-3xl">🌱✨</span>
+                        <span id="quizQuestion" class="text-base sm:text-lg font-bold text-teal-200 font-calligraphy text-glow-teal">
+                            【水質澄清試煉】辣木籽為何能迅速淨化濁水？
+                        </span>
+                    </div>
+                    <p id="quizSubText" class="text-xs text-cyan-200/90 mb-2">
+                        請選擇正確答案以收集清泉水滴與本草能量：
+                    </p>
+
+                    <!-- Interactive Buttons Container -->
+                    <div id="actionButtonsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Toast Alert Overlay -->
+            <div id="gameToast" class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none bg-black/85 border border-teal-400 text-teal-200 text-xs sm:text-sm px-5 py-2.5 rounded-full backdrop-blur-md shadow-2xl opacity-0 transition-opacity duration-300 flex items-center gap-2">
+                <span id="toastIcon">💧</span>
+                <span id="toastText">辣木籽凝集反應開始...</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-20 w-full text-center py-2 text-xs text-teal-400/70 font-light">
+        【奇籽淨水】辣木籽（Moringa oleifera） ── 三棱翅奇籽 ‧ 淨水澄清 ‧ 增強免疫 ‧ 血糖調節
+    </footer>
+
+    <div id="startModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="bg-gradient-to-b from-teal-950 via-slate-900 to-slate-950 border-2 border-teal-500/60 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal-400 via-cyan-300 to-teal-500"></div>
+            
+            <div class="mb-5">
+                <span class="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs tracking-widest mb-2 border border-teal-500/30">本草奇籽 ‧ 水質澄清</span>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-teal-300 font-calligraphy text-glow-teal mb-2">【奇籽淨水】</h1>
+                <p class="text-sm sm:text-base text-teal-200/80">辣木籽水質澄清實驗體驗與保健養生遊戲</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-left text-xs sm:text-sm">
+                <div class="bg-teal-900/30 border border-teal-700/40 rounded-xl p-3">
+                    <div class="text-teal-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>🧪</span> 第一步：澄清渾濁水質
+                    </div>
+                    <p class="text-teal-100/80 leading-relaxed">
+                        加入具<strong class="text-teal-300">三棱翅之辣木籽粉</strong>，吸附雜質凝集沉澱，親眼見證濁水化清泉！
+                    </p>
+                </div>
+                <div class="bg-teal-900/30 border border-teal-700/40 rounded-xl p-3">
+                    <div class="text-teal-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span>🌱</span> 第二步：掌握保健與種植
+                    </div>
+                    <p class="text-teal-100/80 leading-relaxed">
+                        解鎖<strong class="text-teal-300">「增強免疫、抗氧化、調節血糖」</strong>與<strong class="text-teal-300">「極耐旱、怕積水、全日照」</strong>栽種秘訣！
+                    </p>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-teal-400 via-cyan-300 to-teal-500 hover:from-teal-300 hover:to-cyan-200 text-slate-950 font-bold text-lg rounded-2xl shadow-xl hover:shadow-teal-500/30 transition-all cursor-pointer">
+                開始實驗 ‧ 澄清水質
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-slate-950 via-teal-950 to-slate-950 border-2 border-teal-500/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl">
+            <div id="gameOverTitle" class="text-3xl sm:text-4xl font-bold text-teal-300 font-calligraphy mb-2 text-glow-teal">奇籽澄泉 ‧ 大獲成功</div>
+            <p id="gameOverSubtitle" class="text-sm text-teal-200/80 mb-6">您已完美掌握辣木籽淨水原理、高營養保健功效與排水防霜種植法！</p>
+
+            <div class="bg-slate-900/80 border border-teal-800/60 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-xs text-teal-400/80 block">淨水總分</span>
+                    <span id="finalScore" class="text-3xl font-extrabold text-teal-300 font-mono">0</span>
+                </div>
+                <div>
+                    <span class="text-xs text-teal-400/80 block">最終澄清度</span>
+                    <span id="finalPurity" class="text-3xl font-extrabold text-cyan-200 font-mono">100%</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnRestart" class="flex-1 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg cursor-pointer">
+                    重新進行實驗
+                </button>
+                <button id="btnOpenCodexEnd" class="flex-1 py-3 bg-slate-900 hover:bg-teal-950 border border-teal-500/60 text-teal-300 font-bold rounded-xl transition-all cursor-pointer">
+                    閱讀辣木籽典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="codexModal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-teal-950 to-slate-950 border-2 border-teal-500/60 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-teal-800/50 flex justify-between items-center bg-teal-900/40">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🌱💧</span>
+                    <h3 class="text-2xl font-bold text-teal-300 font-calligraphy">辣木籽（Moringa oleifera Seeds）本草典籍</h3>
+                </div>
+                <button id="btnCloseCodex" class="text-teal-400 hover:text-teal-200 p-1 text-2xl transition-all cursor-pointer">&times;</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-5 text-sm sm:text-base text-teal-100/90 leading-relaxed">
+                <!-- Visual & Purification Traits -->
+                <div class="bg-teal-900/25 border border-teal-700/40 rounded-2xl p-5">
+                    <div class="text-teal-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-teal-800/40 pb-2">
+                        <span>【形態特徵與奇籽淨水】</span>
+                    </div>
+                    <p>
+                        辣木籽為辣木科辣木屬植物的種子，最明顯特徵為具有<strong class="text-teal-300">三條白色薄膜狀的三棱翅</strong>。種子磨粉後富含陽離子可溶性蛋白質，加入渾濁水中能中和懸浮膠體電荷，使雜質快速絮凝沉澱，為傳統天然淨水聖品。
+                    </p>
+                </div>
+
+                <!-- Medicinal Uses -->
+                <div class="bg-teal-900/25 border border-teal-700/40 rounded-2xl p-5">
+                    <div class="text-teal-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-teal-800/40 pb-2">
+                        <span>【特性用處 ‧ 高營養保健】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-teal-200/90">
+                        <li><strong class="text-teal-300">高營養價值：</strong> 含有豐富多種維生素、優質蛋白質、鈣、鐵及多酚活性成分。</li>
+                        <li><strong class="text-teal-300">增強免疫力：</strong> 激活人體免疫防衛機制，提高抵抗力。</li>
+                        <li><strong class="text-teal-300">抗氧化與調節血糖：</strong> 具顯著抗氧化、清除自由基作用，並有助於輔助穩定血糖與血脂。</li>
+                    </ul>
+                </div>
+
+                <!-- Planting & Cultivation Guide -->
+                <div class="bg-teal-900/25 border border-teal-700/40 rounded-2xl p-5">
+                    <div class="text-teal-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-teal-800/40 pb-2">
+                        <span>【種植建議 ‧ 耐旱怕積水】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-teal-200/90">
+                        <li><strong class="text-teal-300">水分需求：</strong> <strong class="text-teal-300">極度耐旱，非常怕積水</strong>！根部極易因積水腐爛，灌溉需「寧乾勿濕」。</li>
+                        <li><strong class="text-teal-300">日照與土壤：</strong> 必須種植在<strong class="text-teal-300">排水極佳</strong>之砂質土壤且陽光極其充足處。</li>
+                        <li><strong class="text-teal-300">氣溫防護：</strong> 喜高溫熱帶氣候，寒冬低溫季節<strong class="text-teal-300">必須預防霜凍與寒流</strong>。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-4 bg-teal-950 border-t border-teal-800/50 text-center">
+                <button id="btnConfirmCodex" class="px-8 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl transition-all cursor-pointer">
+                    領悟典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playPour() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } catch(e){}
+            }
+
+            playClarify() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.4); // C6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                } catch(e){}
+            }
+
+            playMistake() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(240, now);
+                    osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.28);
+                } catch(e){}
+            }
+
+            playWin() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, i) => {
+                        const now = this.ctx.currentTime + i * 0.12;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.35);
+                    });
+                } catch(e){}
+            }
+        }
+
+        const MORINGA_QUESTS = [
+            {
+                stepTitle: "第一步：倒入三棱辣木籽粉",
+                instruction: "「奇籽降濁水，瞬間化清泉」── 點擊「倒入辣木籽粉」觀察陽離子蛋白質吸附濁物！",
+                hint: "特性：辣木籽具三棱翅，含有陽離子蛋白質，能吸引帶負電的泥沙懸浮物。",
+                question: "【實驗題一】辣木籽加入濁水後，其天然蛋白會發揮何種淨水作用？",
+                status: "懸浮泥沙濁水 (15% 澄清度)",
+                options: [
+                    { title: "🧪 吸附帶電膠體凝集沉澱", desc: "【正確】蛋白質中和膠體電荷，使濁物結塊下沉", isCorrect: true, boostPurity: 20 },
+                    { title: "🔥 加熱沸騰蒸發水分", desc: "【錯誤】非物理蒸餾過程", isCorrect: false, boostPurity: 0 },
+                    { title: "🧪 產生劇烈化學毒性反應", desc: "【錯誤】辣木籽為天然無毒食品", isCorrect: false, boostPurity: 0 },
+                    { title: "染色成深黑墨汁", desc: "【錯誤】無染料作用", isCorrect: false, boostPurity: 0 }
+                ],
+                explanation: "辣木籽粉含有天然高分子陽離子聚合物，可與濁水中的膠體雜質發生架橋凝集並沉澱！"
+            },
+            {
+                stepTitle: "第二步：輕柔攪拌與凝集反應",
+                instruction: "點擊「輕柔攪拌」加速雜質凝集結塊，觀看渾濁泥水漸漸變得晶瑩透亮！",
+                hint: "淨水原理：攪拌能促使辣木蛋白與濁水微粒碰撞結成較大沉澱顆粒。",
+                question: "【實驗題二】傳統上辣木籽常用於水質淨化，同時它在保健上有何核心功效？",
+                status: "凝集反應進行中 (35% 澄清度)",
+                options: [
+                    { title: "💊 增強免疫、抗氧化與調節血糖", desc: "【正確】高營養價值，有助抗氧化與免疫調節", isCorrect: true, boostPurity: 20 },
+                    { title: "麻醉神經致人昏睡", desc: "【錯誤】無麻醉致幻作用", isCorrect: false, boostPurity: 0 },
+                    { title: "高熱量高脂肪肥胖劑", desc: "【錯誤】富含優質蛋白與微量元素", isCorrect: false, boostPurity: 0 },
+                    { title: "導致嚴重腹瀉脫水", desc: "【錯誤】正常食用具保健益處", isCorrect: false, boostPurity: 0 }
+                ],
+                explanation: "辣木籽富含豐富維生素、蛋白質與多酚，能增強免疫力、抗氧化並輔助調節血糖。"
+            },
+            {
+                stepTitle: "第三步：沉澱分離與收集純淨水滴",
+                instruction: "雜質已沉入缸底！點擊「收集純淨水滴」驗證水質澄清度上升！",
+                hint: "形態特徵：辣木籽外形具有極其顯著的三條薄膜狀「三棱翅」。",
+                question: "【實驗題三】觀察辣木籽的外觀形態，其種子具有何種獨特特徵？",
+                status: "沉澱分離中 (55% 澄清度)",
+                options: [
+                    { title: "扁平長有刺鉤", desc: "【錯誤】非鉤刺形態", isCorrect: false, boostPurity: 0 },
+                    { title: "🌱 具三條薄膜狀之「三棱翅」", desc: "【正確】三棱翅為辣木籽顯著之形態特點", isCorrect: true, boostPurity: 20 },
+                    { title: "圓滾光滑如珍珠", desc: "【錯誤】辣木籽具明顯棱角翼膜", isCorrect: false, boostPurity: 0 },
+                    { title: "巨大如橄欖球", desc: "【錯誤】種子大小適中", isCorrect: false, boostPurity: 0 }
+                ],
+                explanation: "辣木籽最著名的形態特徵即為其種子四周延伸出的「三棱翅」膜翼！"
+            },
+            {
+                stepTitle: "第四步：掌握辣木種植之水分秘訣",
+                instruction: "清泉澄清度達 75%！請選擇正確的「辣木澆水與土壤排水策略」。",
+                hint: "種植提示：辣木原產熱帶乾旱地區，根系極忌積水。",
+                question: "【種植題一】在園藝栽種辣木時，關於水分與土壤的要求何者正確？",
+                status: "水質趨於清澈 (75% 澄清度)",
+                options: [
+                    { title: "💧 極度耐旱、極怕積水，需排水極佳", desc: "【正確】排水良好是辣木防爛根關鍵", isCorrect: true, boostPurity: 15 },
+                    { title: "每天浸泡在水池中栽培", desc: "【錯誤】積水會導致根部迅速腐爛", isCorrect: false, boostPurity: 0 },
+                    { title: "必須種植於陰暗泥潭", desc: "【錯誤】喜陽光充足與乾燥土壤", isCorrect: false, boostPurity: 0 },
+                    { title: "完全不需陽光照耀", desc: "【錯誤】極喜全日照環境", isCorrect: false, boostPurity: 0 }
+                ],
+                explanation: "辣木極度耐旱但也極度怕積水，必須栽種於陽光充足、排水極佳的砂質土壤中！"
+            },
+            {
+                stepTitle: "第五步：全日照與冬季寒流防護",
+                instruction: "達到 100% 晶瑩清泉！完成最終寒冬護株測試，點亮本草奇籽！",
+                hint: "氣候提示：辣木喜高溫，冬季低溫霜凍需做保暖防護。",
+                question: "【種植題二】面對冬季嚴寒氣候與日照，辣木的栽培維護該注意什麼？",
+                status: "晶瑩湛藍清泉 (100% 澄清度)",
+                options: [
+                    { title: "☀️ 需充足陽光，冬季注意預防霜凍", desc: "【正確】喜全日照與高溫，寒冬防霜凍傷", isCorrect: true, boostPurity: 10 },
+                    { title: "越冷越開花，放在冰櫃養護", desc: "【錯誤】不耐嚴寒凍害", isCorrect: false, boostPurity: 0 },
+                    { title: "夏季遮光90%避暑", desc: "【錯誤】辣木極喜烈日酷暑", isCorrect: false, boostPurity: 0 },
+                    { title: "頻繁大水漫灌過冬", desc: "【錯誤】冬季低溫積水必死", isCorrect: false, boostPurity: 0 }
+                ],
+                explanation: "辣木喜全日照與高溫環境，冬季寒流襲來時需特別注意防止霜凍凍傷！"
+            }
+        ];
+
+        let score = 0;
+        let purity = 15;
+        let currentRound = 0;
+
+        const sounds = new SoundEngine();
+
+        const waterCanvas = document.getElementById('waterCanvas');
+        const waterCtx = waterCanvas.getContext('2d');
+
+        let siltParticles = [];
+        let seedParticles = [];
+        let cleanBubbles = [];
+
+        function resizeWaterCanvas() {
+            const rect = waterCanvas.parentElement.getBoundingClientRect();
+            waterCanvas.width = rect.width;
+            waterCanvas.height = rect.height;
+            initParticles();
+        }
+
+        function initParticles() {
+            siltParticles = [];
+            seedParticles = [];
+            cleanBubbles = [];
+
+            // Brown silt particles suspended in water
+            const siltCount = Math.floor(60 * (1 - purity / 100)) + 5;
+            for (let i = 0; i < siltCount; i++) {
+                siltParticles.push({
+                    x: Math.random() * waterCanvas.width,
+                    y: Math.random() * (waterCanvas.height * 0.8),
+                    radius: 2 + Math.random() * 3.5,
+                    vx: (Math.random() - 0.5) * 0.8,
+                    vy: (Math.random() - 0.5) * 0.8,
+                    color: Math.random() > 0.5 ? '#8d6e63' : '#a1887f',
+                    bound: false
+                });
+            }
+
+            // Clean sparkling bubbles when purity rises
+            if (purity > 40) {
+                const bubbleCount = Math.floor(purity / 8);
+                for (let i = 0; i < bubbleCount; i++) {
+                    cleanBubbles.push({
+                        x: Math.random() * waterCanvas.width,
+                        y: Math.random() * waterCanvas.height,
+                        radius: 1.5 + Math.random() * 3,
+                        vy: 0.4 + Math.random() * 0.8,
+                        alpha: 0.3 + Math.random() * 0.5
+                    });
+                }
+            }
+        }
+
+        function triggerPourAnimation() {
+            // Spawn falling seed powder particles
+            for (let i = 0; i < 35; i++) {
+                seedParticles.push({
+                    x: waterCanvas.width * 0.2 + Math.random() * (waterCanvas.width * 0.6),
+                    y: 10 + Math.random() * 20,
+                    radius: 2 + Math.random() * 3,
+                    vy: 1.5 + Math.random() * 2,
+                    color: '#fef08a' // Golden/white seed powder
+                });
+            }
+        }
+
+        function drawWaterScene() {
+            if (!waterCtx) return;
+            const w = waterCanvas.width;
+            const h = waterCanvas.height;
+
+            waterCtx.clearRect(0, 0, w, h);
+
+            // Interpolate Water Color based on Purity (Murky Brown -> Crystal Teal Aqua)
+            const purityRatio = purity / 100;
+            
+            // Murky RGB: 70, 55, 30 -> Clear RGB: 13, 148, 136
+            const r = Math.floor(70 * (1 - purityRatio) + 13 * purityRatio);
+            const g = Math.floor(55 * (1 - purityRatio) + 148 * purityRatio);
+            const b = Math.floor(30 * (1 - purityRatio) + 136 * purityRatio);
+
+            const bgGrad = waterCtx.createLinearGradient(0, 0, 0, h);
+            bgGrad.addColorStop(0, `rgba(${r + 20}, ${g + 30}, ${b + 40}, 0.85)`);
+            bgGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.95)`);
+            waterCtx.fillStyle = bgGrad;
+            waterCtx.fillRect(0, 0, w, h);
+
+            // Draw Bottom Sediment Layer (Flccs settling at bottom)
+            const sedimentHeight = Math.min(30, (purityRatio * 25));
+            if (sedimentHeight > 0) {
+                waterCtx.fillStyle = 'rgba(78, 52, 28, 0.7)';
+                waterCtx.beginPath();
+                waterCtx.ellipse(w / 2, h, w * 0.5, sedimentHeight, 0, 0, Math.PI * 2);
+                waterCtx.fill();
+            }
+
+            // Animate Falling Seed Powder
+            for (let i = seedParticles.length - 1; i >= 0; i--) {
+                const sp = seedParticles[i];
+                sp.y += sp.vy;
+
+                waterCtx.beginPath();
+                waterCtx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
+                waterCtx.fillStyle = sp.color;
+                waterCtx.fill();
+
+                if (sp.y > h * 0.8) {
+                    seedParticles.splice(i, 1);
+                }
+            }
+
+            // Animate Silt / Sediment Particles
+            siltParticles.forEach(p => {
+                if (!p.bound && purityRatio > 0.4) {
+                    // Start sinking if water is getting clear
+                    p.vy = Math.abs(p.vy) + 0.3;
+                    p.bound = true;
+                }
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Bounce off boundaries if not sinking to bottom
+                if (!p.bound) {
+                    if (p.x < 0 || p.x > w) p.vx *= -1;
+                    if (p.y < 0 || p.y > h * 0.85) p.vy *= -1;
+                } else {
+                    if (p.y > h - 10) {
+                        p.y = h - 10;
+                        p.vx = 0;
+                        p.vy = 0;
+                    }
+                }
+
+                waterCtx.beginPath();
+                waterCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                waterCtx.fillStyle = p.color;
+                waterCtx.fill();
+            });
+
+            // Animate Clean Water Bubbles
+            cleanBubbles.forEach(b => {
+                b.y -= b.vy;
+                if (b.y < 0) b.y = h;
+
+                waterCtx.beginPath();
+                waterCtx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                waterCtx.fillStyle = `rgba(224, 242, 254, ${b.alpha})`;
+                waterCtx.fill();
+            });
+
+            requestAnimationFrame(drawWaterScene);
+        }
+
+        waterCanvas.addEventListener('click', () => {
+            sounds.init();
+            sounds.playPour();
+            triggerPourAnimation();
+            showToast('✨ 點擊缸體：觀察三棱辣木籽粉微粒與濁物吸附！');
+        });
+
+        function startNewGame() {
+            score = 0;
+            purity = 15;
+            currentRound = 0;
+            updateHeaderUI();
+            loadRound(currentRound);
+
+            document.getElementById('startModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('codexModal').classList.add('hidden');
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = score;
+            document.getElementById('purityText').innerText = purity + '%';
+            document.getElementById('levelText').innerText = `${currentRound + 1} / ${MORINGA_QUESTS.length}`;
+        }
+
+        function loadRound(roundIdx) {
+            if (roundIdx >= MORINGA_QUESTS.length) {
+                endGame();
+                return;
+            }
+
+            updateHeaderUI();
+
+            const quest = MORINGA_QUESTS[roundIdx];
+
+            document.getElementById('stepTitleText').innerText = quest.stepTitle;
+            document.getElementById('questInstruction').innerText = quest.instruction;
+            document.getElementById('subHintText').innerText = quest.hint;
+            document.getElementById('quizQuestion').innerText = quest.question;
+            document.getElementById('tankStatusText').innerText = quest.status;
+
+            renderQuizOptions(quest);
+            initParticles();
+        }
+
+        function renderQuizOptions(quest) {
+            const container = document.getElementById('actionButtonsContainer');
+            container.innerHTML = '';
+
+            const shuffledOpts = [...quest.options].sort(() => Math.random() - 0.5);
+
+            shuffledOpts.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = "group bg-gradient-to-b from-slate-900/90 to-teal-950/80 hover:from-teal-900/90 hover:to-teal-950/95 border-2 border-teal-700/60 hover:border-teal-300 rounded-xl p-2.5 text-left transition-all shadow-md hover:scale-[1.02] active:scale-95 flex flex-col justify-between cursor-pointer";
+
+                btn.innerHTML = `
+                    <div class="font-bold text-teal-200 text-xs sm:text-sm mb-0.5 font-calligraphy group-hover:text-teal-100 text-glow-teal">${opt.title}</div>
+                    <p class="text-[11px] text-cyan-200/80 leading-snug">${opt.desc}</p>
+                `;
+
+                btn.addEventListener('click', () => handleOptionClick(opt, quest, btn));
+                container.appendChild(btn);
+            });
+        }
+
+        function handleOptionClick(selectedOpt, quest, btnElement) {
+            sounds.init();
+
+            if (selectedOpt.isCorrect) {
+                sounds.playClarify();
+                triggerPourAnimation();
+
+                score += 120;
+                purity = Math.min(100, purity + selectedOpt.boostPurity);
+                updateHeaderUI();
+
+                btnElement.classList.add('border-teal-300', 'teal-glow');
+                showToast(`✅ 正確！${quest.explanation}`);
+
+                setTimeout(() => {
+                    currentRound++;
+                    loadRound(currentRound);
+                }, 1800);
+            } else {
+                sounds.playMistake();
+                btnElement.classList.add('border-rose-500/80');
+                showToast(`❌ 選擇未合！${quest.explanation}`);
+
+                setTimeout(() => {
+                    btnElement.classList.remove('border-rose-500/80');
+                }, 900);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('gameToast');
+            const toastText = document.getElementById('toastText');
+            toastText.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 1800);
+        }
+
+        function endGame() {
+            sounds.playWin();
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalPurity').innerText = purity + '%';
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        window.addEventListener('load', () => {
+            resizeWaterCanvas();
+            drawWaterScene();
+            window.addEventListener('resize', resizeWaterCanvas);
+
+            document.getElementById('btnStartGame').addEventListener('click', () => {
+                sounds.init();
+                startNewGame();
+            });
+
+            document.getElementById('btnRestart').addEventListener('click', () => {
+                startNewGame();
+            });
+
+            const openCodex = () => {
+                document.getElementById('codexModal').classList.remove('hidden');
+            };
+            const closeCodex = () => {
+                document.getElementById('codexModal').classList.add('hidden');
+            };
+
+            document.getElementById('btnCodex').addEventListener('click', openCodex);
+            document.getElementById('btnOpenCodexEnd').addEventListener('click', openCodex);
+            document.getElementById('btnCloseCodex').addEventListener('click', closeCodex);
+            document.getElementById('btnConfirmCodex').addEventListener('click', closeCodex);
+
+            const btnSound = document.getElementById('btnSound');
+            const soundOnIcon = document.getElementById('soundOnIcon');
+            const soundOffIcon = document.getElementById('soundOffIcon');
+
+            btnSound.addEventListener('click', () => {
+                sounds.enabled = !sounds.enabled;
+                if (sounds.enabled) {
+                    soundOnIcon.classList.remove('hidden');
+                    soundOffIcon.classList.add('hidden');
+                } else {
+                    soundOnIcon.classList.add('hidden');
+                    soundOffIcon.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

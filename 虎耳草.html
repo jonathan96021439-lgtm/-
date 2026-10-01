@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【耳畔荷包】虎耳草圖鑑拼圖與耳疾療愈遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #03140e;
+            color: #ecfdf5;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .emerald-glow {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        }
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+        }
+        .text-glow-emerald {
+            text-shadow: 0 0 14px rgba(52, 211, 153, 0.85);
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 12px rgba(250, 204, 21, 0.85);
+        }
+        .puzzle-slot {
+            transition: all 0.25s ease;
+            background: rgba(6, 44, 30, 0.7);
+            border: 2px dashed rgba(52, 211, 153, 0.4);
+        }
+        .puzzle-slot.slot-highlight {
+            border-color: #fbbf24 !important;
+            background: rgba(251, 191, 36, 0.2) !important;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+            transform: scale(1.02);
+        }
+        .puzzle-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+        .puzzle-card:hover {
+            transform: translateY(-3px) scale(1.03);
+        }
+        .piece-dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .step-tab-active {
+            background-color: #059669;
+            color: #ffffff;
+            border-color: #34d399;
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+        }
+        .step-tab-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.04); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+        }
+        .animate-float-heart {
+            animation: floatUp 1.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-emerald-950 text-emerald-50 flex flex-col justify-between overflow-hidden">
+
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-emerald-900/80 border border-emerald-500/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 emerald-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-emerald-300/80 block font-medium">療癒積分 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-emerald-300 font-mono text-glow-emerald">0</span>
+            </div>
+            <div class="h-8 w-px bg-emerald-700/50"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-emerald-300/80 block font-medium">耳疾痊癒 Healed</span>
+                <span id="healedText" class="text-xl sm:text-2xl font-semibold text-amber-300 font-mono text-glow-gold">0 / 3</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-teal-800/80 hover:bg-teal-700 text-teal-100 border border-teal-400/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往動物耳診所 🩺</span>
+            </button>
+            <button id="btnCodex" class="bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-400/50 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📖 虎耳典籍
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: BOTANICAL JIGSAW PUZZLE SECTION -->
+        <section id="phasePuzzle" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-emerald-200 text-glow-emerald">【耳畔荷包】虎耳草圖鑑拼圖</h1>
+                <p class="text-xs sm:text-sm text-emerald-300/80 mt-1">請將下方植物特徵卡片拼入對應位置，復原虎耳草之美</p>
+            </div>
+
+            <div class="w-full max-w-2xl bg-emerald-900/40 border border-emerald-500/40 backdrop-blur-md p-3 sm:p-5 rounded-3xl emerald-glow flex flex-col gap-4">
+                <div class="flex justify-between items-center text-xs font-bold text-emerald-300 px-1">
+                    <span>🧩 圖鑑槽位 （點選下方卡片後再點擊槽位，或直接拖拽）</span>
+                    <span id="puzzleProgressText" class="text-amber-300 font-mono">0 / 4 塊</span>
+                </div>
+
+                <!-- 2x2 Target Grid -->
+                <div id="puzzleGrid" class="grid grid-cols-2 gap-3 w-full">
+                    <!-- Slot 0 -->
+                    <div data-slot="0" class="puzzle-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden group cursor-pointer">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🍃</span>
+                            <span class="text-xs sm:text-sm text-emerald-300/80 font-bold">① 虎耳斑紋葉</span>
+                            <span class="text-[10px] text-emerald-400/60 block">圓心形、白斑紋、背紫紅</span>
+                        </div>
+                    </div>
+                    <!-- Slot 1 -->
+                    <div data-slot="1" class="puzzle-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden group cursor-pointer">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🦋</span>
+                            <span class="text-xs sm:text-sm text-emerald-300/80 font-bold">② 飛蛾狀小白花</span>
+                            <span class="text-[10px] text-emerald-400/60 block">下二瓣延長如飛蛾雙翅</span>
+                        </div>
+                    </div>
+                    <!-- Slot 2 -->
+                    <div data-slot="2" class="puzzle-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden group cursor-pointer">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🌱</span>
+                            <span class="text-xs sm:text-sm text-emerald-300/80 font-bold">③ 紅絲匍匐莖</span>
+                            <span class="text-[10px] text-emerald-400/60 block">細長紫色匍匐枝生根繁殖</span>
+                        </div>
+                    </div>
+                    <!-- Slot 3 -->
+                    <div data-slot="3" class="puzzle-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden group cursor-pointer">
+                        <div class="text-center pointer-events-none">
+                            <span class="text-2xl sm:text-3xl opacity-30 block mb-1">🌲</span>
+                            <span class="text-xs sm:text-sm text-emerald-300/80 font-bold">④ 陰濕林下地被</span>
+                            <span class="text-[10px] text-emerald-400/60 block">喜陰濕忌暴曬、高濕度</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Cards Tray -->
+                <div class="mt-2">
+                    <span class="text-xs text-emerald-300/80 font-bold mb-2 block">🌿 待拼湊特徵卡片：</span>
+                    <div id="piecesDock" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-emerald-950/80 border border-emerald-600/50 rounded-2xl p-2.5 backdrop-blur-md min-h-[110px] items-center">
+                        <!-- Dynamic Piece Cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PHASE 2: ANIMAL EAR CLINIC SECTION (UPGRADED PLAYABILITY) -->
+        <section id="phaseClinic" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-amber-200 text-glow-gold">【萬物清涼】動物耳疾診療所</h1>
+                <p class="text-xs sm:text-sm text-emerald-200/90 mt-1">完整體驗「耳鏡探查 ➔ 轉動搗藥 ➔ 拭潔耳道 ➔ 點滴按摩」多步精細療法</p>
+            </div>
+
+            <!-- CLINIC STEP STEPPER NAVBAR -->
+            <div class="w-full max-w-3xl flex items-center justify-around bg-emerald-950/80 border border-emerald-700/60 p-1.5 rounded-2xl text-xs font-bold">
+                <button id="tabStep1" class="step-tab-active flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1">
+                    <span>1. 耳鏡探查</span>
+                </button>
+                <button id="tabStep2" class="step-tab-disabled flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1">
+                    <span>2. 圓周搗藥</span>
+                </button>
+                <button id="tabStep3" class="step-tab-disabled flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1">
+                    <span>3. 拭潔耳道</span>
+                </button>
+                <button id="tabStep4" class="step-tab-disabled flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1">
+                    <span>4. 滴藥消腫</span>
+                </button>
+            </div>
+
+            <div class="w-full max-w-3xl bg-emerald-900/40 border border-emerald-500/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl emerald-glow flex flex-col md:flex-row items-center gap-5">
+                
+                <!-- Patient Interactive View Box -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-emerald-950/80 p-4 rounded-2xl border border-emerald-700/50 relative">
+                    
+                    <!-- Patient Image Canvas Interactive Area -->
+                    <div id="patientStage" class="relative w-52 h-52 sm:w-60 sm:h-60 bg-emerald-900/30 border-2 border-emerald-500/40 rounded-2xl p-2 flex items-center justify-center overflow-hidden cursor-crosshair">
+                        
+                        <!-- Animal SVG Dynamic Layer -->
+                        <div id="animalContainer" class="w-full h-full flex items-center justify-center pointer-events-auto"></div>
+
+                        <!-- Interactive Diagnostic Hotspot Overlay -->
+                        <div id="earScopeOverlay" class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                            <div id="scopeReticle" class="w-16 h-16 rounded-full border-2 border-amber-300 bg-amber-400/20 shadow-lg pointer-events-none hidden items-center justify-center">
+                                <span class="text-[10px] text-amber-200 font-bold bg-black/60 px-1 rounded">探查中</span>
+                            </div>
+                        </div>
+
+                        <!-- Cotton Swab Cursor Tool for Step 3 -->
+                        <div id="swabCursor" class="absolute w-8 h-8 pointer-events-none hidden z-20 -translate-x-1/2 -translate-y-1/2 text-2xl select-none">
+                            🧹
+                        </div>
+
+                        <!-- Floating Feedback Particle Container -->
+                        <div id="effectOverlay" class="absolute inset-0 pointer-events-none overflow-hidden z-10"></div>
+                    </div>
+
+                    <!-- Patient Medical Info Header -->
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span id="animalName" class="text-base font-bold text-amber-300 font-calligraphy">小兔長耳</span>
+                            <span id="patientBadge" class="ml-2 text-[10px] bg-red-950 text-red-300 border border-red-500/50 px-2 py-0.5 rounded-full">風熱耳痛中</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-emerald-300/80 block">耳部炎症度</span>
+                            <div class="w-24 h-2.5 bg-gray-800 rounded-full overflow-hidden border border-emerald-600/40">
+                                <div id="earHeatBar" class="h-full bg-gradient-to-r from-amber-400 to-red-500 transition-all duration-300 w-[90%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p id="clinicInstructionText" class="text-xs text-amber-200 mt-2 bg-amber-950/70 px-3 py-1.5 rounded-xl border border-amber-500/30 w-full text-center">
+                        🔍 步驟一：滑動或點擊小動物發炎的耳朵，進行「耳鏡檢查」！
+                    </p>
+                </div>
+
+                <!-- Treatment Control & Interactive Panel -->
+                <div class="flex-1 w-full flex flex-col items-center justify-between bg-emerald-950/80 p-4 rounded-2xl border border-emerald-700/50 min-h-[280px]">
+                    
+                    <!-- STEP 1 PANEL: DIAGNOSTIC LENS -->
+                    <div id="panelStep1" class="w-full flex flex-col items-center text-center my-auto">
+                        <div class="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-2xl mb-2 animate-bounce">
+                            🔎
+                        </div>
+                        <h4 class="text-sm font-bold text-amber-300">步驟一：耳鏡觀察診斷</h4>
+                        <p id="diagText" class="text-xs text-emerald-200/90 mt-1 max-w-xs">
+                            請在左側小動物耳朵處滑動耳鏡，尋找【風熱紅腫發炎點】。
+                        </p>
+                        <div class="mt-4 w-full bg-emerald-900/60 p-2.5 rounded-xl border border-emerald-700 text-left text-xs space-y-1">
+                            <div class="text-amber-300 font-bold">🩺 診斷報告：</div>
+                            <div id="diagDetailText" class="text-emerald-200 text-[11px]">等待耳鏡掃描中...</div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 PANEL: INTERACTIVE MORTAR GRINDING -->
+                    <div id="panelStep2" class="hidden w-full flex-col items-center text-center my-auto">
+                        <h4 class="text-sm font-bold text-emerald-300 mb-1">步驟二：圓周划動搗碎虎耳草</h4>
+                        <p class="text-[11px] text-emerald-200/80 mb-2">請用手指或滑鼠在石臼中<b>圓周迴旋滑動</b>，碾碎鮮葉榨汁！</p>
+                        
+                        <!-- Interactive Mortar Canvas Area -->
+                        <div class="relative w-36 h-36 flex items-center justify-center cursor-grab active:cursor-grabbing select-none" id="mortarContainer">
+                            <svg class="w-32 h-32 pointer-events-none" viewBox="0 0 100 100">
+                                <!-- Mortar Bowl -->
+                                <path d="M 20 45 C 20 85, 80 85, 80 45 Z" fill="#173e2d" stroke="#34d399" stroke-width="3"/>
+                                <ellipse cx="50" cy="45" rx="30" ry="10" fill="#0d241a" stroke="#34d399" stroke-width="2"/>
+                                <!-- Fresh Green Leaf Pieces -->
+                                <g id="herbLeaves">
+                                    <ellipse cx="45" cy="46" rx="8" ry="4" fill="#22c55e" transform="rotate(15 45 46)"/>
+                                    <ellipse cx="55" cy="45" rx="7" ry="5" fill="#15803d" transform="rotate(-20 55 45)"/>
+                                </g>
+                                <!-- Green Herb Juice Level -->
+                                <ellipse id="herbJuiceLevel" cx="50" cy="47" rx="22" ry="6" fill="#10b981" class="transition-all duration-300 opacity-10"/>
+                                <!-- Pestle Handle -->
+                                <path id="pestleHandle" d="M 68 15 L 45 50" stroke="#a7f3d0" stroke-width="11" stroke-linecap="round" class="transition-transform duration-75 origin-[45px_50px]"/>
+                            </svg>
+                        </div>
+
+                        <!-- Juice Progress Bar -->
+                        <div class="w-full mt-2">
+                            <div class="flex justify-between text-[10px] text-emerald-300 font-bold mb-1">
+                                <span>藥汁濃縮萃取度</span>
+                                <span id="grindPercentText">0%</span>
+                            </div>
+                            <div class="w-full h-3 bg-emerald-950 rounded-full border border-emerald-600/50 overflow-hidden">
+                                <div id="grindProgressBar" class="h-full bg-emerald-400 transition-all duration-150 w-[0%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 PANEL: EAR SWAB CLEANING -->
+                    <div id="panelStep3" class="hidden w-full flex-col items-center text-center my-auto">
+                        <div class="w-14 h-14 rounded-full bg-teal-500/20 border-2 border-teal-400 flex items-center justify-center text-2xl mb-2 animate-pulse">
+                            🧹
+                        </div>
+                        <h4 class="text-sm font-bold text-teal-300">步驟三：清理拭潔耳道</h4>
+                        <p class="text-xs text-emerald-200/90 mt-1 max-w-xs">
+                            請點擊或拖擦小動物耳部的<b>黃斑分泌物</b>，將耳道清潔乾淨以利藥汁吸收。
+                        </p>
+                        <div class="w-full mt-3 bg-emerald-900/60 p-2 rounded-xl border border-emerald-700/80 text-xs font-bold text-amber-300 text-center">
+                            耳道清潔度：<span id="cleanProgressText" class="text-white font-mono">0 / 3 處</span>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4 PANEL: DROPPER & MASSAGE -->
+                    <div id="panelStep4" class="hidden w-full flex-col items-center text-center my-auto">
+                        <div class="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-2xl mb-2 animate-bounce">
+                            💧
+                        </div>
+                        <h4 class="text-sm font-bold text-amber-300">步驟四：滴入鮮藥汁並按摩敷撫</h4>
+                        <p class="text-xs text-emerald-200/90 mt-1 max-w-xs">
+                            點擊【滴藥】按鈕將濃汁滴入患處，隨後在耳朵處<b>撫摸按摩</b>助其祛風涼血！
+                        </p>
+                        
+                        <div class="mt-3 w-full space-y-2">
+                            <button id="btnTriggerDrop" class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer transition-all shadow-lg gold-glow flex items-center justify-center gap-2">
+                                💧 點滴濃綠虎耳草汁 (0 / 2 滴)
+                            </button>
+                            <div id="massageHint" class="hidden text-xs font-bold text-emerald-300 animate-pulse bg-emerald-900/80 p-2 rounded-xl border border-emerald-500">
+                                ✋ 請在耳部輕柔滑動撫摸按摩消腫...
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-emerald-950 border border-emerald-400/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto emerald-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-emerald-400 hover:text-emerald-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-emerald-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-emerald-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-800/80 border border-emerald-400 flex items-center justify-center text-2xl">🌿</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-amber-300">虎耳草（Saxifraga stolonifera）典籍</h2>
+                    <p class="text-xs text-emerald-300/80">別名：金絲荷包、耳畔荷包、錦耳草、老虎耳</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
+                <div class="bg-emerald-900/40 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🍃 形態特徵（如虎耳與飛蛾）</h3>
+                    <p>葉片呈圓心形，邊緣有波狀淺裂，葉面具清晰的白色網狀斑紋，形似老虎耳朵；背部常呈紫紅色。夏季抽出細長紫紅色的匍匐莖，開小白花，花瓣5片，下方兩片特別伸長如雙翼飛蛾。</p>
+                </div>
+
+                <div class="bg-emerald-900/40 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-emerald-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 傳統藥用價值（搗汁滴耳）</h3>
+                    <p>性微苦、辛、寒，歸肺、脾經。具<b>祛風清熱、涼血解毒</b>之效。民間傳統常用新鮮鮮葉洗淨搗爛，<b>取汁滴入耳內，治療急慢性中耳炎（耳疾）</b>，能迅速消腫止痛。</p>
+                </div>
+
+                <div class="bg-emerald-900/40 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-teal-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植與養護建議</h3>
+                    <p>喜<b>陰濕涼爽環境</b>，極其適合做林下地被或室內陰面盆栽。忌強光暴曬，土壤需保持濕潤且排水良好。生長季會抽出大量紅絲狀匍匐莖，接觸土壤即可生根繁殖。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">領悟本草奧秘</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-emerald-900/95 border border-emerald-400 text-emerald-100 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine') {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playSnap() {
+                this.init();
+                this.playTone(523.25, 0.15, 'sine'); // C5
+                setTimeout(() => this.playTone(659.25, 0.2, 'sine'), 80); // E5
+            }
+            playGrind() {
+                this.init();
+                this.playTone(180 + Math.random() * 60, 0.08, 'triangle');
+            }
+            playDrip() {
+                this.init();
+                this.playTone(800, 0.08, 'sine');
+                setTimeout(() => this.playTone(1200, 0.12, 'sine'), 60);
+            }
+            playClean() {
+                this.init();
+                this.playTone(350, 0.06, 'sine');
+            }
+            playHeal() {
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+                notes.forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 0.25, 'sine'), i * 100);
+                });
+            }
+            playMistake() {
+                this.init();
+                this.playTone(200, 0.2, 'sawtooth');
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const PUZZLE_DATA = [
+            {
+                id: 0,
+                title: '虎耳斑紋葉',
+                desc: '圓心形葉片，白色虎紋斑，背面紫紅',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <circle cx="50" cy="50" r="42" fill="#14532d" stroke="#34d399" stroke-width="2.5"/>
+                    <path d="M 50 82 Q 50 50 50 12 M 50 50 Q 25 30 12 40 M 50 50 Q 75 30 88 40 M 50 60 Q 20 65 15 75 M 50 60 Q 80 65 85 75" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 50 8 C 30 8 10 25 10 50 C 10 75 30 92 50 92 C 70 92 90 75 90 50 C 90 25 70 8 50 8 Z" fill="none" stroke="#059669" stroke-width="2" stroke-dasharray="3,3"/>
+                </svg>`
+            },
+            {
+                id: 1,
+                title: '飛蛾狀小白花',
+                desc: '五花瓣，上方三短帶紅點，下方二瓣延長如飛蛾雙翅',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 50 90 Q 48 60 50 35" fill="none" stroke="#f43f5e" stroke-width="2.5"/>
+                    <ellipse cx="50" cy="22" rx="5" ry="9" fill="#ffffff" stroke="#e2e8f0"/>
+                    <circle cx="50" cy="20" r="1.5" fill="#ef4444"/>
+                    <ellipse cx="40" cy="28" rx="5" ry="8" fill="#ffffff" stroke="#e2e8f0" transform="rotate(-40 40 28)"/>
+                    <ellipse cx="60" cy="28" rx="5" ry="8" fill="#ffffff" stroke="#e2e8f0" transform="rotate(40 60 28)"/>
+                    <path d="M 47 35 C 35 50 20 70 22 85 C 28 85 42 60 49 38 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                    <path d="M 53 35 C 65 50 80 70 78 85 C 72 85 58 60 51 38 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+                    <circle cx="50" cy="33" r="3" fill="#facc15"/>
+                </svg>`
+            },
+            {
+                id: 2,
+                title: '紅絲匍匐莖',
+                desc: '紫色細長匍匐莖，觸地即可生根長出新株',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 10 75 Q 35 25 65 60 T 95 30" fill="none" stroke="#e11d48" stroke-width="3.5" stroke-linecap="round"/>
+                    <circle cx="65" cy="60" r="8" fill="#15803d" stroke="#f43f5e" stroke-width="2"/>
+                    <path d="M 65 68 L 65 78 M 62 76 L 68 76" stroke="#fbbf24" stroke-width="2"/>
+                </svg>`
+            },
+            {
+                id: 3,
+                title: '陰濕林下地被',
+                desc: '喜陰涼潮濕，忌太陽暴曬，為理想綠化地被',
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <path d="M 5 70 Q 50 60 95 70 L 95 95 L 5 95 Z" fill="#271c19"/>
+                    <path d="M 10 72 Q 30 50 50 68 Q 70 52 90 72 Z" fill="#047857"/>
+                    <path d="M 25 72 Q 45 58 65 72 Z" fill="#10b981"/>
+                    <circle cx="35" cy="62" r="2.5" fill="#38bdf8"/>
+                    <circle cx="60" cy="60" r="2" fill="#38bdf8"/>
+                </svg>`
+            }
+        ];
+
+        const PATIENTS = [
+            {
+                name: '小兔長耳',
+                diagSummary: '患急性風熱中耳炎，耳廓紅腫高熱，耳道有分泌黃汁。',
+                svgSick: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="28" ry="20" fill="#f8fafc"/>
+                    <circle cx="50" cy="50" r="20" fill="#f8fafc"/>
+                    <ellipse cx="36" cy="22" rx="6" ry="18" fill="#f8fafc" stroke="#e2e8f0" transform="rotate(-10 36 22)"/>
+                    <ellipse cx="36" cy="22" rx="3.5" ry="12" fill="#fbcfe8" transform="rotate(-10 36 22)"/>
+                    <g id="earRightTarget">
+                        <ellipse cx="64" cy="22" rx="9" ry="20" fill="#fca5a5" stroke="#ef4444" stroke-width="2.5" transform="rotate(15 64 22)"/>
+                        <ellipse cx="64" cy="22" rx="5" ry="14" fill="#f87171" transform="rotate(15 64 22)"/>
+                        <circle cx="64" cy="20" r="12" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2,2" class="animate-ping"/>
+                        
+                        <!-- Enlarged Touch Hitboxes for Dirts -->
+                        <g id="dirt1" class="cursor-pointer">
+                            <circle cx="62" cy="18" r="9" fill="transparent"/>
+                            <circle cx="62" cy="18" r="3.5" fill="#eab308"/>
+                        </g>
+                        <g id="dirt2" class="cursor-pointer">
+                            <circle cx="66" cy="24" r="9" fill="transparent"/>
+                            <circle cx="66" cy="24" r="3" fill="#ca8a04"/>
+                        </g>
+                        <g id="dirt3" class="cursor-pointer">
+                            <circle cx="60" cy="26" r="9" fill="transparent"/>
+                            <circle cx="60" cy="26" r="2.5" fill="#eab308"/>
+                        </g>
+                    </g>
+                    <circle cx="43" cy="46" r="2" fill="#1e293b"/>
+                    <circle cx="57" cy="46" r="2" fill="#1e293b"/>
+                    <polygon points="50,51 47,54 53,54" fill="#f43f5e"/>
+                    <path d="M 44 57 Q 50 54 56 57" stroke="#64748b" stroke-width="1.5" fill="none"/>
+                </svg>`,
+                svgHealthy: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="28" ry="20" fill="#f8fafc"/>
+                    <circle cx="50" cy="50" r="20" fill="#f8fafc"/>
+                    <ellipse cx="36" cy="22" rx="6" ry="18" fill="#f8fafc" stroke="#e2e8f0" transform="rotate(-10 36 22)"/>
+                    <ellipse cx="36" cy="22" rx="3.5" ry="12" fill="#fbcfe8" transform="rotate(-10 36 22)"/>
+                    <ellipse cx="64" cy="22" rx="6" ry="18" fill="#f8fafc" stroke="#e2e8f0" transform="rotate(10 64 22)"/>
+                    <ellipse cx="64" cy="22" rx="3.5" ry="12" fill="#fbcfe8" transform="rotate(10 64 22)"/>
+                    <circle cx="43" cy="46" r="2.5" fill="#1e293b"/>
+                    <circle cx="57" cy="46" r="2.5" fill="#1e293b"/>
+                    <polygon points="50,51 47,54 53,54" fill="#f43f5e"/>
+                    <path d="M 44 55 Q 50 60 56 55" stroke="#10b981" stroke-width="2" fill="none"/>
+                </svg>`
+            },
+            {
+                name: '狐狸赤尾',
+                diagSummary: '山林濕熱侵襲耳道，引起嚴重瘙癢紅腫與異味。',
+                svgSick: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="28" ry="20" fill="#ea580c"/>
+                    <circle cx="50" cy="50" r="20" fill="#ea580c"/>
+                    <polygon points="50,60 38,48 62,48" fill="#ffffff"/>
+                    <polygon points="32,40 22,18 40,32" fill="#ea580c"/>
+                    <g id="earRightTarget">
+                        <polygon points="68,40 78,16 60,32" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                        <circle cx="70" cy="26" r="10" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2,2" class="animate-ping"/>
+                        <g id="dirt1" class="cursor-pointer">
+                            <circle cx="68" cy="25" r="9" fill="transparent"/>
+                            <circle cx="68" cy="25" r="3.5" fill="#eab308"/>
+                        </g>
+                        <g id="dirt2" class="cursor-pointer">
+                            <circle cx="72" cy="22" r="9" fill="transparent"/>
+                            <circle cx="72" cy="22" r="3" fill="#ca8a04"/>
+                        </g>
+                        <g id="dirt3" class="cursor-pointer">
+                            <circle cx="66" cy="30" r="9" fill="transparent"/>
+                            <circle cx="66" cy="30" r="2.5" fill="#eab308"/>
+                        </g>
+                    </g>
+                    <circle cx="43" cy="46" r="2" fill="#0f172a"/>
+                    <circle cx="57" cy="46" r="2" fill="#0f172a"/>
+                    <circle cx="50" cy="53" r="2.5" fill="#0f172a"/>
+                    <path d="M 45 58 Q 50 55 55 58" stroke="#0f172a" stroke-width="1.5" fill="none"/>
+                </svg>`,
+                svgHealthy: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="28" ry="20" fill="#ea580c"/>
+                    <circle cx="50" cy="50" r="20" fill="#ea580c"/>
+                    <polygon points="50,60 38,48 62,48" fill="#ffffff"/>
+                    <polygon points="32,40 22,18 40,32" fill="#ea580c"/>
+                    <polygon points="68,40 78,18 60,32" fill="#ea580c"/>
+                    <circle cx="43" cy="46" r="2.5" fill="#0f172a"/>
+                    <circle cx="57" cy="46" r="2.5" fill="#0f172a"/>
+                    <circle cx="50" cy="53" r="2.5" fill="#0f172a"/>
+                    <path d="M 44 56 Q 50 62 56 56" stroke="#10b981" stroke-width="2" fill="none"/>
+                </svg>`
+            },
+            {
+                name: '小熊棕棕',
+                diagSummary: '溪邊玩水耳道積水發炎，腫脹堵塞，聽力受阻。',
+                svgSick: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="32" ry="22" fill="#78350f"/>
+                    <circle cx="50" cy="48" r="22" fill="#78350f"/>
+                    <circle cx="32" cy="30" r="8" fill="#78350f"/>
+                    <circle cx="32" cy="30" r="4" fill="#b45309"/>
+                    <g id="earRightTarget">
+                        <circle cx="68" cy="30" r="11" fill="#ef4444" stroke="#991b1b" stroke-width="2"/>
+                        <circle cx="68" cy="30" r="6" fill="#f87171"/>
+                        <circle cx="68" cy="30" r="14" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2,2" class="animate-ping"/>
+                        <g id="dirt1" class="cursor-pointer">
+                            <circle cx="66" cy="28" r="9" fill="transparent"/>
+                            <circle cx="66" cy="28" r="3.5" fill="#eab308"/>
+                        </g>
+                        <g id="dirt2" class="cursor-pointer">
+                            <circle cx="70" cy="32" r="9" fill="transparent"/>
+                            <circle cx="70" cy="32" r="3" fill="#ca8a04"/>
+                        </g>
+                        <g id="dirt3" class="cursor-pointer">
+                            <circle cx="68" cy="34" r="9" fill="transparent"/>
+                            <circle cx="68" cy="34" r="2.5" fill="#eab308"/>
+                        </g>
+                    </g>
+                    <ellipse cx="50" cy="52" rx="10" ry="7" fill="#fde68a"/>
+                    <circle cx="43" cy="45" r="2" fill="#1e293b"/>
+                    <circle cx="57" cy="45" r="2" fill="#1e293b"/>
+                    <circle cx="50" cy="50" r="3" fill="#1e293b"/>
+                    <path d="M 45 56 Q 50 53 55 56" stroke="#78350f" stroke-width="1.5" fill="none"/>
+                </svg>`,
+                svgHealthy: `<svg viewBox="0 0 100 100" class="w-full h-full">
+                    <ellipse cx="50" cy="72" rx="32" ry="22" fill="#78350f"/>
+                    <circle cx="50" cy="48" r="22" fill="#78350f"/>
+                    <circle cx="32" cy="30" r="8" fill="#78350f"/>
+                    <circle cx="32" cy="30" r="4" fill="#b45309"/>
+                    <circle cx="68" cy="30" r="8" fill="#78350f"/>
+                    <circle cx="68" cy="30" r="4" fill="#b45309"/>
+                    <ellipse cx="50" cy="52" rx="10" ry="7" fill="#fde68a"/>
+                    <circle cx="43" cy="45" r="2.5" fill="#1e293b"/>
+                    <circle cx="57" cy="45" r="2.5" fill="#1e293b"/>
+                    <circle cx="50" cy="50" r="3" fill="#1e293b"/>
+                    <path d="M 45 55 Q 50 60 55 55" stroke="#10b981" stroke-width="2" fill="none"/>
+                </svg>`
+            }
+        ];
+
+        let state = {
+            score: 0,
+            healedCount: 0,
+            puzzlePlaced: [false, false, false, false],
+            selectedPieceId: null,
+            currentPhase: 'puzzle', // 'puzzle' | 'clinic'
+            
+            // Clinic Interactive State
+            clinicStep: 1, // 1: Scope, 2: Grind, 3: Clean, 4: Drop/Massage
+            currentPatientIdx: 0,
+            scopeFound: false,
+            grindPercent: 0,
+            lastGrindAngle: null,
+            cleanedDirts: [false, false, false],
+            dropsCount: 0,
+            massageProgress: 0,
+            isHealthy: false
+        };
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1 + Math.random() * 2.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: -0.2 - Math.random() * 0.4,
+                    alpha: 0.2 + Math.random() * 0.6
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(52, 211, 153, ${p.alpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2500);
+        }
+
+        function renderPuzzleDock() {
+            const dock = document.getElementById('piecesDock');
+            dock.innerHTML = '';
+
+            let remaining = 0;
+            PUZZLE_DATA.forEach(piece => {
+                if (!state.puzzlePlaced[piece.id]) {
+                    remaining++;
+                    const card = document.createElement('div');
+                    card.className = `puzzle-card p-2 bg-emerald-900/80 hover:bg-emerald-800/90 border-2 ${state.selectedPieceId === piece.id ? 'border-amber-400 gold-glow scale-105' : 'border-emerald-600/60'} rounded-xl flex flex-col items-center justify-between text-center select-none cursor-grab active:cursor-grabbing`;
+                    card.setAttribute('draggable', 'true');
+                    card.dataset.id = piece.id;
+
+                    card.innerHTML = `
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 pointer-events-none">${piece.svg}</div>
+                        <span class="text-[11px] sm:text-xs font-bold text-emerald-200 mt-1 pointer-events-none">${piece.title}</span>
+                    `;
+
+                    card.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        sound.init();
+                        state.selectedPieceId = (state.selectedPieceId === piece.id) ? null : piece.id;
+                        renderPuzzleDock();
+                        highlightSlots();
+                        if (state.selectedPieceId !== null) {
+                            showToast(`已選取【${piece.title}】，請點擊上方對應框或直接拖拽！`);
+                        }
+                    });
+
+                    card.addEventListener('dragstart', (e) => {
+                        sound.init();
+                        state.selectedPieceId = piece.id;
+                        card.classList.add('piece-dragging');
+                        e.dataTransfer.setData('text/plain', piece.id.toString());
+                        highlightSlots();
+                    });
+
+                    card.addEventListener('dragend', () => {
+                        card.classList.remove('piece-dragging');
+                        clearSlotHighlights();
+                    });
+
+                    dock.appendChild(card);
+                }
+            });
+
+            if (remaining === 0) {
+                dock.parentElement.innerHTML = `
+                    <button id="btnGotoClinic" class="w-full py-3 bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-xl hover:scale-105 transition-all cursor-pointer animate-pulse">
+                        🎉 虎耳草圖鑑拼湊完成！立即前往【動物耳診所】治療耳疾 ➔
+                    </button>
+                `;
+                document.getElementById('btnGotoClinic').addEventListener('click', switchToClinic);
+            }
+        }
+
+        function highlightSlots() {
+            clearSlotHighlights();
+            if (state.selectedPieceId !== null) {
+                const targetSlot = document.querySelector(`.puzzle-slot[data-slot="${state.selectedPieceId}"]`);
+                if (targetSlot && !state.puzzlePlaced[state.selectedPieceId]) {
+                    targetSlot.classList.add('slot-highlight');
+                }
+            }
+        }
+
+        function clearSlotHighlights() {
+            document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('slot-highlight'));
+        }
+
+        function tryPlacePiece(pieceId, slotIdx) {
+            if (pieceId === null || isNaN(slotIdx)) return;
+
+            if (pieceId === slotIdx) {
+                sound.playSnap();
+                state.puzzlePlaced[slotIdx] = true;
+                state.score += 150;
+                state.selectedPieceId = null;
+
+                const piece = PUZZLE_DATA[slotIdx];
+                const slot = document.querySelector(`.puzzle-slot[data-slot="${slotIdx}"]`);
+                slot.className = "puzzle-slot aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden bg-emerald-900/90 border-2 border-emerald-400 emerald-glow transition-all";
+                
+                slot.innerHTML = `
+                    <div class="flex flex-col items-center justify-center text-center w-full h-full p-1 animate-bounce">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 mb-0.5">${piece.svg}</div>
+                        <span class="text-xs font-bold text-emerald-200 font-calligraphy">${piece.title}</span>
+                        <span class="text-[10px] text-emerald-400 font-mono">✅ 正確歸位</span>
+                    </div>
+                `;
+
+                updateHeaderUI();
+                const count = state.puzzlePlaced.filter(Boolean).length;
+                document.getElementById('puzzleProgressText').innerText = `${count} / 4 塊`;
+                showToast(`🎉 成功歸位【${piece.title}】！`, '🌿');
+                renderPuzzleDock();
+            } else {
+                sound.playMistake();
+                showToast(`⚠️ 位置不符！【${PUZZLE_DATA[pieceId].title}】應放入對應圖案槽位`, '❌');
+            }
+            clearSlotHighlights();
+        }
+
+        function setupPuzzleSlots() {
+            const slots = document.querySelectorAll('.puzzle-slot');
+            slots.forEach(slot => {
+                slot.addEventListener('click', () => {
+                    const slotIdx = parseInt(slot.dataset.slot);
+                    if (state.puzzlePlaced[slotIdx]) return;
+
+                    if (state.selectedPieceId !== null) {
+                        tryPlacePiece(state.selectedPieceId, slotIdx);
+                    } else {
+                        showToast(`請先在下方選取特徵卡片！`, '👇');
+                    }
+                });
+
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    slot.classList.add('slot-highlight');
+                });
+
+                slot.addEventListener('dragleave', () => {
+                    slot.classList.remove('slot-highlight');
+                });
+
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('slot-highlight');
+                    const pieceId = parseInt(e.dataTransfer.getData('text/plain'));
+                    const slotIdx = parseInt(slot.dataset.slot);
+                    tryPlacePiece(pieceId, slotIdx);
+                });
+            });
+        }
+
+        function setClinicStep(step) {
+            state.clinicStep = step;
+            
+            // Tab visual update
+            for (let i = 1; i <= 4; i++) {
+                const tab = document.getElementById(`tabStep${i}`);
+                const panel = document.getElementById(`panelStep${i}`);
+
+                if (i === step) {
+                    tab.className = "step-tab-active flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer";
+                    panel.classList.remove('hidden');
+                    panel.classList.add('flex');
+                } else if (i < step) {
+                    tab.className = "bg-emerald-800/80 text-emerald-200 flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer";
+                    panel.classList.add('hidden');
+                    panel.classList.remove('flex');
+                } else {
+                    tab.className = "step-tab-disabled flex-1 py-1.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1";
+                    panel.classList.add('hidden');
+                    panel.classList.remove('flex');
+                }
+            }
+
+            const p = PATIENTS[state.currentPatientIdx];
+            const textEl = document.getElementById('clinicInstructionText');
+
+            if (step === 1) {
+                textEl.innerHTML = "🔍 <b>步驟一</b>：在小動物耳朵處滑動或點擊，進行耳鏡掃描！";
+            } else if (step === 2) {
+                textEl.innerHTML = "🥣 <b>步驟二</b>：在右側石臼中<b>圓周迴旋划動</b>，榨取濃綠虎耳草汁！";
+            } else if (step === 3) {
+                textEl.innerHTML = "🧹 <b>步驟三</b>：點擊或擦拭耳部的<b>黃色分泌物</b>，清潔耳道！";
+            } else if (step === 4) {
+                textEl.innerHTML = "💧 <b>步驟四</b>：點擊按鈕滴入虎耳草汁，並在耳朵上<b>撫摸按摩消腫</b>！";
+            }
+        }
+
+        function renderPatient() {
+            const patient = PATIENTS[state.currentPatientIdx];
+            const container = document.getElementById('animalContainer');
+            
+            container.innerHTML = state.isHealthy ? patient.svgHealthy : patient.svgSick;
+            document.getElementById('animalName').innerText = patient.name;
+
+            const badge = document.getElementById('patientBadge');
+            if (state.isHealthy) {
+                badge.className = "ml-2 text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "✨ 已痊癒康復";
+                document.getElementById('earHeatBar').style.width = "0%";
+            } else {
+                badge.className = "ml-2 text-[10px] bg-red-950 text-red-300 border border-red-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "風熱耳痛中";
+                document.getElementById('earHeatBar').style.width = "90%";
+            }
+
+            // Re-bind dirt cleanup events if step 3
+            if (!state.isHealthy && state.clinicStep === 3) {
+                bindDirtEvents();
+            }
+        }
+
+        // STEP 1: SCOPE DIAGNOSIS
+        function setupScopeInteraction() {
+            const stage = document.getElementById('patientStage');
+            const reticle = document.getElementById('scopeReticle');
+
+            const handleMove = (e) => {
+                if (state.clinicStep !== 1 || state.scopeFound) return;
+                const rect = stage.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                reticle.style.display = 'flex';
+                reticle.style.left = `${x - 32}px`;
+                reticle.style.top = `${y - 32}px`;
+
+                // Check if cursor is over right ear area (~ upper right side)
+                if (x > rect.width * 0.52 && x < rect.width * 0.85 && y > rect.height * 0.1 && y < rect.height * 0.45) {
+                    state.scopeFound = true;
+                    sound.playSnap();
+                    showToast("🔎 耳鏡成功發現風熱紅腫發炎點！", "🩺");
+                    document.getElementById('diagDetailText').innerHTML = `<span class="text-amber-300 font-bold">${PATIENTS[state.currentPatientIdx].diagSummary}</span>`;
+                    
+                    setTimeout(() => {
+                        reticle.style.display = 'none';
+                        setClinicStep(2);
+                    }, 1200);
+                }
+            };
+
+            stage.addEventListener('mousemove', handleMove);
+            stage.addEventListener('touchmove', handleMove);
+            stage.addEventListener('click', handleMove);
+        }
+
+        // STEP 2: CIRCULAR GRINDING IN MORTAR
+        function setupMortarInteraction() {
+            const mortar = document.getElementById('mortarContainer');
+            const pestle = document.getElementById('pestleHandle');
+            
+            let isGrinding = false;
+
+            const calcAngle = (e) => {
+                const rect = mortar.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+            };
+
+            const startGrind = (e) => {
+                if (state.clinicStep !== 2) return;
+                isGrinding = true;
+                state.lastGrindAngle = calcAngle(e);
+            };
+
+            const moveGrind = (e) => {
+                if (!isGrinding || state.clinicStep !== 2) return;
+                const currentAngle = calcAngle(e);
+                let diff = Math.abs(currentAngle - state.lastGrindAngle);
+                
+                if (diff > 5 && diff < 180) {
+                    state.grindPercent = Math.min(100, state.grindPercent + diff * 0.35);
+                    state.lastGrindAngle = currentAngle;
+                    
+                    // Visual updates
+                    pestle.style.transform = `rotate(${currentAngle}deg) translate(-5px, 5px)`;
+                    document.getElementById('herbJuiceLevel').style.opacity = (0.1 + state.grindPercent * 0.008).toString();
+                    document.getElementById('grindProgressBar').style.width = `${state.grindPercent}%`;
+                    document.getElementById('grindPercentText').innerText = `${Math.floor(state.grindPercent)}%`;
+
+                    if (Math.random() < 0.3) sound.playGrind();
+
+                    if (state.grindPercent >= 100) {
+                        isGrinding = false;
+                        sound.playHeal();
+                        showToast("✨ 鮮綠虎耳草藥汁研磨提煉完成！", "🌿");
+                        setTimeout(() => {
+                            setClinicStep(3);
+                            renderPatient();
+                        }, 1000);
+                    }
+                }
+            };
+
+            const stopGrind = () => { isGrinding = false; };
+
+            mortar.addEventListener('mousedown', startGrind);
+            mortar.addEventListener('mousemove', moveGrind);
+            window.addEventListener('mouseup', stopGrind);
+
+            mortar.addEventListener('touchstart', startGrind);
+            mortar.addEventListener('touchmove', moveGrind);
+            window.addEventListener('touchend', stopGrind);
+        }
+
+        // STEP 3: DIRTY EAR CLEANUP & SWAB INTERACTION
+        function bindDirtEvents() {
+            const dirts = ['dirt1', 'dirt2', 'dirt3'];
+
+            const clearSingleDirt = (idx) => {
+                if (state.clinicStep !== 3 || state.cleanedDirts[idx]) return;
+
+                const el = document.getElementById(dirts[idx]);
+                if (el) {
+                    sound.playClean();
+                    state.cleanedDirts[idx] = true;
+                    el.style.display = 'none';
+
+                    // Clean particle spark
+                    const overlay = document.getElementById('effectOverlay');
+                    const spark = document.createElement('div');
+                    spark.className = "absolute text-amber-300 font-bold text-xs animate-ping pointer-events-none";
+                    spark.innerText = "✨清潔";
+                    spark.style.right = `${25 + idx * 5}%`;
+                    spark.style.top = `${20 + idx * 4}%`;
+                    overlay.appendChild(spark);
+                    setTimeout(() => spark.remove(), 600);
+
+                    const cleanedCount = state.cleanedDirts.filter(Boolean).length;
+                    document.getElementById('cleanProgressText').innerText = `${cleanedCount} / 3 處`;
+
+                    if (cleanedCount >= 3) {
+                        sound.playSnap();
+                        showToast("✨ 耳道分泌物已全數清潔乾淨！", "🧹");
+                        setTimeout(() => {
+                            setClinicStep(4);
+                        }, 1000);
+                    }
+                }
+            };
+
+            dirts.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        clearSingleDirt(idx);
+                    });
+                    el.addEventListener('touchstart', (e) => {
+                        e.stopPropagation();
+                        clearSingleDirt(idx);
+                    });
+                }
+            });
+
+            // Stage Drag-to-Swab Cleaning logic
+            const stage = document.getElementById('patientStage');
+            const swab = document.getElementById('swabCursor');
+
+            const handleSwabMove = (e) => {
+                if (state.clinicStep !== 3) return;
+                const rect = stage.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                if (swab) {
+                    swab.style.left = `${x}px`;
+                    swab.style.top = `${y}px`;
+                }
+
+                // Swabbing near ear area (~ upper right side) automatically clears nearby dirts
+                dirts.forEach((id, idx) => {
+                    const dirtEl = document.getElementById(id);
+                    if (dirtEl && !state.cleanedDirts[idx]) {
+                        const dRect = dirtEl.getBoundingClientRect();
+                        const dX = dRect.left + dRect.width / 2 - rect.left;
+                        const dY = dRect.top + dRect.height / 2 - rect.top;
+
+                        const dist = Math.hypot(x - dX, y - dY);
+                        if (dist < 35) {
+                            clearSingleDirt(idx);
+                        }
+                    }
+                });
+            };
+
+            stage.addEventListener('mousemove', handleSwabMove);
+            stage.addEventListener('touchmove', handleSwabMove);
+        }
+
+        // STEP 4: DRIPPING & MASSAGE
+        function setupDripAndMassage() {
+            const btnDrop = document.getElementById('btnTriggerDrop');
+            const stage = document.getElementById('patientStage');
+
+            btnDrop.addEventListener('click', () => {
+                if (state.clinicStep !== 4 || state.dropsCount >= 2) return;
+
+                sound.playDrip();
+                state.dropsCount++;
+                btnDrop.innerText = `💧 已滴入鮮藥汁 (${state.dropsCount} / 2 滴)`;
+
+                // Add drop effect on ear
+                const overlay = document.getElementById('effectOverlay');
+                const dropEl = document.createElement('div');
+                dropEl.className = "absolute w-4 h-4 rounded-full bg-emerald-400 border border-white animate-ping";
+                dropEl.style.right = "28%";
+                dropEl.style.top = "20%";
+                overlay.appendChild(dropEl);
+
+                setTimeout(() => dropEl.remove(), 800);
+
+                if (state.dropsCount >= 2) {
+                    btnDrop.disabled = true;
+                    btnDrop.className = "w-full py-2 px-4 rounded-xl font-bold text-xs bg-gray-800 text-gray-500 cursor-not-allowed";
+                    document.getElementById('massageHint').classList.remove('hidden');
+                }
+            });
+
+            // Massage Touch/Mouse interaction
+            let isMassaging = false;
+            const handleMassage = (e) => {
+                if (state.clinicStep !== 4 || state.dropsCount < 2 || state.isHealthy) return;
+
+                state.massageProgress += 5;
+                sound.playClean();
+
+                const bar = document.getElementById('earHeatBar');
+                const heat = Math.max(0, 90 - state.massageProgress);
+                bar.style.width = `${heat}%`;
+
+                // Floating heart effect
+                if (Math.random() < 0.4) {
+                    const overlay = document.getElementById('effectOverlay');
+                    const heart = document.createElement('div');
+                    heart.className = "absolute text-amber-300 font-bold text-sm animate-float-heart";
+                    heart.innerText = "💚 涼血消腫";
+                    heart.style.right = `${22 + Math.random() * 15}%`;
+                    heart.style.top = `${15 + Math.random() * 20}%`;
+                    overlay.appendChild(heart);
+                    setTimeout(() => heart.remove(), 1200);
+                }
+
+                if (state.massageProgress >= 90) {
+                    state.isHealthy = true;
+                    sound.playHeal();
+                    state.score += 300;
+                    state.healedCount++;
+                    updateHeaderUI();
+
+                    renderPatient();
+                    showToast(`🎉 成功治療【${PATIENTS[state.currentPatientIdx].name}】的耳疾！祛風清熱，涼血解毒！`, "🩺");
+
+                    setTimeout(() => {
+                        // Reset Clinic for next patient
+                        state.clinicStep = 1;
+                        state.scopeFound = false;
+                        state.grindPercent = 0;
+                        state.cleanedDirts = [false, false, false];
+                        state.dropsCount = 0;
+                        state.massageProgress = 0;
+                        state.isHealthy = false;
+
+                        state.currentPatientIdx = (state.currentPatientIdx + 1) % PATIENTS.length;
+                        
+                        btnDrop.disabled = false;
+                        btnDrop.className = "w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer transition-all shadow-lg gold-glow flex items-center justify-center gap-2";
+                        btnDrop.innerText = "💧 點滴濃綠虎耳草汁 (0 / 2 滴)";
+                        document.getElementById('massageHint').classList.add('hidden');
+                        document.getElementById('grindProgressBar').style.width = "0%";
+                        document.getElementById('grindPercentText').innerText = "0%";
+                        document.getElementById('herbJuiceLevel').style.opacity = "0.1";
+                        document.getElementById('cleanProgressText').innerText = "0 / 3 處";
+                        document.getElementById('diagDetailText').innerText = "等待耳鏡掃描中...";
+
+                        setClinicStep(1);
+                        renderPatient();
+                    }, 2500);
+                }
+            };
+
+            stage.addEventListener('mousemove', (e) => { if (e.buttons === 1) handleMassage(e); });
+            stage.addEventListener('touchmove', handleMassage);
+        }
+
+        function switchToClinic() {
+            sound.playSnap();
+            state.currentPhase = 'clinic';
+            document.getElementById('phasePuzzle').classList.add('hidden');
+            document.getElementById('phaseClinic').classList.remove('hidden');
+            document.getElementById('phaseClinic').classList.add('flex');
+            document.getElementById('phaseBtnLabel').innerText = "返回圖鑑拼圖 🧩";
+            
+            setClinicStep(1);
+            renderPatient();
+        }
+
+        function switchToPuzzle() {
+            sound.playSnap();
+            state.currentPhase = 'puzzle';
+            document.getElementById('phaseClinic').classList.add('hidden');
+            document.getElementById('phaseClinic').classList.remove('flex');
+            document.getElementById('phasePuzzle').classList.remove('hidden');
+            document.getElementById('phaseBtnLabel').innerText = "前往動物耳診所 🩺";
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            document.getElementById('healedText').innerText = `${state.healedCount} / 3`;
+        }
+
+        function bindEvents() {
+            window.addEventListener('resize', resizeCanvas);
+
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                if (state.currentPhase === 'puzzle') {
+                    switchToClinic();
+                } else {
+                    switchToPuzzle();
+                }
+            });
+
+            // Codex Modal Controls
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playSnap();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+
+            // Step Tab Click Handlers
+            document.getElementById('tabStep1').addEventListener('click', () => setClinicStep(1));
+            document.getElementById('tabStep2').addEventListener('click', () => { if (state.scopeFound) setClinicStep(2); });
+            document.getElementById('tabStep3').addEventListener('click', () => { if (state.grindPercent >= 100) setClinicStep(3); });
+            document.getElementById('tabStep4').addEventListener('click', () => { if (state.cleanedDirts.every(Boolean)) setClinicStep(4); });
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initParticles();
+            animateCanvas();
+
+            setupPuzzleSlots();
+            renderPuzzleDock();
+
+            setupScopeInteraction();
+            setupMortarInteraction();
+            setupDripAndMassage();
+
+            bindEvents();
+        };
+    </script>
+</body>
+</html>

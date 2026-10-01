@@ -1,0 +1,586 @@
+<!DOCTYPE1.0>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>聖若瑟草本園 - 第十四關：金針葉【忘憂解郁】</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background-color: #1a1612;
+      color: #f3ece0;
+      touch-action: manipulation;
+    }
+    
+    .font-calligraphy {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .ink-border {
+      border: 2px solid #8c6d46;
+      box-shadow: 0 0 15px rgba(212, 160, 23, 0.2);
+    }
+
+    .poetry-card {
+      background: linear-gradient(135deg, rgba(45, 33, 20, 0.95), rgba(25, 18, 12, 0.95));
+      border: 1px solid #d4a017;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4 bg-radial-dark">
+
+  <!-- Header Section -->
+  <header class="w-full max-w-4xl flex justify-between items-center border-b border-amber-900/50 pb-3 mb-2">
+    <div>
+      <span class="text-amber-500 text-xs sm:text-sm font-semibold tracking-widest">聖若瑟草本園 · 第十四關</span>
+      <h1 class="text-2xl sm:text-3xl font-calligraphy text-amber-300">金針葉 ── 【忘憂解郁】</h1>
+    </div>
+    <div class="flex gap-2">
+      <button id="btn-tab-game" onclick="switchMode('game')" class="px-3 py-1.5 rounded-lg text-sm bg-amber-700 text-amber-100 hover:bg-amber-600 transition shadow">
+        🌸 採摘考驗
+      </button>
+      <button id="btn-tab-farm" onclick="switchMode('farm')" class="px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition">
+        ☀️ 陽光分株
+      </button>
+      <button onclick="toggleCodex()" class="px-3 py-1.5 rounded-lg text-sm bg-amber-900/60 text-amber-200 hover:bg-amber-800 border border-amber-700/50">
+        📜 典籍
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Container -->
+  <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+    
+    <!-- PHASE 1: 採花時機考驗 -->
+    <div id="section-game" class="w-full flex flex-col items-center gap-3">
+      <div class="w-full flex justify-between items-center bg-stone-900/80 px-4 py-2 rounded-xl border border-amber-900/40 text-xs sm:text-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">時辰：</span>
+          <span id="time-display" class="font-bold text-amber-200">午時 (正午)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400">適採花蕾：</span>
+          <span id="score-display" class="text-amber-300 font-bold text-base">0 / 5</span>
+        </div>
+        <div>
+          <span class="text-amber-400">忘憂心境：</span>
+          <span id="mood-status" class="text-emerald-400 font-semibold">平靜</span>
+        </div>
+      </div>
+
+      <!-- Interactive Canvas -->
+      <div class="relative w-full aspect-[4/3] max-h-[500px] bg-stone-950 rounded-2xl overflow-hidden ink-border">
+        <canvas id="gameCanvas" class="w-full h-full cursor-pointer"></canvas>
+
+        <!-- Dynamic Time Glow Overlay -->
+        <div id="time-overlay" class="absolute inset-0 pointer-events-none transition-colors duration-1000 bg-amber-500/10"></div>
+
+        <!-- Floating Poetry Unlocked Banner -->
+        <div id="poetry-banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 bg-amber-950/90 border border-amber-400 text-amber-200 px-4 py-2 rounded-full text-xs sm:text-sm font-calligraphy shadow-lg animate-bounce">
+          ✨ 成功採摘含苞黃花菜！解鎖古詩詞句...
+        </div>
+      </div>
+
+      <p class="text-xs sm:text-sm text-stone-400 text-center">
+        💡 <strong class="text-amber-300">玩法提示：</strong> 觀察太陽東升西落。請在<strong class="text-amber-400">「黃昏前 (含苞未放)」</strong>點擊採摘黃花菜蕾；開放之花朵已失去藥效！
+      </p>
+    </div>
+
+    <!-- PHASE 2: 陽光分株養護 -->
+    <div id="section-farm" class="hidden w-full flex-col items-center gap-4">
+      <div class="bg-stone-900/90 border border-amber-800 p-4 rounded-xl w-full max-w-xl text-center">
+        <h2 class="text-xl font-calligraphy text-amber-300 mb-2">萱草強健栽植與春秋分株</h2>
+        <p class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-4">
+          金針草性極強健，耐寒耐旱、喜強烈陽光。春秋兩季是最佳的<strong class="text-amber-400">分株繁殖</strong>時機。
+        </p>
+
+        <!-- Plant Dynamic Canvas -->
+        <div class="relative w-full h-56 bg-stone-950 rounded-xl overflow-hidden border border-amber-900/50 mb-4">
+          <canvas id="farmCanvas" class="w-full h-full"></canvas>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="careAction('sun')" class="py-2 px-3 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            ☀️ 補充陽光
+          </button>
+          <button onclick="careAction('split')" class="py-2 px-3 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            🌱 春秋分株
+          </button>
+          <button onclick="careAction('water')" class="py-2 px-3 bg-amber-900/80 hover:bg-amber-800 text-amber-100 rounded-lg text-xs sm:text-sm border border-amber-700/50 transition">
+            💧 適量澆灌
+          </button>
+        </div>
+        <div id="farm-feedback" class="mt-3 text-xs text-amber-400 h-4"></div>
+      </div>
+    </div>
+
+    <!-- Unlocked Poetry Collection Scroll -->
+    <div class="w-full mt-4 bg-stone-900/60 rounded-xl p-3 border border-amber-900/30">
+      <h3 class="text-xs font-semibold text-amber-400 mb-2 flex items-center gap-1">
+        <span>📖 已解鎖忘憂古詩詞</span>
+        <span id="poetry-count" class="text-stone-400 font-normal">(0/3)</span>
+      </h3>
+      <div id="poetry-list" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+        <div class="poetry-card p-2 rounded border border-stone-800 text-stone-600 italic text-center">
+          🔒 採摘 1 朵解鎖《詩經》
+        </div>
+        <div class="poetry-card p-2 rounded border border-stone-800 text-stone-600 italic text-center">
+          🔒 採摘 3 朵解鎖《游子吟》
+        </div>
+        <div class="poetry-card p-2 rounded border border-stone-800 text-stone-600 italic text-center">
+          🔒 採摘 5 朵解鎖《萱草》
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Codex Modal -->
+  <div id="codex-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-stone-900 border-2 border-amber-600 max-w-lg w-full rounded-2xl p-6 relative shadow-2xl">
+      <button onclick="toggleCodex()" class="absolute top-3 right-4 text-stone-400 hover:text-amber-400 text-xl font-bold">&times;</button>
+      <h2 class="text-2xl font-calligraphy text-amber-300 mb-4 border-b border-amber-800 pb-2">金針葉 (萱草) · 本草典籍</h2>
+      
+      <div class="space-y-4 text-xs sm:text-sm text-stone-300">
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌿 特性與用處：</h3>
+          <p class="leading-relaxed">
+            金針菜即萱草/黃花菜的花蕾。古稱「忘憂草」。性味甘平，能<strong class="text-amber-200">清熱利尿、涼血平肝、安神解郁</strong>。可用於舒緩情緒鬱結、失眠不安及平肝明目。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">🌱 種植建議：</h3>
+          <p class="leading-relaxed">
+            性極強健，極具耐寒與耐旱能力；喜全日照陽光，對土壤適應力廣。秋季或春季進行<strong class="text-amber-200">分株繁殖</strong>生長最佳。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-amber-400 font-semibold mb-1">📜 忘憂文化：</h3>
+          <p class="leading-relaxed italic text-amber-200/80">
+            「焉得諼草，言樹之背。」古人常於堂前栽種萱草以慰藉思親與解憂，乃中華傳統慈母與忘憂之花。
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="toggleCodex()" class="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-amber-100 rounded-lg text-sm shadow">
+          領悟並返回
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer Engine
+    class SoundEngine {
+      constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      playPick(success = true) {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        if (success) {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.2);
+        } else {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.25);
+        }
+      }
+    }
+
+    const snd = new SoundEngine();
+
+    // Canvas Setup
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const farmCanvas = document.getElementById('farmCanvas');
+    const farmCtx = farmCanvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      farmCanvas.width = farmCanvas.parentElement.clientWidth;
+      farmCanvas.height = farmCanvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Poetry Database
+    const POETRY = [
+      {
+        req: 1,
+        title: "《詩經·衛風·伯兮》",
+        verse: "焉得諼草，言樹之背。<br>願言思伯，使我心痏。"
+      },
+      {
+        req: 3,
+        title: "《游子吟》孟郊",
+        verse: "慈母倚堂門，萱草生堂階。<br>慈親倚堂門，不見萱草花。"
+      },
+      {
+        req: 5,
+        title: "《萱草》白居易",
+        verse: "杜康能散悶，萱草解忘憂。<br>借問醉何如，何如雲外游。"
+      }
+    ];
+
+    // Game Variables
+    let timeProgress = 0.2; // 0 (Dawn) -> 0.5 (Noon) -> 0.8 (Dusk) -> 1.0 (Night)
+    let pickedCount = 0;
+    let buds = [];
+    let particles = [];
+
+    // Initialize Buds
+    function initBuds() {
+      buds = [];
+      const count = 6;
+      for (let i = 0; i < count; i++) {
+        buds.push({
+          x: 0.15 + (i * 0.14) + (Math.random() * 0.04),
+          y: 0.45 + (Math.random() * 0.2),
+          phaseShift: Math.random() * 0.1, // Bloom slightly offset
+          picked: false,
+          bloomed: false
+        });
+      }
+    }
+
+    // Time cycle labels
+    function getTimeName(t) {
+      if (t < 0.2) return "卯時 (晨曦)";
+      if (t < 0.4) return "巳時 (上午)";
+      if (t < 0.65) return "未時 (午後)";
+      if (t < 0.85) return "申酉時 (黃昏前 - 最佳採摘)";
+      return "戌時 (夜幕降臨)";
+    }
+
+    // Main Game Loop
+    function updateGame() {
+      // Time advances
+      timeProgress += 0.0006;
+      if (timeProgress > 1.0) timeProgress = 0;
+
+      // Update UI time
+      document.getElementById('time-display').innerText = getTimeName(timeProgress);
+
+      // Render Scene
+      drawScene();
+      requestAnimationFrame(updateGame);
+    }
+
+    function drawScene() {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Sky Background gradient depending on timeProgress
+      let skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+      if (timeProgress < 0.3) {
+        // Dawn
+        skyGrad.addColorStop(0, '#2b1d19');
+        skyGrad.addColorStop(1, '#120d0a');
+      } else if (timeProgress < 0.65) {
+        // Day
+        skyGrad.addColorStop(0, '#3a2e1d');
+        skyGrad.addColorStop(1, '#1a140e');
+      } else if (timeProgress < 0.85) {
+        // Dusk (Golden Hour)
+        skyGrad.addColorStop(0, '#5a2a18');
+        skyGrad.addColorStop(0.6, '#381c14');
+        skyGrad.addColorStop(1, '#120a08');
+      } else {
+        // Night
+        skyGrad.addColorStop(0, '#0d0d14');
+        skyGrad.addColorStop(1, '#050508');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Sun / Moon arc
+      const sunX = w * timeProgress;
+      const sunY = h * 0.7 - Math.sin(timeProgress * Math.PI) * (h * 0.5);
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, timeProgress > 0.85 ? 12 : 20, 0, Math.PI * 2);
+      ctx.fillStyle = timeProgress > 0.85 ? '#e2e8f0' : (timeProgress > 0.65 ? '#f97316' : '#fbbf24');
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Draw Daylily Plants & Buds
+      buds.forEach((bud, idx) => {
+        const bx = bud.x * w;
+        const by = bud.y * h;
+
+        // Stem
+        ctx.beginPath();
+        ctx.moveTo(bx, h);
+        ctx.quadraticCurveTo(bx - 20, by + 50, bx, by);
+        ctx.strokeStyle = '#4a5d31';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Leaves
+        ctx.beginPath();
+        ctx.moveTo(bx, h);
+        ctx.quadraticCurveTo(bx - 50, h - 60, bx - 70, h - 20);
+        ctx.quadraticCurveTo(bx + 50, h - 80, bx + 80, h - 10);
+        ctx.strokeStyle = '#384d25';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        if (bud.picked) return; // Picked flowers disappear or show harvest effect
+
+        // Blooming condition: Blooms when dusk approaches (timeProgress > 0.78 + phaseShift)
+        const bloomThreshold = 0.75 + bud.phaseShift;
+        const isBloomed = timeProgress >= bloomThreshold;
+        bud.bloomed = isBloomed;
+
+        if (!isBloomed) {
+          // Tight Golden Bud (黃花菜蕾 - Prime Harvest)
+          ctx.save();
+          ctx.translate(bx, by);
+          ctx.rotate(-0.2);
+
+          // Bud Shape
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 8, 22, 0, 0, Math.PI * 2);
+          ctx.fillStyle = '#eab308'; // Golden yellow bud
+          ctx.fill();
+          ctx.strokeStyle = '#854d0e';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Green tip
+          ctx.beginPath();
+          ctx.arc(0, -20, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#65a30d';
+          ctx.fill();
+
+          ctx.restore();
+        } else {
+          // Open Flower (萱草盛開 - Past Prime)
+          ctx.save();
+          ctx.translate(bx, by);
+          for (let p = 0; p < 6; p++) {
+            ctx.rotate((Math.PI * 2) / 6);
+            ctx.beginPath();
+            ctx.ellipse(0, -18, 7, 20, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#f97316'; // Open orange petal
+            ctx.fill();
+            ctx.strokeStyle = '#7c2d12';
+            ctx.stroke();
+          }
+          // Center stamens
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fillStyle = '#fef08a';
+          ctx.fill();
+          ctx.restore();
+        }
+      });
+
+      // Render Floating Sparks/Particles
+      particles.forEach((p, index) => {
+        p.y -= p.speed;
+        p.alpha -= 0.015;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(251, 191, 36, ${p.alpha})`;
+        ctx.fill();
+
+        if (p.alpha <= 0) particles.splice(index, 1);
+      });
+    }
+
+    // Handle Harvest Click
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let hit = false;
+      buds.forEach((bud) => {
+        if (bud.picked) return;
+
+        const bx = bud.x * canvas.width;
+        const by = bud.y * canvas.height;
+        const dist = Math.hypot(clickX - bx, clickY - by);
+
+        if (dist < 35) {
+          hit = true;
+          if (!bud.bloomed && timeProgress < 0.8) {
+            // SUCCESS: Harvested unopened bud before dusk!
+            bud.picked = true;
+            pickedCount++;
+            snd.playPick(true);
+            spawnParticles(bx, by);
+            showBanner("✨ 成功採摘含苞金針蕾！解鎖忘憂靈氣！");
+            updatePoetryUnlocks();
+          } else {
+            // FAIL: Already bloomed or too late
+            snd.playPick(false);
+            showBanner("❌ 花朵已開放或夜幕降臨，藥效散失！");
+          }
+        }
+      });
+
+      document.getElementById('score-display').innerText = `${pickedCount} / 5`;
+    });
+
+    function spawnParticles(x, y) {
+      for (let i = 0; i < 12; i++) {
+        particles.push({
+          x: x + (Math.random() - 0.5) * 20,
+          y: y,
+          speed: 1 + Math.random() * 2,
+          radius: 2 + Math.random() * 3,
+          alpha: 1
+        });
+      }
+    }
+
+    function showBanner(text) {
+      const banner = document.getElementById('poetry-banner');
+      banner.innerText = text;
+      banner.classList.remove('hidden');
+      setTimeout(() => banner.classList.add('hidden'), 2000);
+    }
+
+    function updatePoetryUnlocks() {
+      document.getElementById('poetry-count').innerText = `(${Math.min(pickedCount, 5)}/5)`;
+      const list = document.getElementById('poetry-list');
+      list.innerHTML = '';
+
+      POETRY.forEach((p) => {
+        if (pickedCount >= p.req) {
+          list.innerHTML += `
+            <div class="poetry-card p-2 rounded text-amber-200 border border-amber-500/50 animate-fade-in text-center">
+              <div class="font-bold text-amber-400 mb-1">${p.title}</div>
+              <div class="font-calligraphy text-xs">${p.verse}</div>
+            </div>
+          `;
+        } else {
+          list.innerHTML += `
+            <div class="poetry-card p-2 rounded border border-stone-800 text-stone-600 italic text-center">
+              🔒 採摘 ${p.req} 朵解鎖${p.title.split('《')[1] ? '《' + p.title.split('《')[1] : ''}
+            </div>
+          `;
+        }
+      });
+
+      if (pickedCount >= 5) {
+        document.getElementById('mood-status').innerText = "忘憂安神 🌟";
+        document.getElementById('mood-status').className = "text-amber-300 font-bold";
+      }
+    }
+
+    // Farm Mode Logic
+    let farmSun = 50;
+    let farmPlants = 1;
+
+    function renderFarm() {
+      const w = farmCanvas.width;
+      const h = farmCanvas.height;
+      farmCtx.clearRect(0, 0, w, h);
+
+      // Soil Background
+      farmCtx.fillStyle = '#22150c';
+      farmCtx.fillRect(0, 0, w, h);
+
+      // Draw Clump of Daylilies
+      for (let i = 0; i < farmPlants; i++) {
+        const offset = (i - (farmPlants - 1) / 2) * 45;
+        const cx = w / 2 + offset;
+        const cy = h * 0.8;
+
+        // Leaf tuft
+        farmCtx.beginPath();
+        farmCtx.moveTo(cx, cy);
+        farmCtx.quadraticCurveTo(cx - 30, cy - 60, cx - 50, cy - 20);
+        farmCtx.quadraticCurveTo(cx + 30, cy - 70, cx + 55, cy - 10);
+        farmCtx.strokeStyle = '#4d7c0f';
+        farmCtx.lineWidth = 4;
+        farmCtx.stroke();
+
+        // Flower stalk
+        farmCtx.beginPath();
+        farmCtx.moveTo(cx, cy);
+        farmCtx.lineTo(cx, cy - 80);
+        farmCtx.strokeStyle = '#65a30d';
+        farmCtx.lineWidth = 3;
+        farmCtx.stroke();
+
+        // Bud
+        farmCtx.beginPath();
+        farmCtx.arc(cx, cy - 85, 6, 0, Math.PI * 2);
+        farmCtx.fillStyle = '#eab308';
+        farmCtx.fill();
+      }
+    }
+
+    function careAction(type) {
+      const fb = document.getElementById('farm-feedback');
+      if (type === 'sun') {
+        farmSun = Math.min(100, farmSun + 20);
+        fb.innerText = "☀️ 補充充足陽光！萱草長勢強健。";
+      } else if (type === 'split') {
+        if (farmPlants < 5) {
+          farmPlants++;
+          fb.innerText = "🌱 成功進行春秋分株繁殖！株數增加。";
+        } else {
+          fb.innerText = "🌸 花叢已繁茂分株至極致！";
+        }
+      } else if (type === 'water') {
+        fb.innerText = "💧 適量澆水，保持土壤良好通透性。";
+      }
+      renderFarm();
+    }
+
+    // Navigation Tabs
+    function switchMode(mode) {
+      document.getElementById('section-game').classList.toggle('hidden', mode !== 'game');
+      document.getElementById('section-farm').classList.toggle('hidden', mode !== 'farm');
+
+      document.getElementById('btn-tab-game').className = mode === 'game' 
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-700 text-amber-100 hover:bg-amber-600 transition shadow"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition";
+
+      document.getElementById('btn-tab-farm').className = mode === 'farm'
+        ? "px-3 py-1.5 rounded-lg text-sm bg-amber-700 text-amber-100 hover:bg-amber-600 transition shadow"
+        : "px-3 py-1.5 rounded-lg text-sm bg-stone-800 text-amber-300 hover:bg-stone-700 transition";
+
+      if (mode === 'farm') renderFarm();
+    }
+
+    function toggleCodex() {
+      document.getElementById('codex-modal').classList.toggle('hidden');
+    }
+
+    // Startup Initialization
+    window.onload = () => {
+      resizeCanvas();
+      initBuds();
+      updatePoetryUnlocks();
+      requestAnimationFrame(updateGame);
+    };
+  </script>
+</body>
+</html>

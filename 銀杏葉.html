@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>金扇迎秋 ── 銀杏葉主題接葉遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #1c130b;
+            color: #fcefd2;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Custom scrollbar for codex */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(40, 25, 15, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 3px;
+        }
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+        .gold-text-glow {
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+        }
+        @keyframes pulseSlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        .pulse-slow {
+            animation: pulseSlow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-amber-950 text-amber-50">
+
+    <!-- Background Canvas for Leaf Game Physics and Particles -->
+    <canvas id="gameCanvas" class="absolute inset-0 z-0"></canvas>
+
+    <!-- Main UI Container -->
+    <div id="uiOverlay" class="absolute inset-0 z-10 flex flex-col justify-between pointer-events-none p-4 sm:p-6">
+        
+        <!-- Header / Top Bar -->
+        <header class="flex justify-between items-start w-full max-w-4xl mx-auto pointer-events-auto">
+            <!-- Score & Level Badge -->
+            <div class="bg-amber-950/80 border border-amber-600/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 gold-glow">
+                <div>
+                    <span class="text-xs text-amber-300/70 block uppercase tracking-wider">得分 Score</span>
+                    <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-amber-300 font-mono gold-text-glow">0</span>
+                </div>
+                <div class="h-8 w-px bg-amber-700/50"></div>
+                <div>
+                    <span class="text-xs text-amber-300/70 block uppercase tracking-wider">連擊 Combo</span>
+                    <span id="comboText" class="text-xl sm:text-2xl font-semibold text-amber-400 font-mono">x0</span>
+                </div>
+            </div>
+
+            <!-- Health / Leaves Remaining & Buttons -->
+            <div class="flex items-center gap-3">
+                <button id="btnCodex" class="bg-amber-900/80 hover:bg-amber-800 text-amber-200 border border-amber-600/50 px-3 py-2 rounded-xl text-sm font-semibold transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 pointer-events-auto">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    銀杏典籍
+                </button>
+                <button id="btnSound" class="bg-amber-900/80 hover:bg-amber-800 text-amber-200 border border-amber-600/50 p-2.5 rounded-xl transition-all shadow-md pointer-events-auto">
+                    <svg id="soundOnIcon" class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                    <svg id="soundOffIcon" class="w-5 h-5 text-amber-500/50 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Center Banner: Question Box during active game -->
+        <div id="questionBox" class="w-full max-w-2xl mx-auto transition-all duration-300 pointer-events-auto transform translate-y-2 opacity-0">
+            <div class="bg-gradient-to-r from-amber-950/90 via-amber-900/95 to-amber-950/90 border-2 border-amber-500/60 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md text-center relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
+                <div class="text-xs text-amber-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping"></span>
+                    秋風送題 ‧ 請用金扇接住正確答案葉片
+                </div>
+                <h2 id="questionText" class="text-lg sm:text-2xl font-bold text-amber-100 font-calligraphy leading-relaxed drop-shadow">
+                    正在準備題目...
+                </h2>
+                <!-- Explanation / Trivia hint tooltip -->
+                <div id="hintText" class="text-xs text-amber-300/80 mt-1.5 hidden transition-opacity"></div>
+            </div>
+        </div>
+
+        <!-- Floating Tip at Bottom for mobile/desktop control -->
+        <div id="controlTip" class="text-center text-xs text-amber-300/60 mb-2 font-light tracking-wide pointer-events-none">
+            左右滑動 / 移動滑鼠 / 方向鍵 控制「金扇」接葉
+        </div>
+    </div>
+
+    <!-- Start Menu Overlay -->
+    <div id="startModal" class="absolute inset-0 z-30 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+        <div class="bg-gradient-to-b from-amber-950 via-stone-900 to-amber-950 border-2 border-amber-600/60 rounded-3xl p-6 sm:p-10 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600"></div>
+            
+            <div class="mb-6">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs tracking-widest mb-2 border border-amber-500/30">國風意境 ‧ 智慧接葉</span>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-amber-300 font-calligraphy gold-text-glow mb-2">金扇迎秋</h1>
+                <p class="text-sm sm:text-base text-amber-200/80">銀杏飄金葉 ‧ 飛扇接雅韻</p>
+            </div>
+
+            <!-- Lore summary cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 text-left text-xs sm:text-sm">
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-amber-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span class="text-amber-400">🍂</span> 玩法規則
+                    </div>
+                    <p class="text-amber-100/70 leading-relaxed">
+                        秋風吹下金黃銀杏葉，請操縱紙扇接住帶有<strong class="text-amber-300">正確答案</strong>的葉片。答對得分，答錯扣分。
+                    </p>
+                </div>
+                <div class="bg-amber-900/30 border border-amber-700/40 rounded-xl p-3">
+                    <div class="text-amber-300 font-bold mb-1 flex items-center gap-1.5">
+                        <span class="text-amber-400">🌿</span> 銀杏藥效與栽培
+                    </div>
+                    <p class="text-amber-100/70 leading-relaxed">
+                        能活血化瘀、斂肺平喘；喜光耐寒，宜栽於排水良好沙質土。通關可解鎖典籍！
+                    </p>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-amber-950 font-bold text-lg rounded-2xl shadow-xl hover:shadow-amber-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+                開始接葉 ‧ 迎秋
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="gameOverModal" class="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-amber-950 via-stone-900 to-amber-950 border-2 border-amber-500/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl">
+            <div id="gameOverTitle" class="text-3xl sm:text-4xl font-bold text-amber-300 font-calligraphy mb-2 gold-text-glow">秋滿杏林</div>
+            <p id="gameOverSubtitle" class="text-sm text-amber-200/80 mb-6">您已完成本輪秋葉挑戰</p>
+
+            <div class="bg-amber-950/60 border border-amber-800/60 rounded-2xl p-4 mb-6 grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-xs text-amber-400/80 block">最終得分</span>
+                    <span id="finalScore" class="text-3xl font-extrabold text-amber-300 font-mono">0</span>
+                </div>
+                <div>
+                    <span class="text-xs text-amber-400/80 block">最高連擊</span>
+                    <span id="finalCombo" class="text-3xl font-extrabold text-amber-400 font-mono">x0</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnRestart" class="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-amber-950 font-bold rounded-xl transition-all shadow-lg">
+                    再玩一次
+                </button>
+                <button id="btnOpenCodexEnd" class="flex-1 py-3 bg-amber-950 hover:bg-amber-900 border border-amber-600/60 text-amber-300 font-bold rounded-xl transition-all">
+                    閱讀銀杏典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ginkgo Lore Codex Modal -->
+    <div id="codexModal" class="absolute inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 hidden">
+        <div class="bg-gradient-to-b from-amber-950 to-stone-950 border-2 border-amber-500/60 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-amber-800/50 flex justify-between items-center bg-amber-900/30">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🍂</span>
+                    <h3 class="text-2xl font-bold text-amber-300 font-calligraphy">銀杏知識典籍</h3>
+                </div>
+                <button id="btnCloseCodex" class="text-amber-400 hover:text-amber-200 p-1 text-2xl transition-all">&times;</button>
+            </div>
+
+            <!-- Modal Content Scrollable Area -->
+            <div class="p-6 overflow-y-auto space-y-6 text-sm sm:text-base text-amber-100/90 leading-relaxed">
+                
+                <!-- Section 1: Visual & Symbolism -->
+                <div class="bg-amber-900/20 border border-amber-700/40 rounded-2xl p-5 relative overflow-hidden">
+                    <div class="text-amber-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【金扇迎秋 ‧ 形貌】</span>
+                    </div>
+                    <p>
+                        銀杏葉呈扇形，有長柄，葉片淡綠至金黃，柄長而細。秋風拂過時，金黃的銀杏葉如飛扇翩翩起舞，姿態極優雅，是東方金秋最具代表性的美景之一。
+                    </p>
+                </div>
+
+                <!-- Section 2: TCM & Modern Medicine -->
+                <div class="bg-amber-900/20 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-amber-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【藥用價值 ‧ 功效】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-amber-300">活血化瘀：</strong> 能宣通心脈、促進血液循環，常用於冠心病、心絞痛與高血壓。</li>
+                        <li><strong class="text-amber-300">斂肺平喘：</strong> 可收斂肺氣、祛痰平喘，緩解咳嗽哮喘等症狀。</li>
+                        <li><strong class="text-amber-300">通絡止痛：</strong> 改善經絡不通引起的肢體麻木與頭痛。</li>
+                        <li><strong class="text-amber-300">大腦與心血管保健：</strong> 現代研究證實其萃取物有助於提升記憶力、改善微循環與認知功能。</li>
+                    </ul>
+                </div>
+
+                <!-- Section 3: Planting & Care Guide -->
+                <div class="bg-amber-900/20 border border-amber-700/40 rounded-2xl p-5">
+                    <div class="text-amber-300 font-bold text-lg mb-2 flex items-center gap-2 border-b border-amber-800/40 pb-2">
+                        <span>【種植指南 ‧ 培育】</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-amber-200/90">
+                        <li><strong class="text-amber-300">光照與氣候：</strong> 喜光、耐寒、耐旱，適應能力強，喜深厚涼爽環境。</li>
+                        <li><strong class="text-amber-300">土壤需求：</strong> 宜栽培於排水良好、土層深厚、肥沃的沙質壤土，切忌積水爛根。</li>
+                        <li><strong class="text-amber-300">幼苗養護：</strong> 幼苗生長較為脆弱，需適度遮蔭防止暴曬，並維持定期適量澆水。</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-amber-950 border-t border-amber-800/50 text-center">
+                <button id="btnConfirmCodex" class="px-8 py-2.5 bg-amber-600 hover:bg-amber-500 text-amber-950 font-bold rounded-xl transition-all">
+                    明曉典籍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playCatch(isCorrect) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    if (isCorrect) {
+                        // High melodic chime for correct catch
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(523.25, now); // C5
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                        osc.start(now);
+                        osc.stop(now + 0.3);
+                    } else {
+                        // Low warning rumble for wrong catch
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(180, now);
+                        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                        osc.start(now);
+                        osc.stop(now + 0.25);
+                    }
+                } catch (e) {
+                    console.warn("Audio error", e);
+                }
+            }
+
+            playSwoosh() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } catch (e) {}
+            }
+
+            playWin() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+                    notes.forEach((freq, i) => {
+                        const now = this.ctx.currentTime + i * 0.1;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.3);
+                    });
+                } catch (e) {}
+            }
+        }
+
+        const QUESTIONS_BANK = [
+            {
+                q: "中醫認為銀杏葉的主要功效包含哪些？",
+                options: [
+                    { text: "活血化瘀、斂肺平喘", correct: true },
+                    { text: "清熱大瀉、大補元氣", correct: false },
+                    { text: "滋陰補腎、發汗解表", correct: false },
+                    { text: "鎮靜催眠、利尿通淋", correct: false }
+                ],
+                detail: "銀杏葉性味甘苦澀，能活血化瘀、通絡止痛、斂肺平喘。"
+            },
+            {
+                q: "銀杏葉在形貌上有何顯著特徵？",
+                options: [
+                    { text: "葉如飛扇，金秋色極美", correct: true },
+                    { text: "針狀成簇，四季常青", correct: false },
+                    { text: "羽狀複葉，帶有刺齒", correct: false },
+                    { text: "圓形浮水，帶有鋸齒", correct: false }
+                ],
+                detail: "銀杏葉呈獨特的扇形，秋天轉為璀璨的金黃色。"
+            },
+            {
+                q: "栽培銀杏樹時，最理想的土壤條件是？",
+                options: [
+                    { text: "排水良好、深厚的沙質土壤", correct: true },
+                    { text: "長期積水的黏重泥炭土", correct: false },
+                    { text: "高鹽分強鹼性土地", correct: false },
+                    { text: "純硬碎石不含養分土", correct: false }
+                ],
+                detail: "銀杏忌積水，宜栽於排水良好、土層深厚肥沃的沙質土壤。"
+            },
+            {
+                q: "銀杏幼苗期的關鍵養護建議是什麼？",
+                options: [
+                    { text: "適當遮蔭與定期澆水", correct: true },
+                    { text: "暴曬且完全不給水", correct: false },
+                    { text: "完全遮光浸泡深水中", correct: false },
+                    { text: "每日大量施高濃度重肥", correct: false }
+                ],
+                detail: "幼苗抗逆性尚弱，幼苗期需要適度遮蔭與定期澆水。"
+            },
+            {
+                q: "銀杏對氣候環境的適應特性是？",
+                options: [
+                    { text: "喜光、耐寒能力強", correct: true },
+                    { text: "極度喜陰且極度怕冷", correct: false },
+                    { text: "只能生存於熱帶雨林", correct: false },
+                    { text: "不能接受任何陽光照射", correct: false }
+                ],
+                detail: "銀杏喜陽光充足，且具有相當強的耐寒適應力。"
+            },
+            {
+                q: "現代醫學研究中，銀杏葉萃取物常用於改善？",
+                options: [
+                    { text: "記憶力與心血管健康", correct: true },
+                    { text: "視力近視與骨折復原", correct: false },
+                    { text: "增加肌肉力量與身高", correct: false },
+                    { text: "治療急性病毒感冒", correct: false }
+                ],
+                detail: "銀杏葉萃取物能促進末梢與腦部血液循環，有助維持記憶力與血管健康。"
+            },
+            {
+                q: "銀杏葉通絡止痛主要適用於紓解何種情況？",
+                options: [
+                    { text: "經絡不通、瘀血阻滯之痛", correct: true },
+                    { text: "急性外科創傷大出血", correct: false },
+                    { text: "細菌性皮疹搔癢", correct: false },
+                    { text: "嚴重寄生蟲感染", correct: false }
+                ],
+                detail: "銀杏葉具通絡止痛之功，能改善因血液循環不良導致的麻木痛感。"
+            }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const sounds = new SoundEngine();
+
+        let width = 0;
+        let height = 0;
+
+        // Game state
+        let gameState = 'START'; // 'START', 'PLAYING', 'GAMEOVER', 'CODEX'
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let leaves = [];
+        let particles = [];
+        let bgLeaves = [];
+
+        // Player Paper Fan Object
+        const fan = {
+            x: 0,
+            y: 0,
+            width: 140,
+            height: 70,
+            targetX: 0,
+            angle: 0
+        };
+
+        // Resize Canvas dynamically
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            fan.y = height - 90;
+            if (fan.x === 0) fan.x = width / 2;
+            fan.targetX = fan.x;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class GinkgoLeaf {
+            constructor(x, y, optionData) {
+                this.x = x;
+                this.y = y;
+                this.option = optionData; // { text, correct }
+                this.size = 38; // base leaf radius
+                this.speedY = 1.8 + Math.random() * 1.2;
+                this.swayAmp = 25 + Math.random() * 20;
+                this.swayFreq = 0.02 + Math.random() * 0.02;
+                this.swayPhase = Math.random() * Math.PI * 2;
+                this.angle = (Math.random() - 0.5) * 0.5;
+                this.rotSpeed = (Math.random() - 0.5) * 0.02;
+                this.initialX = x;
+                this.time = 0;
+                this.caught = false;
+            }
+
+            update() {
+                this.time += 1;
+                this.y += this.speedY;
+                this.x = this.initialX + Math.sin(this.time * this.swayFreq + this.swayPhase) * this.swayAmp;
+                this.angle += this.rotSpeed;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                // Draw Golden Ginkgo Leaf SVG-like Path
+                ctx.beginPath();
+                // Stem
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 3;
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(0, 25, 5, 35);
+                ctx.stroke();
+
+                // Fan-shaped blade
+                const gradient = ctx.createRadialGradient(0, -10, 5, 0, -10, 35);
+                gradient.addColorStop(0, '#fef08a'); // Bright Yellow
+                gradient.addColorStop(0.7, '#f59e0b'); // Amber
+                gradient.addColorStop(1, '#d97706'); // Golden Orange
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-25, -15, -45, -30, -30, -48);
+                ctx.bezierCurveTo(-15, -55, -5, -42, 0, -45);
+                ctx.bezierCurveTo(5, -42, 15, -55, 30, -48);
+                ctx.bezierCurveTo(45, -30, 25, -15, 0, 0);
+                ctx.closePath();
+
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = '#b45309';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Leaf Veins Detail
+                ctx.strokeStyle = 'rgba(217, 119, 6, 0.4)';
+                ctx.lineWidth = 1;
+                for (let a = -40; a <= 40; a += 16) {
+                    const rad = (a * Math.PI) / 180;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.sin(rad) * 35, -Math.cos(rad) * 35);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // Draw Text Box under Leaf
+                ctx.save();
+                ctx.font = '600 14px "Noto Serif TC", serif';
+                const textWidth = ctx.measureText(this.option.text).width;
+                const boxWidth = Math.max(textWidth + 24, 110);
+                const boxHeight = 32;
+
+                ctx.translate(this.x, this.y + 20);
+
+                // Label Background
+                ctx.fillStyle = 'rgba(28, 19, 11, 0.88)';
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 10);
+                ctx.fill();
+                ctx.stroke();
+
+                // Label Text
+                ctx.fillStyle = '#fef3c7';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.option.text, 0, 1);
+                ctx.restore();
+            }
+        }
+
+        // Ambient Background Falling Leaf Particle
+        class AmbientLeaf {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = -20 - Math.random() * 100;
+                this.size = 10 + Math.random() * 15;
+                this.speedY = 0.8 + Math.random() * 1.2;
+                this.sway = Math.random() * 2;
+                this.opacity = 0.2 + Math.random() * 0.5;
+                this.angle = Math.random() * Math.PI * 2;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.y * 0.02) * this.sway;
+                this.angle += 0.01;
+                if (this.y > height + 30) this.reset();
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 1.2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Sparkle Particles on Leaf Catch
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8 - 2;
+                this.radius = 2 + Math.random() * 4;
+                this.alpha = 1;
+                this.decay = 0.02 + Math.random() * 0.03;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            draw(ctx) {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Populate background leaves
+        for (let i = 0; i < 25; i++) {
+            bgLeaves.push(new AmbientLeaf());
+        }
+
+        function drawFan(ctx) {
+            // Smooth fan movement easing
+            fan.x += (fan.targetX - fan.x) * 0.2;
+
+            ctx.save();
+            ctx.translate(fan.x, fan.y);
+
+            // Subtle fan tilt based on velocity
+            const tilt = (fan.targetX - fan.x) * 0.005;
+            ctx.rotate(tilt);
+
+            // Fan Golden Silk Radius
+            const fanRadius = 90;
+            const startAngle = Math.PI * 1.15;
+            const endAngle = Math.PI * 1.85;
+
+            // Fan Silk Arc Gradient
+            const silkGrad = ctx.createRadialGradient(0, 20, 10, 0, 0, fanRadius);
+            silkGrad.addColorStop(0, '#fef3c7');
+            silkGrad.addColorStop(0.6, '#f59e0b');
+            silkGrad.addColorStop(1, '#b45309');
+
+            ctx.beginPath();
+            ctx.moveTo(0, 15);
+            ctx.arc(0, 15, fanRadius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = silkGrad;
+            ctx.fill();
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Fan Ribs (竹骨)
+            ctx.strokeStyle = 'rgba(120, 53, 15, 0.6)';
+            ctx.lineWidth = 1.5;
+            const totalRibs = 9;
+            for (let i = 0; i <= totalRibs; i++) {
+                const a = startAngle + (endAngle - startAngle) * (i / totalRibs);
+                ctx.beginPath();
+                ctx.moveTo(0, 15);
+                ctx.lineTo(Math.cos(a) * fanRadius, 15 + Math.sin(a) * fanRadius);
+                ctx.stroke();
+            }
+
+            // Fan Handle (扇柄)
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(-5, 15, 10, 45);
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-5, 15, 10, 45);
+
+            // Red Tassel (紅絲條結)
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 60);
+            ctx.lineTo(0, 80);
+            ctx.stroke();
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(0, 82, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function loadNextQuestion() {
+            if (currentQuestionIndex >= QUESTIONS_BANK.length) {
+                // All questions answered -> Victory / Summary
+                endGame(true);
+                return;
+            }
+
+            const qData = QUESTIONS_BANK[currentQuestionIndex];
+            const qTextEl = document.getElementById('questionText');
+            const qBox = document.getElementById('questionBox');
+            const hintEl = document.getElementById('hintText');
+
+            qTextEl.textContent = `${currentQuestionIndex + 1}. ${qData.q}`;
+            hintEl.textContent = '';
+            hintEl.classList.add('hidden');
+
+            qBox.classList.remove('opacity-0', 'translate-y-2');
+
+            // Clear previous leaves
+            leaves = [];
+
+            // Shuffle option positions across screen width
+            const options = [...qData.options];
+            // Fisher-Yates shuffle options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            const padding = 80;
+            const availableWidth = width - padding * 2;
+            const step = availableWidth / (options.length - 1 || 1);
+
+            options.forEach((opt, idx) => {
+                const spawnX = padding + step * idx + (Math.random() - 0.5) * 30;
+                const spawnY = -60 - idx * 45; // Staggered spawn heights
+                leaves.push(new GinkgoLeaf(spawnX, spawnY, opt));
+            });
+        }
+
+        function createGlitterBurst(x, y, isCorrect) {
+            const count = isCorrect ? 35 : 15;
+            const color = isCorrect ? '#fef08a' : '#ef4444';
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function checkCollisions() {
+            const fanTopY = fan.y - 25; // Catching arc area
+
+            for (let i = leaves.length - 1; i >= 0; i--) {
+                const leaf = leaves[i];
+                if (leaf.caught) continue;
+
+                // Distance check between leaf and fan center
+                const dx = leaf.x - fan.x;
+                const dy = (leaf.y + 20) - fanTopY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // Collision threshold
+                if (dist < 65 && Math.abs(dy) < 35) {
+                    leaf.caught = true;
+                    sounds.playCatch(leaf.option.correct);
+                    createGlitterBurst(leaf.x, leaf.y, leaf.option.correct);
+
+                    if (leaf.option.correct) {
+                        // Correct Catch!
+                        combo++;
+                        if (combo > maxCombo) maxCombo = combo;
+                        const points = 100 + (combo - 1) * 20;
+                        score += points;
+
+                        // Show detailed explanation brief hint
+                        const currentQ = QUESTIONS_BANK[currentQuestionIndex];
+                        const hintEl = document.getElementById('hintText');
+                        hintEl.textContent = `正解！${currentQ.detail}`;
+                        hintEl.classList.remove('hidden');
+
+                        // Advance to next question after short delay
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            loadNextQuestion();
+                        }, 1200);
+
+                    } else {
+                        // Incorrect Catch
+                        combo = 0;
+                        score = Math.max(0, score - 50);
+                    }
+
+                    updateUI();
+                    break;
+                }
+
+                // If leaf fell off screen bottom without catching
+                if (leaf.y > height + 80) {
+                    leaves.splice(i, 1);
+                }
+            }
+
+            // If all leaves fell off without catching the correct one, re-spawn question leaves
+            if (leaves.length === 0 && gameState === 'PLAYING') {
+                loadNextQuestion();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('scoreText').textContent = score;
+            document.getElementById('comboText').textContent = `x${combo}`;
+        }
+
+        function animate() {
+            // Clear Canvas & Draw Autumn Sunset Gradient Background
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            bgGrad.addColorStop(0, '#1c130b');
+            bgGrad.addColorStop(0.5, '#2d1a0e');
+            bgGrad.addColorStop(1, '#180e07');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Background Parallax Ambient Leaves
+            bgLeaves.forEach(bgL => {
+                bgL.update();
+                bgL.draw(ctx);
+            });
+
+            if (gameState === 'PLAYING') {
+                // Update and Draw Question Leaves
+                leaves.forEach(leaf => {
+                    if (!leaf.caught) {
+                        leaf.update();
+                        leaf.draw(ctx);
+                    }
+                });
+
+                // Check Leaf Catch Collisions
+                checkCollisions();
+
+                // Draw Fan Paddle
+                drawFan(ctx);
+            }
+
+            // Update & Draw Particle Effects
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw(ctx);
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Mouse & Touch Controls for Fan Movement
+        function handlePointerMove(e) {
+            if (gameState !== 'PLAYING') return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            fan.targetX = Math.max(70, Math.min(width - 70, clientX));
+            sounds.playSwoosh();
+        }
+
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('touchmove', handlePointerMove, { passive: true });
+
+        // Keyboard Arrow Key Support
+        window.addEventListener('keydown', (e) => {
+            if (gameState !== 'PLAYING') return;
+            const speed = 40;
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                fan.targetX = Math.max(70, fan.targetX - speed);
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                fan.targetX = Math.min(width - 70, fan.targetX + speed);
+            }
+        });
+
+        // Game Flow State Controllers
+        function startGame() {
+            sounds.init();
+            gameState = 'PLAYING';
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            currentQuestionIndex = 0;
+
+            document.getElementById('startModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            updateUI();
+            loadNextQuestion();
+        }
+
+        function endGame(isVictory) {
+            gameState = 'GAMEOVER';
+            sounds.playWin();
+
+            document.getElementById('questionBox').classList.add('opacity-0');
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalCombo').textContent = `x${maxCombo}`;
+            
+            const titleEl = document.getElementById('gameOverTitle');
+            const subEl = document.getElementById('gameOverSubtitle');
+
+            if (isVictory) {
+                titleEl.textContent = "秋滿金林 ‧ 大獲全勝";
+                subEl.textContent = "恭喜您圓滿通關銀杏采秋題！銀杏知識深植於心。";
+            } else {
+                titleEl.textContent = "秋意闌珊";
+                subEl.textContent = "挑戰結束，隨時可閱讀典籍溫故知新。";
+            }
+
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        // Modal Controls
+        document.getElementById('btnStartGame').addEventListener('click', startGame);
+        document.getElementById('btnRestart').addEventListener('click', startGame);
+
+        const codexModal = document.getElementById('codexModal');
+        const openCodex = () => {
+            codexModal.classList.remove('hidden');
+        };
+        const closeCodex = () => {
+            codexModal.classList.add('hidden');
+        };
+
+        document.getElementById('btnCodex').addEventListener('click', openCodex);
+        document.getElementById('btnOpenCodexEnd').addEventListener('click', openCodex);
+        document.getElementById('btnCloseCodex').addEventListener('click', closeCodex);
+        document.getElementById('btnConfirmCodex').addEventListener('click', closeCodex);
+
+        // Sound Toggle
+        const soundBtn = document.getElementById('btnSound');
+        const soundOnIcon = document.getElementById('soundOnIcon');
+        const soundOffIcon = document.getElementById('soundOffIcon');
+
+        soundBtn.addEventListener('click', () => {
+            sounds.enabled = !sounds.enabled;
+            if (sounds.enabled) {
+                soundOnIcon.classList.remove('hidden');
+                soundOffIcon.classList.add('hidden');
+            } else {
+                soundOnIcon.classList.add('hidden');
+                soundOffIcon.classList.remove('hidden');
+            }
+        });
+
+        window.onload = function() {
+            animate();
+        };
+    </script>
+</body>
+</html>

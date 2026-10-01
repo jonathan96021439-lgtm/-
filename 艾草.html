@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>【端午伏魔】艾草經絡艾灸與掛艾驅邪遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+            background-color: #0b130e;
+            color: #ecfdf5;
+        }
+        .font-calligraphy {
+            font-family: 'Ma Shan Zheng', cursive, 'Noto Serif TC', serif;
+        }
+        .emerald-glow {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        }
+        .emerald-glow-lg {
+            box-shadow: 0 0 45px rgba(52, 211, 153, 0.6);
+        }
+        .fire-glow {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
+        }
+        .text-glow-emerald {
+            text-shadow: 0 0 14px rgba(52, 211, 153, 0.85);
+        }
+        .text-glow-fire {
+            text-shadow: 0 0 18px rgba(245, 158, 11, 0.9);
+        }
+        .acupoint-node {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .acupoint-node:hover {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 12px #34d399);
+        }
+        .acupoint-active {
+            animation: pulseAcupoint 1.8s infinite ease-in-out;
+        }
+        @keyframes pulseAcupoint {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px #f59e0b); }
+            50% { transform: scale(1.25); filter: drop-shadow(0 0 18px #fbbf24); }
+        }
+        .moxa-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        .moxa-card:hover {
+            transform: translateY(-4px) scale(1.03);
+        }
+        .piece-dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        @keyframes smokeRise {
+            0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-30px) scale(1.3) rotate(12deg); opacity: 0.8; }
+            100% { transform: translateY(-60px) scale(1.8) rotate(-12deg); opacity: 0; }
+        }
+        .moxa-smoke {
+            animation: smokeRise 2.5s infinite ease-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-emerald-950/95 text-emerald-100 flex flex-col justify-between overflow-hidden select-none">
+
+    <canvas id="bgCanvas" class="absolute inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="relative z-20 w-full max-w-5xl mx-auto p-3 sm:p-4 flex justify-between items-center">
+        <div class="bg-emerald-950/80 border border-emerald-500/40 backdrop-blur-md rounded-2xl px-4 py-2 flex items-center gap-4 emerald-glow">
+            <div>
+                <span class="text-[10px] sm:text-xs text-emerald-300/80 block font-medium">驅邪靈氣 Score</span>
+                <span id="scoreText" class="text-2xl sm:text-3xl font-bold text-emerald-300 font-mono text-glow-emerald">0</span>
+            </div>
+            <div class="h-8 w-px bg-emerald-800/60"></div>
+            <div>
+                <span class="text-[10px] sm:text-xs text-emerald-300/80 block font-medium">通絡辟邪進度</span>
+                <span id="progressText" class="text-xl sm:text-2xl font-semibold text-amber-300 font-mono text-glow-fire">0 / 4</span>
+            </div>
+        </div>
+
+        <!-- Mode Toggle & Codex Button -->
+        <div class="flex items-center gap-2">
+            <button id="btnPhaseSwitch" class="bg-emerald-900/90 hover:bg-emerald-800 text-emerald-100 border border-emerald-400/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5">
+                <span id="phaseBtnLabel">前往【艾草栽植與採嫩葉】 🌿</span>
+            </button>
+            <button id="btnCodex" class="bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center gap-1">
+                📜 艾草典籍
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <main class="relative z-10 flex-1 w-full max-w-4xl mx-auto px-3 py-2 flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- PHASE 1: ACUPOINT MOXIBUSTION & DOORWAY MUGWORT HANGING -->
+        <section id="phaseMoxa" class="w-full flex flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-4xl font-bold font-calligraphy text-emerald-200 text-glow-emerald">【端午伏魔】艾灸點穴與懸艾驅邪</h1>
+                <p class="text-xs sm:text-sm text-emerald-300/90 mt-1">「手執艾條溫經絡，門懸艾包辟邪氣」── 點燃熱艾對準穴位，掛艾草包驅蚊散寒</p>
+            </div>
+
+            <!-- Sub Mode Tab Bar -->
+            <div class="flex gap-2 bg-emerald-950/60 p-1.5 rounded-2xl border border-emerald-700/50">
+                <button id="tabAcupoint" class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-700 text-emerald-100 border border-emerald-400 shadow">
+                    🔥 艾灸溫經點穴
+                </button>
+                <button id="tabDoorway" class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-900/60 text-emerald-300 hover:text-emerald-100 border border-transparent">
+                    🚪 端午門框懸艾驅邪
+                </button>
+            </div>
+
+            <!-- TAB 1: ACUPOINT MOXIBUSTION MAP -->
+            <div id="viewAcupoint" class="w-full max-w-3xl bg-emerald-950/60 border border-emerald-600/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl emerald-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Acupoint Human Silhouette Diagram -->
+                <div class="flex-1 w-full flex flex-col items-center justify-center bg-stone-950/80 p-3 rounded-2xl border border-emerald-800/60 relative min-h-[280px]">
+                    <span class="text-xs text-emerald-400/80 font-bold mb-1">📍 人體經絡圖（請選取下方艾條對準閃爍穴位）</span>
+                    
+                    <div class="relative w-56 h-64 sm:w-64 sm:h-72 flex items-center justify-center">
+                        <!-- Human Meridian Body Silhouette Vector -->
+                        <svg viewBox="0 0 100 120" class="w-full h-full">
+                            <!-- Body Contour -->
+                            <path d="M 50 12 C 55 12 58 18 58 24 C 58 28 55 31 50 31 C 45 31 42 28 42 24 C 42 18 45 12 50 12 Z 
+                                     M 42 31 L 32 36 L 25 55 L 28 57 L 35 42 L 38 68 L 35 105 L 44 105 L 47 70 L 50 70 L 53 70 L 56 105 L 65 105 L 62 68 L 65 42 L 72 57 L 75 55 L 68 36 L 58 31 Z" 
+                                  fill="#064e3b" stroke="#10b981" stroke-width="1.2" opacity="0.8"/>
+
+                            <!-- Meridian Lines -->
+                            <path d="M 50 31 L 50 70 M 42 36 L 38 68 M 58 31 L 62 68 M 41 70 L 40 105 M 59 70 L 60 105" 
+                                  stroke="#34d399" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>
+
+                            <!-- Interactive Target Acupoint Nodes -->
+                            <!-- Node 0: 合谷穴 (Hegu) -->
+                            <g class="acupoint-node" data-node="0" transform="translate(26, 52)">
+                                <circle cx="0" cy="0" r="4.5" fill="#f59e0b" class="acupoint-active"/>
+                                <text x="7" y="3" fill="#fef3c7" font-size="5" font-weight="bold">合谷</text>
+                            </g>
+
+                            <!-- Node 1: 神闕穴 (Shenque - Navel) -->
+                            <g class="acupoint-node" data-node="1" transform="translate(50, 52)">
+                                <circle cx="0" cy="0" r="4.5" fill="#f59e0b" class="acupoint-active"/>
+                                <text x="-16" y="3" fill="#fef3c7" font-size="5" font-weight="bold">神闕</text>
+                            </g>
+
+                            <!-- Node 2: 關元穴 (Guanyuan) -->
+                            <g class="acupoint-node" data-node="2" transform="translate(50, 62)">
+                                <circle cx="0" cy="0" r="4.5" fill="#f59e0b" class="acupoint-active"/>
+                                <text x="7" y="3" fill="#fef3c7" font-size="5" font-weight="bold">關元</text>
+                            </g>
+
+                            <!-- Node 3: 足三里穴 (Zusanli) -->
+                            <g class="acupoint-node" data-node="3" transform="translate(40, 84)">
+                                <circle cx="0" cy="0" r="4.5" fill="#f59e0b" class="acupoint-active"/>
+                                <text x="-20" y="3" fill="#fef3c7" font-size="5" font-weight="bold">足三里</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Acupoint Controls & Info Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-emerald-800/60 min-h-[280px]">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-emerald-800/60 pb-2 mb-2">
+                            <span class="text-xs text-amber-300 font-bold">🔥 點燃陳年純艾條（點選後施灸）：</span>
+                            <button id="btnLightMoxa" class="text-[11px] bg-amber-700/80 hover:bg-amber-600 text-amber-100 border border-amber-400/50 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer">
+                                🕯️ 吹亮艾條微火
+                            </button>
+                        </div>
+
+                        <!-- Moxa Item Selection Card -->
+                        <div id="moxaItemCard" class="moxa-card p-3 bg-emerald-900/50 border-2 border-amber-500 rounded-xl flex items-center gap-3 fire-glow">
+                            <div class="w-12 h-12 rounded-xl bg-amber-950 flex items-center justify-center text-2xl border border-amber-400 relative overflow-hidden">
+                                🪵
+                                <div class="absolute bottom-0 inset-x-0 h-1.5 bg-amber-500 animate-pulse"></div>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-amber-200">三年陳純艾條（艾絨壓製）</h4>
+                                <p class="text-[10px] text-emerald-300/80 mt-0.5">具溫經通絡、散寒止痛、培元固本之熱效</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Acupoint Health Tip Box -->
+                    <div id="acupointDetailTip" class="bg-emerald-950/80 p-3 rounded-xl border border-emerald-600/50 text-xs text-emerald-200 leading-relaxed">
+                        💡 <b>艾灸說明：</b>請點擊或拖拽上方【三年陳純艾條】，對準人體經絡圖上的金色穴位（如足三里、關元）進行艾灸驅寒！
+                    </div>
+
+                    <button id="btnAromaSmoke" class="w-full py-2 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 border border-emerald-400/50 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                        💨 釋放藥艾溫香（溫經散寒）
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: DOORWAY MUGWORT HANGING (HIDDEN BY DEFAULT) -->
+            <div id="viewDoorway" class="hidden w-full max-w-3xl bg-emerald-950/60 border border-emerald-600/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl emerald-glow flex-col items-center gap-4">
+                <div class="text-center">
+                    <h3 class="text-base font-bold text-emerald-200">🚪 端午懸艾驅邪辟毒（門框掛艾草束與香包）</h3>
+                    <p class="text-xs text-emerald-300/80 mt-0.5">「手攬艾草掛門楣，百蟲不近禍邪避」── 點擊門框左右掛鉤，懸掛端午艾束</p>
+                </div>
+
+                <div class="w-full bg-stone-950/90 p-4 rounded-2xl border border-emerald-800/60 relative flex flex-col items-center">
+                    <!-- Door Frame Graphic -->
+                    <div class="w-64 h-52 sm:w-80 sm:h-60 border-t-8 border-x-8 border-amber-900 rounded-t-xl relative bg-stone-900/60 flex justify-between p-2">
+                        
+                        <!-- Left Door Hook -->
+                        <div id="hookLeft" data-hook="left" class="w-12 h-28 border-2 border-dashed border-emerald-500/50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-900/30 transition-all p-1">
+                            <span class="text-xl opacity-40">🪝</span>
+                            <span class="text-[10px] text-emerald-300/80 font-bold mt-1 text-center">左門框掛位</span>
+                        </div>
+
+                        <!-- Center Lintels Banner -->
+                        <div class="mt-1 bg-amber-950 border border-amber-500/60 px-3 py-1 rounded-lg text-center h-fit">
+                            <span class="text-xs font-bold text-amber-300 font-calligraphy">端陽吉祥 · 避邪納福</span>
+                        </div>
+
+                        <!-- Right Door Hook -->
+                        <div id="hookRight" data-hook="right" class="w-12 h-28 border-2 border-dashed border-emerald-500/50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-900/30 transition-all p-1">
+                            <span class="text-xl opacity-40">🪝</span>
+                            <span class="text-[10px] text-emerald-300/80 font-bold mt-1 text-center">右門框掛位</span>
+                        </div>
+                    </div>
+
+                    <div id="doorTipText" class="mt-3 text-xs text-amber-300 text-center font-medium">
+                        🌿 請點擊左右門鉤，掛上帶有獨特芳香的鮮艾草束與驅蚊艾草包！
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PHASE 2: CULTIVATION & HARVEST MINI GAME -->
+        <section id="phaseCultivation" class="hidden w-full flex-col items-center justify-center gap-3 my-auto">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold font-calligraphy text-emerald-300 text-glow-emerald">【百草之王】艾草植栽養護與嫩葉採收</h1>
+                <p class="text-xs sm:text-sm text-emerald-200/90 mt-1">「極易栽培耐旱貧，喜陽分株採嫩葉」── 體會艾草頑強生機與藥香採集</p>
+            </div>
+
+            <div class="w-full max-w-3xl bg-emerald-950/60 border border-emerald-600/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl emerald-glow flex flex-col md:flex-row items-center gap-6">
+                
+                <!-- Plant Container Viewport -->
+                <div class="flex-1 w-full flex flex-col items-center text-center bg-stone-900/90 p-4 rounded-2xl border border-emerald-800/60 relative">
+                    <div id="plantContainer" class="w-56 h-56 sm:w-64 sm:h-64 relative flex items-center justify-center overflow-hidden cursor-pointer border border-emerald-700/40 rounded-xl bg-stone-950/70">
+                        <!-- Dynamic SVG Mugwort Bush -->
+                    </div>
+
+                    <div class="mt-3 w-full flex justify-between items-center px-1">
+                        <div>
+                            <span class="text-sm font-bold text-emerald-300 font-calligraphy">園圃艾草叢</span>
+                            <span id="plantStatusBadge" class="ml-2 text-[10px] bg-emerald-900/90 text-emerald-200 border border-emerald-500/50 px-2 py-0.5 rounded-full">等待栽培</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-emerald-300/80 block">旺盛生長度</span>
+                            <div class="w-24 h-2.5 bg-stone-800 rounded-full overflow-hidden border border-emerald-600/40">
+                                <div id="plantHealthBar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-300 w-[35%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cultivation Controls Panel -->
+                <div class="flex-1 w-full flex flex-col justify-between gap-3 bg-stone-900/90 p-4 rounded-2xl border border-emerald-800/60 min-h-[260px]">
+                    <h3 class="text-sm font-bold text-emerald-300 text-center border-b border-emerald-800/60 pb-2">🌱 艾草種植要點與採收指南</h3>
+
+                    <div class="space-y-2 text-xs">
+                        <!-- Action 1: Sunlight -->
+                        <button id="btnPlantSun" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">☀️</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">1. 移至日光充足處</div>
+                                    <div class="text-[10px] text-emerald-400/80">喜光照，能耐旱耐貧瘠</div>
+                                </div>
+                            </div>
+                            <span id="plantSunBadge" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">未充足</span>
+                        </button>
+
+                        <!-- Action 2: Spring Division -->
+                        <button id="btnPlantDivide" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🌱</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">2. 春季分株與播種</div>
+                                    <div class="text-[10px] text-emerald-400/80">春季擴穴分株，強健根系生長</div>
+                                </div>
+                            </div>
+                            <span id="plantDivideBadge" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">未分株</span>
+                        </button>
+
+                        <!-- Action 3: Harvest Tender Leaves -->
+                        <button id="btnPlantHarvest" class="w-full p-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/50 flex items-center justify-between text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🍃</span>
+                                <div>
+                                    <div class="font-bold text-emerald-200">3. 端午採收香嫩葉</div>
+                                    <div class="text-[10px] text-emerald-400/80">採摘頂端香嫩葉，用作艾絨與香包</div>
+                                </div>
+                            </div>
+                            <span id="plantHarvestBadge" class="text-[10px] bg-emerald-950 px-2 py-1 rounded text-emerald-400">未採收</span>
+                        </button>
+                    </div>
+
+                    <div id="plantCareResultTip" class="bg-emerald-950/80 p-2 rounded-xl border border-emerald-600/40 text-[11px] text-emerald-200 text-center">
+                        請依序點擊上方養護要點，體會艾草極易栽培且頑強的百草生機！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BOTANICAL CODEX POPUP -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-emerald-950 border border-emerald-400/60 rounded-3xl max-w-2xl w-full p-5 sm:p-7 relative max-h-[85vh] overflow-y-auto emerald-glow">
+            <button id="btnCloseCodex" class="absolute top-4 right-4 text-emerald-400 hover:text-emerald-100 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-emerald-900/60 cursor-pointer">✕</button>
+            
+            <div class="flex items-center gap-3 mb-4 border-b border-emerald-800/80 pb-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-800/80 border border-emerald-400 flex items-center justify-center text-2xl">🌿</div>
+                <div>
+                    <h2 class="text-2xl font-bold font-calligraphy text-emerald-200">艾草（Artemisia argyi）典籍</h2>
+                    <p class="text-xs text-emerald-300/80">別名：蕭茅、冰台、艾蒿、醫草、黃草</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🌿 形態特徵與獨特芳香</h3>
+                    <p>多年生草本植物，葉片羽狀深裂，背密生灰白色絨毛（可搗製艾絨）。整株帶有強烈獨特的揮發性藥用芳香，為端午節驅邪避毒之傳統植物。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🩺 性味功效（溫經止血、散寒止痛、外用驅蚊）</h3>
+                    <p>性溫，味苦、辛，歸肝、脾、腎經。具有<b>溫經止血、散寒止痛、外用驅蚊逐濕</b>之效。為中醫<b>艾灸</b>的核心材料，溫通十二經脈；外用煮水或懸掛可驅趕蚊蟲與濕氣。</p>
+                </div>
+
+                <div class="bg-stone-900/80 p-3.5 rounded-2xl border border-emerald-700/50">
+                    <h3 class="font-bold text-amber-300 mb-1 flex items-center gap-1.5 text-sm sm:text-base">🪴 種植與採收建議</h3>
+                    <p><b>極易栽培，耐旱耐貧瘠</b>，喜陽光充足處。春季可進行播種或分株繁殖。生長期與端午節前後注意採收頂端香嫩葉，曬乾後可製艾條、艾包或入藥。</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="btnConfirmCodex" class="bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold py-2.5 px-8 rounded-xl text-sm transition-all shadow-lg cursor-pointer">參透艾草溫經本草心法</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toastContent" class="bg-emerald-950/95 border border-emerald-400 text-emerald-100 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-2xl backdrop-blur-md flex items-center gap-2">
+            <span id="toastIcon">✨</span>
+            <span id="toastMessage">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT GAME ENGINE LOGIC -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playChime() {
+                this.init();
+                this.playTone(587.33, 0.4, 'sine', 0.2); // D5
+                setTimeout(() => this.playTone(739.99, 0.6, 'sine', 0.2), 120); // F#5
+                setTimeout(() => this.playTone(880.00, 0.8, 'sine', 0.25), 240); // A5
+            }
+            playSizzle() {
+                this.init();
+                this.playTone(220 + Math.random() * 100, 0.18, 'triangle', 0.12);
+            }
+            playSnap() {
+                this.init();
+                this.playTone(523.25, 0.1, 'triangle', 0.15);
+            }
+            playSmokeSwoosh() {
+                this.init();
+                this.playTone(350 + Math.random() * 150, 0.25, 'sine', 0.1);
+            }
+            playHarvest() {
+                this.init();
+                this.playTone(659.25, 0.1, 'sine', 0.15);
+                setTimeout(() => this.playTone(987.77, 0.2, 'sine', 0.18), 80);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const ACUPOINT_DATA = [
+            {
+                id: 0,
+                name: '合谷穴',
+                location: '手背第1、2掌骨間',
+                benefit: '✨ 溫經散寒 · 疏風解表',
+                desc: '鎮痛通絡要穴，清利頭目，增強衛外免疫。'
+            },
+            {
+                id: 1,
+                name: '神闕穴',
+                location: '肚臍正中',
+                benefit: '✨ 溫陽固脫 · 健運脾胃',
+                desc: '艾灸神闕能溫補脾陽、散寒止痛、調理腸胃。'
+            },
+            {
+                id: 2,
+                name: '關元穴',
+                location: '臍下三寸',
+                benefit: '✨ 培元固本 · 補益下焦',
+                desc: '男子藏精女子蓄血之處，灸關元大補元氣。'
+            },
+            {
+                id: 3,
+                name: '足三里穴',
+                location: '犢鼻下三寸，脛骨前嵴外一橫指',
+                benefit: '✨ 燥濕健脾 · 扶正培元',
+                desc: '長壽保健要穴，調理脾胃、補中益氣。'
+            }
+        ];
+
+        let state = {
+            score: 0,
+            acupunctureDone: [false, false, false, false],
+            leftHookHung: false,
+            rightHookHung: false,
+            currentPhase: 'moxa', // 'moxa' | 'cultivation'
+            activeTab: 'acupoint', // 'acupoint' | 'doorway'
+            
+            // Cultivation states
+            plantSun: false,
+            plantDivide: false,
+            plantHarvest: false,
+            plantHealth: 35
+        };
+
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1.2 + Math.random() * 2.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: -0.2 - Math.random() * 0.4,
+                    alpha: 0.2 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(52, 211, 153, ${p.alpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+
+        function showToast(message, icon = '✨') {
+            const container = document.getElementById('toastContainer');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+            container.classList.remove('opacity-0', 'translate-y-4');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-4');
+            }, 2600);
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('scoreText').innerText = state.score;
+            let count = state.acupunctureDone.filter(Boolean).length;
+            if (state.leftHookHung) count++;
+            if (state.rightHookHung) count++;
+            document.getElementById('progressText').innerText = `${count} / 6`;
+        }
+
+        function setupAcupoints() {
+            const nodes = document.querySelectorAll('.acupoint-node');
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const idx = parseInt(node.dataset.node);
+                    if (state.acupunctureDone[idx]) {
+                        sound.playSizzle();
+                        showToast(`🔥 【${ACUPOINT_DATA[idx].name}】已被艾熱溫煦，通絡散寒！`);
+                        return;
+                    }
+
+                    sound.playChime();
+                    state.acupunctureDone[idx] = true;
+                    state.score += 250;
+
+                    // Update Visual on Node
+                    const circle = node.querySelector('circle');
+                    circle.setAttribute('fill', '#10b981');
+                    circle.classList.remove('acupoint-active');
+                    circle.setAttribute('r', '6');
+
+                    const data = ACUPOINT_DATA[idx];
+                    document.getElementById('acupointDetailTip').innerHTML = `
+                        <div class="text-amber-300 font-bold text-xs sm:text-sm">🔥 艾灸【${data.name}】成功！</div>
+                        <div class="text-emerald-200 mt-0.5">${data.benefit}</div>
+                        <div class="text-[10px] text-emerald-300/80 mt-1">${data.desc}</div>
+                    `;
+
+                    triggerSmokeEffect(node);
+                    updateHeaderUI();
+                    showToast(`🔥 艾灸${data.name}！${data.benefit}`, '🔥');
+                });
+            });
+        }
+
+        function triggerSmokeEffect(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: rect.left + rect.width / 2 + (Math.random() - 0.5) * 20,
+                    y: rect.top + rect.height / 2,
+                    radius: 3 + Math.random() * 4,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: -1.5 - Math.random() * 2,
+                    alpha: 0.85
+                });
+            }
+        }
+
+        function setupDoorwayHooks() {
+            const left = document.getElementById('hookLeft');
+            const right = document.getElementById('hookRight');
+
+            const hangMugwort = (hookEl, side) => {
+                if ((side === 'left' && state.leftHookHung) || (side === 'right' && state.rightHookHung)) return;
+
+                sound.playChime();
+                if (side === 'left') state.leftHookHung = true;
+                if (side === 'right') state.rightHookHung = true;
+
+                state.score += 200;
+                hookEl.className = "w-12 h-28 border-2 border-emerald-400 bg-emerald-900/80 rounded-xl flex flex-col items-center justify-center p-1 emerald-glow";
+                hookEl.innerHTML = `
+                    <div class="text-2xl animate-bounce">🌿</div>
+                    <span class="text-[9px] text-amber-200 font-bold text-center mt-1">懸艾包/艾束</span>
+                    <span class="text-[8px] text-emerald-300">驅蚊逐濕</span>
+                `;
+
+                document.getElementById('doorTipText').innerHTML = `
+                    ✨ <b>端午門掛艾草束完成！</b> 獨特芳香能外用驅蚊逐濕、避邪祈福！
+                `;
+
+                updateHeaderUI();
+                showToast(`🚪 門框懸掛艾草包！驅蚊逐濕，避邪祈福！`, '🌿');
+            };
+
+            left.addEventListener('click', () => hangMugwort(left, 'left'));
+            right.addEventListener('click', () => hangMugwort(right, 'right'));
+        }
+
+        function renderPlant() {
+            const container = document.getElementById('plantContainer');
+            let leafScale = state.plantSun ? '1.2' : '0.85';
+            let leafColor = state.plantHarvest ? '#34d399' : '#10b981';
+
+            container.innerHTML = `
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <!-- Soil Mound -->
+                    <ellipse cx="50" cy="85" rx="35" ry="8" fill="#271c19"/>
+                    <ellipse cx="50" cy="84" rx="30" ry="6" fill="#422a21"/>
+
+                    <!-- Stems -->
+                    <path d="M 50 84 C 48 65 45 45 42 25" stroke="#065f46" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M 50 84 C 55 65 60 50 65 30" stroke="#065f46" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    ${state.plantDivide ? `<path d="M 50 84 C 40 70 30 55 25 38" stroke="#065f46" stroke-width="2" fill="none" stroke-linecap="round"/>` : ''}
+
+                    <!-- Mugwort Serrated Feathered Leaves -->
+                    <g transform="translate(42, 25) scale(${leafScale})">
+                        <path d="M 0 0 C -12 -8 -15 2 -6 8 C -14 12 -10 20 0 22 C 10 20 14 12 6 8 C 15 2 12 -8 0 0 Z" fill="${leafColor}"/>
+                    </g>
+                    <g transform="translate(65, 30) scale(${leafScale})">
+                        <path d="M 0 0 C -10 -6 -12 2 -5 6 C -12 10 -8 16 0 18 C 8 16 12 10 5 6 C 12 2 10 -6 0 0 Z" fill="${leafColor}"/>
+                    </g>
+                    ${state.plantDivide ? `
+                    <g transform="translate(25, 38) scale(${leafScale})">
+                        <path d="M 0 0 C -8 -5 -10 2 -4 5 C -10 8 -7 14 0 15 C 7 14 10 8 4 5 C 10 2 8 -5 0 0 Z" fill="${leafColor}"/>
+                    </g>` : ''}
+
+                    <!-- Sun effect -->
+                    ${state.plantSun ? `<circle cx="82" cy="18" r="9" fill="#fbbf24" opacity="0.85" class="animate-pulse"/>` : ''}
+                </svg>
+            `;
+
+            document.getElementById('plantHealthBar').style.width = `${state.plantHealth}%`;
+            const badge = document.getElementById('plantStatusBadge');
+            if (state.plantHealth >= 100) {
+                badge.className = "ml-2 text-[10px] bg-amber-500 text-stone-950 font-bold border border-amber-300 px-2 py-0.5 rounded-full animate-bounce";
+                badge.innerText = "✨ 百草之王 · 茂盛採收";
+            } else if (state.plantHealth >= 65) {
+                badge.className = "ml-2 text-[10px] bg-emerald-800 text-emerald-200 border border-emerald-500/50 px-2 py-0.5 rounded-full";
+                badge.innerText = "🌱 頑強生長中";
+            }
+        }
+
+        function setupPlantEvents() {
+            document.getElementById('btnPlantSun').addEventListener('click', () => {
+                sound.playChime();
+                state.plantSun = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('plantSunBadge').className = "text-[10px] bg-emerald-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('plantSunBadge').innerText = "☀️️ 陽光充足";
+                showToast("☀️ 移至日光充足處，艾草極易栽培且耐旱！", "✨");
+                renderPlant();
+            });
+
+            document.getElementById('btnPlantDivide').addEventListener('click', () => {
+                sound.playSnap();
+                state.plantDivide = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 25);
+                document.getElementById('plantDivideBadge').className = "text-[10px] bg-emerald-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('plantDivideBadge').innerText = "🌱 分株完成";
+                showToast("🌱 春季擴穴分株，根系強健分蘖快！", "🌿");
+                renderPlant();
+            });
+
+            document.getElementById('btnPlantHarvest').addEventListener('click', () => {
+                sound.playHarvest();
+                state.plantHarvest = true;
+                state.plantHealth = Math.min(100, state.plantHealth + 20);
+                document.getElementById('plantHarvestBadge').className = "text-[10px] bg-emerald-500 text-stone-950 font-bold px-2 py-1 rounded";
+                document.getElementById('plantHarvestBadge').innerText = "🍃 採收香嫩葉";
+                showToast("🍃 端午採收頂端香嫩葉，用作純艾絨與香包！", "🌾");
+                renderPlant();
+            });
+        }
+
+        function setupTabs() {
+            const tabAcu = document.getElementById('tabAcupoint');
+            const tabDoor = document.getElementById('tabDoorway');
+            const viewAcu = document.getElementById('viewAcupoint');
+            const viewDoor = document.getElementById('viewDoorway');
+
+            tabAcu.addEventListener('click', () => {
+                sound.playSnap();
+                tabAcu.className = "px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-700 text-emerald-100 border border-emerald-400 shadow";
+                tabDoor.className = "px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-900/60 text-emerald-300 hover:text-emerald-100 border border-transparent";
+                viewAcu.classList.remove('hidden');
+                viewDoor.classList.add('hidden');
+                viewDoor.classList.remove('flex');
+            });
+
+            tabDoor.addEventListener('click', () => {
+                sound.playSnap();
+                tabDoor.className = "px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-700 text-emerald-100 border border-emerald-400 shadow";
+                tabAcu.className = "px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-emerald-900/60 text-emerald-300 hover:text-emerald-100 border border-transparent";
+                viewDoor.classList.remove('hidden');
+                viewDoor.classList.add('flex');
+                viewAcu.classList.add('hidden');
+            });
+        }
+
+        function setupPhaseToggle() {
+            document.getElementById('btnPhaseSwitch').addEventListener('click', () => {
+                sound.playSnap();
+                if (state.currentPhase === 'moxa') {
+                    state.currentPhase = 'cultivation';
+                    document.getElementById('phaseMoxa').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('hidden');
+                    document.getElementById('phaseCultivation').classList.add('flex');
+                    document.getElementById('phaseBtnLabel').innerText = "返回【艾灸與掛艾驅邪】 🚪";
+                    renderPlant();
+                } else {
+                    state.currentPhase = 'moxa';
+                    document.getElementById('phaseCultivation').classList.add('hidden');
+                    document.getElementById('phaseCultivation').classList.remove('flex');
+                    document.getElementById('phaseMoxa').classList.remove('hidden');
+                    document.getElementById('phaseBtnLabel').innerText = "前往【艾草栽植與採嫩葉】 🌿";
+                }
+            });
+        }
+
+        function setupExtraControls() {
+            document.getElementById('btnLightMoxa').addEventListener('click', () => {
+                sound.playSizzle();
+                showToast("🕯️ 吹亮純艾條微火！熱力滲入經絡，散寒止痛", "🔥");
+            });
+
+            document.getElementById('btnAromaSmoke').addEventListener('click', () => {
+                sound.playSmokeSwoosh();
+                for (let i = 0; i < 15; i++) {
+                    particles.push({
+                        x: window.innerWidth / 2 + (Math.random() - 0.5) * 150,
+                        y: window.innerHeight / 2,
+                        radius: 3 + Math.random() * 5,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -1 - Math.random() * 2,
+                        alpha: 0.9
+                    });
+                }
+                showToast("💨 漫溢藥艾溫香，溫經散寒，通絡止痛！", "🌿");
+            });
+
+            // Codex Modal
+            const codex = document.getElementById('codexModal');
+            document.getElementById('btnCodex').addEventListener('click', () => {
+                sound.playChime();
+                codex.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseCodex').addEventListener('click', () => codex.classList.add('hidden'));
+            document.getElementById('btnConfirmCodex').addEventListener('click', () => codex.classList.add('hidden'));
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            initParticles();
+            animateCanvas();
+
+            setupAcupoints();
+            setupDoorwayHooks();
+            setupPlantEvents();
+            setupTabs();
+            setupPhaseToggle();
+            setupExtraControls();
+
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+</html>
